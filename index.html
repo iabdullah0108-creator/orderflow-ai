@@ -1,0 +1,3272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrderFlow AI — Smart Inbox</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg:#f5f7fb; --surface:#ffffff; --surface2:#f0f3f9;
+  --text:#182230; --muted:#718096; --border:#e3e8f0;
+  --accent:#635bff; --accent-soft:#eeedff;
+  --green:#138a60; --green-soft:#e4f7ef;
+  --orange:#b86a12; --orange-soft:#fff2df;
+  --red:#c74646; --red-soft:#ffebeb;
+  --shadow:0 8px 28px rgba(28,39,70,.06);
+}
+:root[data-theme="dark"] {
+  color-scheme:dark;
+  --bg:#10131b; --surface:#191e2a; --surface2:#222939;
+  --text:#edf1f9; --muted:#a0abc0; --border:#30394c;
+  --accent:#928bff; --accent-soft:#302d52;
+  --green:#62d5a6; --green-soft:#203d35;
+  --orange:#ffc078; --orange-soft:#493625;
+  --red:#ff9090; --red-soft:#482b32;
+  --shadow:0 8px 28px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;transition:background .2s,color .2s}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{min-height:100vh;display:grid;grid-template-columns:226px minmax(0,1fr)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:23px 14px;display:flex;flex-direction:column;gap:26px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand-icon{width:37px;height:37px;display:grid;place-items:center;background:var(--accent);color:white;border-radius:12px;font-weight:800;font-size:19px}
+.brand-name{font-weight:800;font-size:16px;letter-spacing:-.5px}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);padding:0 11px;margin-bottom:7px}
+.nav{display:grid;gap:4px}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:transparent;color:var(--muted);padding:11px;border-radius:9px}
+.nav button:hover,.nav button.active{background:var(--accent-soft);color:var(--accent)}
+.nav .nav-icon{width:20px;text-align:center;font-size:16px}
+.nav-count{margin-left:auto;background:var(--red-soft);color:var(--red);border-radius:20px;padding:2px 7px;font-size:11px}
+.sidebar-bottom{margin-top:auto}
+.plan-card{padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px}
+.plan-card strong{display:block;margin-bottom:6px}
+.plan-card p{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 12px}
+.main{min-width:0}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;border-bottom:1px solid var(--border);background:var(--surface);gap:14px}
+.breadcrumb{font-size:13px;color:var(--muted)}
+.breadcrumb strong{color:var(--text)}
+.top-actions{display:flex;align-items:center;gap:10px}
+.theme-toggle,.icon-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:8px}
+.avatar{height:34px;width:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800}
+.content{padding:27px 30px;max-width:1600px;margin:auto}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:24px}
+h1{font-size:26px;letter-spacing:-.8px;margin:0 0 7px}
+h2{font-size:16px;margin:0}
+h3{font-size:14px;margin:0}
+.subtitle{color:var(--muted);line-height:1.5;margin:0}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:9px;padding:10px 13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:hover{filter:brightness(.97)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:white}
+.btn-soft{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.btn-danger{background:var(--red-soft);border-color:transparent;color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.demo-note{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:11px 14px;color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:20px}
+.demo-note strong{color:var(--text)}
+.view{display:none}
+.view.active{display:block}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.metric,.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.metric{padding:19px}
+.metric-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}
+.metric-number{font-size:28px;font-weight:750;letter-spacing:-1px;margin:13px 0 7px}
+.metric-foot{font-size:12px;color:var(--muted)}
+.metric-foot span{color:var(--green);font-weight:700}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:18px}
+.panel{padding:20px;min-width:0}
+.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.chart{height:185px;display:flex;align-items:flex-end;gap:12px;padding:12px 3px 0;border-bottom:1px solid var(--border)}
+.bar-col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;color:var(--muted);font-size:11px}
+.bar{width:min(100%,34px);background:var(--accent);border-radius:6px 6px 2px 2px;opacity:.8}
+.activity{display:grid;gap:17px}
+.activity-item{display:flex;gap:11px;align-items:flex-start}
+.activity-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:var(--surface2);flex-shrink:0}
+.activity-item p{margin:0;line-height:1.45}
+.activity-item small{display:block;color:var(--muted);margin-top:4px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;text-align:left}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+td,th{padding:13px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:30px;padding:5px 9px;font-size:11px;font-weight:650;background:var(--surface2);color:var(--muted)}
+.pill.green{background:var(--green-soft);color:var(--green)}
+.pill.orange{background:var(--orange-soft);color:var(--orange)}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.purple{background:var(--accent-soft);color:var(--accent)}
+/* Smart Inbox */
+.inbox-layout{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(300px,1.2fr) minmax(250px,.85fr);border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);min-height:640px;box-shadow:var(--shadow)}
+.inbox-list{border-right:1px solid var(--border);min-width:0}
+.inbox-list-header{padding:17px;border-bottom:1px solid var(--border)}
+.inbox-list-header h2{margin-bottom:14px}
+.search{width:100%;padding:10px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:9px}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.filter-chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);padding:6px 9px;border-radius:20px;font-size:11px}
+.filter-chip.active{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.conversation-list{max-height:670px;overflow:auto}
+.conversation{width:100%;text-align:left;padding:14px;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);display:flex;gap:10px}
+.conversation:hover,.conversation.selected{background:var(--accent-soft)}
+.person-avatar{width:38px;height:38px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;background:var(--surface2);font-weight:750;color:var(--accent)}
+.convo-main{min-width:0;flex:1}
+.convo-top{display:flex;justify-content:space-between;gap:5px;font-size:12px}
+.convo-name{font-weight:700}
+.convo-time{color:var(--muted);font-size:10px}
+.convo-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:6px 0}
+.convo-bottom{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.convo-tag{font-size:10px;color:var(--muted)}
+.unread{background:var(--accent);color:white;min-width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px}
+.chat-panel{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+.chat-header{padding:15px 17px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.chat-person{display:flex;align-items:center;gap:10px;min-width:0}
+.chat-person strong{display:block;margin-bottom:4px}
+.chat-person small{color:var(--muted)}
+.chat-actions{display:flex;gap:5px}
+.chat-actions .icon-btn{padding:7px 9px}
+.messages{flex:1;min-height:230px;max-height:440px;overflow:auto;padding:18px 15px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.date-separator{text-align:center;color:var(--muted);font-size:10px;margin:3px}
+.message{max-width:88%;display:flex;flex-direction:column;gap:5px}
+.message.customer{align-self:flex-start}
+.message.business{align-self:flex-end}
+.message-bubble{padding:11px 12px;border-radius:13px;background:var(--surface);border:1px solid var(--border);line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.message.business .message-bubble{background:var(--accent-soft);border-color:transparent}
+.message-meta{font-size:10px;color:var(--muted);padding:0 3px}
+.message.business .message-meta{text-align:right}
+.composer{padding:13px;border-top:1px solid var(--border);background:var(--surface)}
+.composer-label{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;font-size:11px;color:var(--muted)}
+.composer textarea{width:100%;min-height:95px;resize:vertical;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;line-height:1.5}
+.composer-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.details-panel{min-width:0}
+.details-section{padding:17px;border-bottom:1px solid var(--border)}
+.details-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.detail-row{display:flex;justify-content:space-between;gap:10px;margin:11px 0;font-size:12px}
+.detail-row span:first-child{color:var(--muted)}
+.detail-row span:last-child{text-align:right;font-weight:600;overflow-wrap:anywhere}
+.ai-card{background:var(--accent-soft);border-radius:10px;padding:12px;font-size:12px;line-height:1.55}
+.ai-card strong{display:block;color:var(--accent);margin-bottom:6px}
+.approval-item{border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:10px}
+.approval-item p{color:var(--muted);font-size:12px;line-height:1.5;margin:8px 0}
+.approval-actions{display:flex;gap:7px;flex-wrap:wrap}
+.empty-state{padding:28px 15px;text-align:center;color:var(--muted);line-height:1.6}
+.toast{position:fixed;right:22px;bottom:22px;background:var(--text);color:var(--surface);padding:13px 17px;border-radius:10px;box-shadow:var(--shadow);z-index:10;max-width:360px;display:none}
+.toast.show{display:block}
+.footer-note{color:var(--muted);font-size:11px;margin-top:18px;line-height:1.5}
+@media(max-width:1150px){
+ .inbox-layout{grid-template-columns:minmax(210px,.8fr) minmax(280px,1.2fr)}
+ .details-panel{grid-column:1/-1;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr}
+ .details-section{border-right:1px solid var(--border)}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .app{grid-template-columns:1fr}
+ .sidebar{padding:12px;gap:12px;border-right:0;border-bottom:1px solid var(--border)}
+ .brand{padding:3px 5px}
+ .sidebar nav{display:block}
+ .sidebar .nav{display:flex;overflow-x:auto;padding-bottom:4px}
+ .nav button{width:auto;white-space:nowrap;padding:9px}
+ .nav-label,.sidebar-bottom{display:none}
+ .topbar{height:60px;padding:0 14px}
+ .content{padding:19px 13px}
+ .page-heading{flex-direction:column}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .metric{padding:14px}
+ .metric-number{font-size:23px}
+ .dashboard-grid{grid-template-columns:1fr}
+ .inbox-layout{grid-template-columns:1fr;min-height:0}
+ .inbox-list{border-right:0;border-bottom:1px solid var(--border)}
+ .conversation-list{max-height:260px}
+ .chat-panel{border-right:0}
+ .messages{max-height:350px}
+ .details-panel{grid-column:auto;display:block}
+ .details-section{border-right:0}
+ .theme-label{display:none}
+}
+
+
+
+/* Create Order Modal */
+.modal-overlay[hidden] {
+  display: none !important;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(8, 12, 24, 0.65);
+  backdrop-filter: blur(5px);
+  overflow-y: auto;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 620px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.modal-header,
+.modal-items-heading,
+.order-total-row,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header {
+  margin-bottom: 24px;
+}
+
+.modal-header h2,
+.modal-items-heading h3 {
+  margin: 4px 0;
+}
+
+.modal-card form label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-card select,
+.modal-card input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.modal-items-heading {
+  margin: 24px 0 14px;
+}
+
+.order-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 80px minmax(100px, 1fr) 38px;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.order-item-row label {
+  margin-bottom: 6px;
+}
+
+.remove-order-item {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.order-total-row {
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  font-size: 16px;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.form-error {
+  color: #ef6464;
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .modal-card {
+    margin: auto 0;
+    padding: 18px;
+    max-height: calc(100vh - 20px);
+  }
+
+  .order-item-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .remove-order-item {
+    width: 100%;
+  }
+}
+
+
+/* Customer section spacing */
+#toggle-new-customer {
+  margin-bottom: 12px;
+}
+
+#order-customer {
+  margin-top: 6px;
+}
+
+
+
+
+/* Make the delivery address fill the modal width */
+.modal-card textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+
+[hidden] {
+  display: none !important;
+}
+
+
+
+
+
+/* Order review form polish */
+#extracted-order-form {
+  width: 100%;
+  max-width: 900px;
+  margin: 20px auto 0;
+}
+
+#extracted-order-form input,
+#extracted-order-form select,
+#extracted-order-form textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+
+#extracted-order-form input:focus,
+#extracted-order-form select:focus,
+#extracted-order-form textarea:focus {
+  outline: none;
+  border-color: var(--accent, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+}
+
+#extracted-order-form button {
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 600;
+}
+
+#extracted-order-form button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  #extracted-order-form {
+    max-width: 100%;
+    margin-top: 14px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</style>
+
+
+
+
+
+<style>
+  .auth-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(124, 92, 255, .13), transparent 55%),
+      #0d0f17;
+    color: #f4f4fa;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 32px;
+    font-size: 21px;
+    letter-spacing: -.6px;
+  }
+
+  .auth-brand strong {
+    color: #a394ff;
+    font-weight: 700;
+  }
+
+  .auth-logo {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #9b8aff, #7158e8);
+    color: white;
+    font-size: 23px;
+    font-weight: 800;
+    box-shadow: 0 6px 24px rgba(124, 92, 255, .25);
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 36px;
+    box-sizing: border-box;
+    border: 1px solid #292c3b;
+    border-radius: 20px;
+    background: #151823;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .28);
+  }
+
+  .auth-heading {
+    margin-bottom: 28px;
+  }
+
+  .auth-heading h1 {
+    margin: 0 0 9px;
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: -.9px;
+  }
+
+  .auth-heading p {
+    margin: 0;
+    color: #9a9eb2;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .auth-field {
+    margin-bottom: 19px;
+  }
+
+  .auth-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #dfe1ed;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .auth-field input {
+    display: block;
+    width: 100%;
+    min-height: 47px;
+    padding: 0 13px;
+    box-sizing: border-box;
+    border: 1px solid #34384a;
+    border-radius: 10px;
+    outline: none;
+    background: #0f121c;
+    color: #f4f4fa;
+    font: inherit;
+    font-size: 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .auth-field input::placeholder {
+    color: #696e83;
+  }
+
+  .auth-field input:focus {
+    border-color: #9380ff;
+    box-shadow: 0 0 0 3px rgba(147, 128, 255, .14);
+  }
+
+  .auth-submit {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 5px;
+    border: 0;
+    border-radius: 10px;
+    background: #8975f5;
+    color: white;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+
+  .auth-submit:hover {
+    background: #9a88ff;
+  }
+
+  .auth-submit:active {
+    transform: scale(.99);
+  }
+
+  .auth-submit:disabled {
+    cursor: wait;
+    opacity: .65;
+  }
+
+  .auth-message {
+    margin: -10px 0 15px;
+    color: #b7aaff;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .auth-message:empty {
+    display: none;
+  }
+
+  .auth-switch {
+    margin: 24px 0 0;
+    text-align: center;
+    color: #969bb0;
+    font-size: 13px;
+  }
+
+  .auth-switch button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #ad9fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .auth-security {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    padding-top: 19px;
+    border-top: 1px solid #292c3b;
+    color: #9297ab;
+    font-size: 12px;
+  }
+
+  .auth-security-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #59c99a;
+  }
+
+  .auth-footer {
+    margin: 24px 0 0;
+    color: #74798d;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .auth-card {
+      padding: 26px 22px;
+    }
+
+    .auth-brand {
+      margin-bottom: 24px;
+    }
+
+    .auth-heading h1 {
+      font-size: 25px;
+    }
+  }
+
+
+
+  /* OrderFlow AI — themed signup controls */
+#auth-screen .auth-field select,
+#auth-screen .auth-field input {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#auth-screen .auth-field select {
+  appearance: none;
+  -webkit-appearance: none;
+
+  min-height: 46px;
+  padding: 12px 40px 12px 14px;
+
+  color: #f3f4f6;
+  background-color: #0f111b;
+
+  border: 1px solid #36394b;
+  border-radius: 10px;
+
+  font: inherit;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a5a0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+#auth-screen .auth-field select:focus,
+#auth-screen .auth-field input:focus {
+  outline: none;
+  border-color: #8b75ff;
+  box-shadow: 0 0 0 3px rgba(139, 117, 255, 0.15);
+}
+
+#auth-screen .auth-field select option {
+  color: #f3f4f6;
+  background-color: #171925;
+}
+
+#auth-screen .auth-field select:invalid {
+  color: #85899e;
+}
+
+#auth-screen .auth-field small {
+  display: block;
+  margin-top: 6px;
+  color: #a1a5b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#auth-screen .auth-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 8px 0 14px;
+  color: #c6c8d6;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#auth-screen .auth-terms input {
+  width: auto;
+  flex-shrink: 0;
+  margin-top: 3px;
+  accent-color: #8b75ff;
+}
+
+
+
+/* Fix signup fields not displaying */
+#auth-screen #auth-business-field .auth-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+}
+
+#auth-screen #auth-business-field .auth-field input,
+#auth-screen #auth-business-field .auth-field select {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  color: #f3f4f6;
+  background-color: #0f111b;
+  border: 1px solid #36394b;
+  border-radius: 10px;
+  font: inherit;
+}
+
+#auth-screen #auth-business-field .auth-field input:focus,
+#auth-screen #auth-business-field .auth-field select:focus {
+  outline: none;
+  border-color: #8b75ff;
+  box-shadow: 0 0 0 3px rgba(139, 117, 255, 0.15);
+}
+
+
+
+
+
+/* Phone country dropdown */
+#auth-screen .iti__country-list {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+  border: 1px solid #36394b !important;
+}
+
+#auth-screen .iti__country {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+}
+
+#auth-screen .iti__country:hover,
+#auth-screen .iti__country.iti__highlight {
+  background-color: #29243f !important;
+  color: #ffffff !important;
+}
+
+/* Business country dropdown */
+#auth-screen #auth-business-field #auth-country {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+}
+
+#auth-screen #auth-business-field #auth-country option {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+}
+
+/* Choices.js dropdown, if initialized */
+#auth-screen .choices__inner,
+#auth-screen .choices__list--dropdown,
+#auth-screen .choices__list[aria-expanded] {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+  border-color: #36394b !important;
+}
+
+#auth-screen .choices__input,
+#auth-screen .choices__item,
+#auth-screen .choices__list--dropdown .choices__item {
+  background-color: #0f111b !important;
+  color: #f3f4f6 !important;
+}
+
+#auth-screen .choices__list--dropdown .choices__item--selectable.is-highlighted {
+  background-color: #29243f !important;
+  color: #ffffff !important;
+}
+
+#auth-screen .choices__placeholder {
+  color: #a1a1b5 !important;
+  opacity: 1 !important;
+}
+
+
+
+
+
+/* Match business-country flags and text sizing */
+#auth-screen #auth-country + .choices .fi {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+#auth-screen #auth-country + .choices .choices__item {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#auth-screen #auth-country + .choices .choices__list--dropdown
+.choices__item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+#auth-screen #auth-country + .choices .choices__list--single {
+  padding: 4px 16px 4px 4px;
+}
+
+
+
+
+/* Business country: flag and text alignment */
+#auth-screen .choices__list--dropdown .choices__item--choice,
+#auth-screen .choices__list--single .choices__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Country flag dimensions */
+#auth-screen .choices .fi {
+  display: inline-block;
+  width: 18px;
+  height: 13px;
+  flex: 0 0 18px;
+  border-radius: 2px;
+  background-size: cover;
+  background-position: center;
+}
+
+
+#auth-screen .choices .fi {
+  margin-right: 7px;
+}
+
+
+
+
+/* Profile dropdown */
+.top-actions {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 240px;
+  padding: 10px;
+  background: var(--surface, var(--card, #ffffff));
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  z-index: 1000;
+}
+
+.profile-dropdown[hidden] {
+  display: none;
+}
+
+.profile-dropdown-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  margin-bottom: 6px;
+}
+
+.profile-dropdown-header span {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  overflow-wrap: anywhere;
+}
+
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary, var(--text, #111827));
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-dropdown button:hover {
+  background: var(--accent-soft, #f3e8ff);
+}
+
+
+
+
+
+</style>
+
+
+
+
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/css/intlTelInput.css"
+/>
+
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/choices.js@11/public/assets/styles/choices.min.css"
+/>
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flag-icons@7.3.2/css/flag-icons.min.css"
+/>
+
+
+
+
+</head>
+<body>
+
+
+
+
+
+
+  <div id="auth-screen" class="auth-screen" style="display: none;">
+  <div class="auth-brand">
+    <div class="auth-logo">O</div>
+    <span>OrderFlow <strong>AI</strong></span>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-heading">
+      <h1 id="auth-title">Welcome back</h1>
+      <p id="auth-subtitle">Sign in to manage your business.</p>
+    </div>
+
+    <div id="auth-message" class="auth-message" role="status"></div>
+
+    <form id="auth-form" novalidate>
+
+  <!-- BUSINESS DETAILS: SHOWN DURING SIGNUP -->
+  <div id="auth-business-field" style="display: none;">
+
+    <div class="auth-field">
+      <label for="auth-owner-name">Your full name</label>
+      <input
+        id="auth-owner-name"
+        type="text"
+        placeholder="Your full name"
+        autocomplete="name"
+        required
+      />
+    </div>
+
+    <div class="auth-field">
+  <label for="auth-business-name">Business name</label>
+  <input
+    id="auth-business-name"
+    name="business_name"
+    type="text"
+    placeholder="Your business name"
+    autocomplete="organization"
+    required
+  />
+</div>
+
+    <div class="auth-field">
+      <label for="auth-phone">Phone number</label>
+      <input
+        id="auth-phone"
+        type="tel"
+        autocomplete="tel"
+        placeholder="Enter your phone number"
+        required
+      />
+      <small>
+        Your phone country can differ from your business country.
+      </small>
+    </div>
+
+    <div class="auth-field">
+  <label for="auth-country">Business country</label>
+  <select id="auth-country" required>
+    <option value="">Select your business country</option>
+  </select>
+</div>
+
+    <div class="auth-field">
+      <label for="auth-currency">Business currency</label>
+      <select id="auth-currency" required>
+        <option value="">Select your currency</option>
+        <option value="USD">USD — US Dollar</option>
+        <option value="GBP">GBP — British Pound</option>
+        <option value="EUR">EUR — Euro</option>
+        <option value="PKR">PKR — Pakistani Rupee</option>
+        <option value="INR">INR — Indian Rupee</option>
+        <option value="CAD">CAD — Canadian Dollar</option>
+        <option value="AUD">AUD — Australian Dollar</option>
+        <option value="AED">AED — UAE Dirham</option>
+        <option value="SAR">SAR — Saudi Riyal</option>
+        <option value="BDT">BDT — Bangladeshi Taka</option>
+        <option value="SGD">SGD — Singapore Dollar</option>
+        <option value="MYR">MYR — Malaysian Ringgit</option>
+        <option value="CNY">CNY — Chinese Yuan</option>
+        <option value="NGN">NGN — Nigerian Naira</option>
+        <option value="ZAR">ZAR — South African Rand</option>
+        <option value="NZD">NZD — New Zealand Dollar</option>
+      </select>
+    </div>
+
+    <div class="auth-field">
+      <label for="auth-business-type">Business type (optional)</label>
+      <select id="auth-business-type">
+        <option value="">Choose business type</option>
+        <option value="online_store">Online store</option>
+        <option value="retail">Retail</option>
+        <option value="wholesale">Wholesale</option>
+        <option value="services">Services</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <label class="auth-terms">
+      <input id="auth-terms" type="checkbox" required />
+      <span>
+        I agree to the Terms of Service and Privacy Policy.
+      </span>
+    </label>
+
+  </div>
+
+  <!-- LOGIN AND SIGNUP CREDENTIALS -->
+  <div class="auth-field">
+    <label for="auth-email">Business email</label>
+    <input
+      id="auth-email"
+      type="email"
+      placeholder="you@company.com"
+      autocomplete="email"
+      required
+    />
+  </div>
+
+  <div class="auth-field">
+    <label for="auth-password">Password</label>
+    <input
+      id="auth-password"
+      type="password"
+      placeholder="Enter your password"
+      autocomplete="current-password"
+      minlength="8"
+      required
+    />
+  </div>
+
+  <div id="auth-confirm-password-field" class="auth-field" style="display: none;">
+    <label for="auth-confirm-password">Confirm password</label>
+    <input
+      id="auth-confirm-password"
+      type="password"
+      placeholder="Re-enter your password"
+      autocomplete="new-password"
+      minlength="8"
+    />
+  </div>
+
+  <button type="submit" id="auth-submit" class="auth-submit">
+    Sign in
+  </button>
+
+</form>
+
+    <p class="auth-switch">
+      <span id="auth-switch-text">New to OrderFlow AI?</span>
+      <button type="button" id="auth-mode-toggle">Create an account</button>
+    </p>
+
+    <div class="auth-security">
+      <span class="auth-security-dot"></span>
+      Secure business workspace
+    </div>
+  </div>
+
+  <p class="auth-footer">OrderFlow AI · Business operations, simplified.</p>
+</div>
+  
+
+
+
+
+
+
+
+
+
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">O</div>
+      <div><div class="brand-name">OrderFlow AI</div><div class="brand-sub">Business operations</div></div>
+    </div>
+    <nav>
+      <div class="nav-label">Workspace</div>
+      <div class="nav">
+        <button data-view="overview"><span class="nav-icon">◫</span>Overview</button>
+        <button data-view="inbox" class="active"><span class="nav-icon">✉</span>Smart Inbox <span class="nav-count" id="inbox-count">3</span></button>
+        <button data-view="orders"><span class="nav-icon">▤</span>Orders</button>
+        <button data-view="customers"><span class="nav-icon">♙</span>Customers</button>
+        <button data-view="invoices"><span class="nav-icon">▧</span>Invoices</button>
+      </div>
+      <div class="nav-label" style="margin-top:23px">Manage</div>
+      <div class="nav">
+        <button data-view="approvals"><span class="nav-icon">◉</span>Approval Queue <span class="nav-count" id="approval-count">2</span></button>
+        <button data-view="analytics"><span class="nav-icon">▥</span>Analytics</button>
+        <button data-view="knowledge"><span class="nav-icon">✧</span>Business Knowledge</button>
+        <button data-view="settings"><span class="nav-icon">⚙</span>Settings</button>
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="plan-card">
+        <strong>✧ Your AI workspace</strong>
+        <p>Prototype mode is active. No real customer messages are connected.</p>
+        <span class="pill purple">Demo environment</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">Workspace <span style="margin:0 8px">/</span> <strong id="breadcrumb-title">Smart Inbox</strong></div>
+      <div class="top-actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Switch colour theme" aria-pressed="false"><span id="theme-icon">☾</span><span class="theme-label" id="theme-label">Dark mode</span></button>
+        
+        <button
+  class="avatar"
+  id="profile-menu-button"
+  type="button"
+  title="Account menu"
+  aria-label="Open account menu"
+  aria-expanded="false"
+>
+  OF
+</button>
+
+
+<div class="profile-dropdown" id="profile-dropdown" hidden>
+  <div class="profile-dropdown-header">
+    <strong>My Account</strong>
+    <span id="profile-email">Loading account...</span>
+  </div>
+
+  <button type="button" id="profile-settings-button">
+    Settings
+  </button>
+
+  <button type="button" id="profile-signout-button">
+    Sign out
+  </button>
+</div>
+
+
+
+
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="demo-note"><strong>Prototype only.</strong> AI drafts and actions are simulated in your browser. Nothing is sent to customers, and order updates are not saved to a real database.</div>
+
+      <section class="view" id="view-overview">
+        <div class="page-heading"><div><div class="eyebrow">Business overview</div><h1>Good afternoon 👋</h1><p class="subtitle">Here's what's happening in your demo workspace.</p></div><button class="btn btn-primary" onclick="showView('inbox')">✧ Open Smart Inbox</button></div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-top">Total orders <span>▤</span></div><div class="metric-number" id="metric-orders">128</div><div class="metric-foot"><span>↑ 12%</span> vs. last period (demo)</div></div>
+          <div class="metric"><div class="metric-top">Revenue <span>↗</span></div><div class="metric-number">Rs. 284k</div><div class="metric-foot"><span>↑ 8.4%</span> vs. last period (demo)</div></div>
+          <div class="metric"><div class="metric-top">Inbox conversations <span>✉</span></div><div class="metric-number" id="metric-inbox">6</div><div class="metric-foot">Across all demo channels</div></div>
+          <div class="metric"><div class="metric-top">Needs human review <span>◉</span></div><div class="metric-number" id="metric-approval">2</div><div class="metric-foot">Sensitive or uncertain cases</div></div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="panel"><div class="panel-heading"><h2>Order activity</h2><span class="pill purple">Illustrative data</span></div><div class="chart">
+            <div class="bar-col"><div class="bar" style="height:35%"></div>Mon</div><div class="bar-col"><div class="bar" style="height:52%"></div>Tue</div><div class="bar-col"><div class="bar" style="height:44%"></div>Wed</div><div class="bar-col"><div class="bar" style="height:76%"></div>Thu</div><div class="bar-col"><div class="bar" style="height:58%"></div>Fri</div><div class="bar-col"><div class="bar" style="height:90%"></div>Sat</div><div class="bar-col"><div class="bar" style="height:68%"></div>Sun</div>
+          </div></div>
+          <div class="panel"><div class="panel-heading"><h2>Recent activity</h2></div><div class="activity">
+            <div class="activity-item"><div class="activity-icon">✧</div><p>AI drafted a delivery reply<small>Smart Inbox · Demo event</small></p></div>
+            <div class="activity-item"><div class="activity-icon">◉</div><p>Refund request flagged for review<small>Approval Queue · Demo event</small></p></div>
+            <div class="activity-item"><div class="activity-icon">▤</div><p>Order #OF-1042 created<small>Orders · Fictional record</small></p></div>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="view active" id="view-inbox">
+        <div class="page-heading">
+          <div><div class="eyebrow">Customer communications</div><h1>Smart Inbox</h1><p class="subtitle">Understand messages, prepare replies, and route sensitive cases to a human.</p></div>
+          <button class="btn btn-primary" id="new-message-btn">＋ Demo conversation</button>
+        </div>
+        <div class="inbox-layout">
+          <div class="inbox-list">
+            <div class="inbox-list-header">
+              <h2>Conversations <span class="pill" id="conversation-total">6</span></h2>
+              <input class="search" id="inbox-search" placeholder="⌕ Search customers or messages..." aria-label="Search conversations">
+              <div class="filter-row">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="routine">Routine</button>
+                <button class="filter-chip" data-filter="review">Needs review</button>
+                <button class="filter-chip" data-filter="unread">Unread</button>
+              </div>
+            </div>
+            <div class="conversation-list" id="conversation-list"></div>
+          </div>
+
+          <div class="chat-panel">
+            <div class="chat-header">
+              <div class="chat-person"><div class="person-avatar" id="selected-avatar">SA</div><div><strong id="selected-name">Sarah Ahmed</strong><small id="selected-channel">WhatsApp · Demo</small></div></div>
+              <div class="chat-actions"><button class="icon-btn" id="mark-read-btn" title="Mark as read" aria-label="Mark as read">✓</button><button class="icon-btn" id="resolve-btn" title="Resolve conversation" aria-label="Resolve conversation">✓✓</button></div>
+            </div>
+            <div class="messages" id="messages"><div class="empty-state">Choose a conversation to view messages.</div></div>
+            <div class="composer">
+              <div class="composer-label"><span>Reply composer</span><span class="pill purple">Simulated AI</span></div>
+              <textarea id="reply-draft" placeholder="Generate a draft or write a reply..." aria-label="Reply draft"></textarea>
+              <div class="composer-actions">
+                <button class="btn btn-soft" id="draft-btn">✧ Generate draft</button>
+                <button class="btn btn-primary" id="approve-send-btn">Approve draft</button>
+                <button class="btn" id="escalate-btn">Send to review</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="details-panel">
+            <div class="details-section">
+              <div class="details-title"><h3>Customer details</h3><span class="pill">Demo</span></div>
+              <div class="detail-row"><span>Customer</span><span id="detail-name">Sarah Ahmed</span></div>
+              <div class="detail-row"><span>Channel</span><span id="detail-channel">WhatsApp</span></div>
+              <div class="detail-row"><span>Customer status</span><span id="detail-customer-status">Returning</span></div>
+              <div class="detail-row"><span>Last order</span><span id="detail-order">#OF-1042</span></div>
+            </div>
+            <div class="details-section">
+              <div class="details-title"><h3>Intent detection</h3><span class="pill purple">Simulated</span></div>
+              <div class="detail-row"><span>Category</span><span id="detail-intent">Delivery question</span></div>
+              <div class="detail-row"><span>Priority</span><span id="detail-priority">Normal</span></div>
+              <div class="detail-row"><span>Confidence</span><span id="detail-confidence">High</span></div>
+              <div class="ai-card" id="intent-explanation"><strong>✧ Suggested next step</strong>Generate a reply using the sample business policies.</div>
+            </div>
+            <div class="details-section">
+              <div class="details-title"><h3>Linked order</h3><span class="pill" id="order-status">In transit</span></div>
+              <div class="detail-row"><span>Order ID</span><span id="linked-order-id">#OF-1042</span></div>
+              <div class="detail-row"><span>Items</span><span id="linked-order-items">2 items</span></div>
+              <div class="detail-row"><span>Amount</span><span id="linked-order-amount">Rs. 4,500</span></div>
+              <button class="btn" style="width:100%;margin-top:6px" id="view-order-btn">View demo order</button>
+            </div>
+          </aside>
+        </div>
+
+
+        
+<div class="panel" id="ai-order-panel" style="margin-top:20px;padding:22px">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">AI order assistant</div>
+      <h2 style="margin:4px 0">Create an order draft</h2>
+      <p class="subtitle">
+        Extract order details from a customer message. Review everything before saving.
+      </p>
+    </div>
+    <span class="pill purple">AI-assisted</span>
+  </div>
+
+  <label for="order-message-input">Customer message</label>
+  <textarea
+    id="order-message-input"
+    rows="5"
+    maxlength="5000"
+    placeholder="Paste the customer's message here..."
+    style="width:100%;box-sizing:border-box;margin:8px 0 14px"
+  ></textarea>
+
+  <label for="order-business-info">Product and business information</label>
+  <textarea
+    id="order-business-info"
+    rows="3"
+    maxlength="5000"
+    placeholder="Example: Classic T-Shirt costs USD 15; Baseball Cap costs USD 10."
+    style="width:100%;box-sizing:border-box;margin:8px 0 14px"
+  ></textarea>
+
+  <label for="order-currency">Order currency</label>
+  <select id="order-currency" style="margin:8px 0 16px">
+    <option value="USD">USD — US Dollar</option>
+    <option value="PKR">PKR — Pakistani Rupee</option>
+    <option value="GBP">GBP — British Pound</option>
+    <option value="EUR">EUR — Euro</option>
+    <option value="AED">AED — UAE Dirham</option>
+    <option value="CAD">CAD — Canadian Dollar</option>
+    <option value="AUD">AUD — Australian Dollar</option>
+  </select>
+
+  <div>
+    <button class="btn btn-primary" id="extract-order-btn" type="button">
+      ✧ Extract order with AI
+    </button>
+  </div>
+
+  <p id="extract-order-error" class="form-error" hidden></p>
+
+  <div id="extracted-order-result" hidden style="margin-top:20px">
+    <h3>Review extracted details</h3>
+    <p class="subtitle">
+      These are AI suggestions, not a confirmed order. Verify every field.
+    </p>
+    
+
+    
+<div id="extracted-order-form">
+  <p class="subtitle">Extract an order first to review its details here.</p>
+</div>
+
+
+
+  </div>
+</div>
+
+
+
+        <p class="footer-note">No real AI model, messaging API, or order database is connected. Drafts use simple demo rules and sample policies. Review sensitive requests before taking action in a real product.</p>
+      </section>
+
+      <section class="view" id="view-orders">
+        <div class="page-heading"><div><div class="eyebrow">Order management</div><h1>Orders</h1><p class="subtitle">Example order records for the prototype.</p></div><button class="btn btn-primary" id="add-order-btn">＋ Add demo order</button></div>
+        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="orders-table"></tbody></table></div></div>
+      </section>
+
+
+
+      
+<!-- Create Order Modal -->
+<div class="modal-overlay" id="create-order-modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-order-title">
+    <div class="modal-header">
+      <div>
+        <div class="eyebrow">Order management</div>
+        <h2 id="create-order-title">Create order</h2>
+        <p class="subtitle">Add a customer and their products.</p>
+      </div>
+      <button type="button" class="btn btn-secondary" id="close-order-modal" aria-label="Close">✕</button>
+    </div>
+
+    <form id="create-order-form">
+      
+      
+<div class="customer-field-heading">
+  <label for="order-customer">Customer</label>
+  <button type="button" class="btn btn-secondary" id="toggle-new-customer">
+    + Add new customer
+  </button>
+</div>
+
+<select id="order-customer" required>
+  <option value="">Loading customers…</option>
+</select>
+
+<div id="new-customer-fields" hidden>
+  <label for="new-customer-name">Customer name</label>
+  <input
+    id="new-customer-name"
+    type="text"
+    maxlength="150"
+    placeholder="Full name"
+    autocomplete="name"
+  />
+
+  <label for="new-customer-phone">Phone number</label>
+  <input
+    id="new-customer-phone"
+    type="tel"
+    maxlength="30"
+    placeholder="+92..."
+    autocomplete="tel"
+  />
+
+
+  
+<label for="new-customer-address">Delivery address</label>
+<textarea
+  id="new-customer-address"
+  maxlength="500"
+  rows="3"
+  placeholder="House, street, area, city"
+  autocomplete="street-address"
+></textarea>
+
+
+
+
+  <label for="new-customer-email">Email (optional)</label>
+  <input
+    id="new-customer-email"
+    type="email"
+    maxlength="254"
+    placeholder="customer@example.com"
+    autocomplete="email"
+  />
+
+  
+</div>
+
+
+      <div class="modal-items-heading">
+        <h3>Order items</h3>
+        <button type="button" class="btn btn-secondary" id="add-order-item">＋ Add item</button>
+      </div>
+
+      <div id="order-item-list"></div>
+
+      <div class="order-total-row">
+        <span>Order total</span>
+        <strong id="new-order-total">PKR 0</strong>
+      </div>
+
+      <p id="create-order-error" class="form-error" hidden></p>
+
+      
+<div class="modal-actions">
+  <button type="button" class="btn btn-secondary" id="cancel-new-customer" hidden>
+    Use existing customer
+  </button>
+  <button type="button" class="btn btn-secondary" id="cancel-order-modal">
+    Cancel
+  </button>
+  <button type="submit" class="btn btn-primary" id="save-order-btn">
+    Create Order
+  </button>
+</div>
+
+    </form>
+  </div>
+</div>
+
+
+
+
+      <section class="view" id="view-approvals">
+        <div class="page-heading"><div><div class="eyebrow">Human-in-the-loop</div><h1>Approval Queue</h1><p class="subtitle">Sensitive, unclear, or exception requests should be reviewed by a person.</p></div></div>
+        <div class="demo-note"><strong>Safety rule:</strong> this prototype never autonomously approves or rejects refunds. Queue buttons only simulate a review action.</div>
+        <div id="approval-list"></div>
+      </section>
+
+      
+      <section class="view" id="view-customers"><div class="page-heading"><div><div class="eyebrow">Customer directory</div><h1>Customers</h1><p class="subtitle">Customer records stored in your database.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Created</th></tr></thead><tbody id="customers-table"></tbody></table></div></div></section>
+
+
+      <section class="view" id="view-invoices"><div class="page-heading"><div><div class="eyebrow">Billing</div><h1>Invoices</h1><p class="subtitle">Invoice generation will be connected to real orders later.</p></div></div><div class="panel"><h2>Invoice workspace</h2><p class="subtitle" style="margin-top:10px">This prototype does not create or issue real invoices yet. Once the secure backend is ready, we can generate printable PDFs from verified order records.</p></div></section>
+      <section class="view" id="view-analytics"><div class="page-heading"><div><div class="eyebrow">Business insights</div><h1>Analytics</h1><p class="subtitle">Illustrative metrics only; not connected to real business data.</p></div></div><div class="metrics"><div class="metric"><div class="metric-top">Demo conversations</div><div class="metric-number" id="analytics-conversations">6</div></div><div class="metric"><div class="metric-top">Pending reviews</div><div class="metric-number" id="analytics-reviews">2</div></div><div class="metric"><div class="metric-top">Resolved demos</div><div class="metric-number" id="analytics-resolved">0</div></div><div class="metric"><div class="metric-top">Drafts prepared</div><div class="metric-number" id="analytics-drafts">0</div></div></div></section>
+      <section class="view" id="view-knowledge"><div class="page-heading"><div><div class="eyebrow">Business configuration</div><h1>Business Knowledge</h1><p class="subtitle">Example facts used by the simulated reply generator.</p></div></div><div class="panel"><div class="activity"><div class="activity-item"><div class="activity-icon">▤</div><p><strong>Products</strong><small>Black shirt: Rs. 2,500. These are fictional sample details.</small></p></div><div class="activity-item"><div class="activity-icon">↗</div><p><strong>Delivery</strong><small>Sample estimate: 2–3 business days, subject to confirmation.</small></p></div><div class="activity-item"><div class="activity-icon">↺</div><p><strong>Refund policy</strong><small>Never promise a refund. Send refund requests to an authorized human reviewer.</small></p></div><div class="activity-item"><div class="activity-icon">✧</div><p><strong>Automation rules</strong><small>Routine FAQs may be eligible for automation in a future connected version. Uncertain or sensitive cases require review.</small></p></div></div></div></section>
+      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div></section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  window.ORDERFLOW_SUPABASE_URL = "https://uibdvejhftkfhqzfofmt.supabase.co";
+  window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jCsaqtrZBagP-cigN_8X-A_JaKUqmxv";
+</script>
+<script>
+
+
+const supabaseClient = window.supabase.createClient(
+  window.ORDERFLOW_SUPABASE_URL,
+  window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY
+);
+
+
+
+"use strict";
+
+// Prototype data only. Do not put real customer data or secrets here.
+const conversations = [
+  {id:1,name:"Sarah Ahmed",initials:"SA",channel:"WhatsApp",time:"2m",category:"Delivery question",priority:"Normal",confidence:"High",customerStatus:"Returning",order:"#OF-1042",orderStatus:"In transit",items:"2 items",amount:"Rs. 4,500",unread:true,review:false,resolved:false,
+   messages:[{from:"customer",text:"Hi! Can you tell me when my order will arrive?",time:"2:32 PM"}]},
+  {id:2,name:"Hamza Khan",initials:"HK",channel:"Instagram",time:"8m",category:"Product inquiry",priority:"Normal",confidence:"High",customerStatus:"New customer",order:"—",orderStatus:"No order",items:"—",amount:"—",unread:true,review:false,resolved:false,
+   messages:[{from:"customer",text:"Is the black shirt available in large, and how much is it?",time:"2:26 PM"}]},
+  {id:3,name:"Ayesha Malik",initials:"AM",channel:"WhatsApp",time:"15m",category:"Refund request",priority:"High",confidence:"Medium",customerStatus:"Returning",order:"#OF-1038",orderStatus:"Delivered",items:"1 item",amount:"Rs. 2,500",unread:true,review:true,resolved:false,
+   messages:[{from:"customer",text:"I received my order but want my money back. Can you refund me?",time:"2:19 PM"}]},
+  {id:4,name:"Usman Ali",initials:"UA",channel:"Email",time:"31m",category:"Order confirmation",priority:"Normal",confidence:"High",customerStatus:"Returning",order:"#OF-1045",orderStatus:"Processing",items:"3 items",amount:"Rs. 7,200",unread:false,review:false,resolved:false,
+   messages:[{from:"customer",text:"Please confirm that you received my order. Thank you.",time:"2:03 PM"}]},
+  {id:5,name:"Mariam Noor",initials:"MN",channel:"Instagram",time:"46m",category:"Complaint",priority:"High",confidence:"Medium",customerStatus:"Returning",order:"#OF-1029",orderStatus:"Delivered",items:"2 items",amount:"Rs. 3,800",unread:false,review:true,resolved:false,
+   messages:[{from:"customer",text:"This is the second time the item arrived damaged. Someone needs to help me.",time:"1:48 PM"}]},
+  {id:6,name:"Bilal Raza",initials:"BR",channel:"WhatsApp",time:"1h",category:"Business hours",priority:"Low",confidence:"High",customerStatus:"New customer",order:"—",orderStatus:"No order",items:"—",amount:"—",unread:false,review:false,resolved:false,
+   messages:[{from:"customer",text:"Hello, what are your business hours?",time:"1:32 PM"}]}
+];
+
+const approvals = [
+ {id:201,conversationId:3,name:"Ayesha Malik",type:"Refund request",priority:"High",description:"Customer requests a refund for a delivered order. An authorized person must review the order and policy before deciding."},
+ {id:202,conversationId:5,name:"Mariam Noor",type:"Repeated damage complaint",priority:"High",description:"Customer reports repeated damaged deliveries. A human should review the history and decide the next step."}
+];
+
+const orders = [
+ {id:"#OF-1042",customer:"Sarah Ahmed",items:"2 items",total:"Rs. 4,500",status:"In transit"},
+ {id:"#OF-1038",customer:"Ayesha Malik",items:"1 item",total:"Rs. 2,500",status:"Delivered"},
+ {id:"#OF-1045",customer:"Usman Ali",items:"3 items",total:"Rs. 7,200",status:"Processing"},
+ {id:"#OF-1029",customer:"Mariam Noor",items:"2 items",total:"Rs. 3,800",status:"Delivered"}
+];
+
+let selectedId = 1;
+let activeFilter = "all";
+let draftCount = 0;
+let resolvedCount = 0;
+let toastTimer;
+
+const $ = id => document.getElementById(id);
+const selectedConversation = () => conversations.find(c => c.id === selectedId);
+
+function safeText(value) {
+  return String(value ?? "");
+}
+
+function make(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = safeText(text);
+  return el;
+}
+
+function notify(message) {
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+function showView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const view = $("view-" + name);
+  if (view) view.classList.add("active");
+  document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  const activeButton = document.querySelector('[data-view="' + name + '"]');
+  $("breadcrumb-title").textContent = activeButton ? activeButton.textContent.trim() : name;
+  if (name === "inbox") renderInbox();
+  if (name === "approvals") renderApprovals();
+  if (name === "orders") renderOrders();
+  if (name === "customers") renderCustomers();
+  updateCounts();
+}
+
+document.querySelectorAll("[data-view]").forEach(button => {
+  button.addEventListener("click", () => showView(button.dataset.view));
+});
+
+function renderInbox() {
+  const list = $("conversation-list");
+  list.replaceChildren();
+  const search = $("inbox-search").value.trim().toLowerCase();
+  const visible = conversations.filter(c => {
+    const haystack = [c.name,c.channel,c.category,...c.messages.map(m=>m.text)].join(" ").toLowerCase();
+    if (search && !haystack.includes(search)) return false;
+    if (activeFilter === "routine" && (c.review || c.resolved)) return false;
+    if (activeFilter === "review" && !c.review) return false;
+    if (activeFilter === "unread" && !c.unread) return false;
+    return true;
+  });
+  $("conversation-total").textContent = visible.length;
+  if (!visible.length) {
+    list.append(make("div","empty-state","No conversations match this filter."));
+    return;
+  }
+  visible.forEach(c => {
+    const button = make("button","conversation" + (c.id === selectedId ? " selected" : ""));
+    button.type = "button";
+    button.setAttribute("aria-label","Open conversation with " + c.name);
+    const avatar = make("div","person-avatar",c.initials);
+    const main = make("div","convo-main");
+    const top = make("div","convo-top");
+    top.append(make("span","convo-name",c.name),make("span","convo-time",c.time));
+    const last = c.messages[c.messages.length-1];
+    const preview = make("div","convo-preview",last ? last.text : "No messages");
+    const bottom = make("div","convo-bottom");
+    const tag = make("span","convo-tag",c.review ? "Needs human review" : c.resolved ? "Resolved" : c.category);
+    bottom.append(tag);
+    if (c.unread) bottom.append(make("span","unread","1"));
+    main.append(top,preview,bottom);
+    button.append(avatar,main);
+    button.addEventListener("click", () => {
+     selectedId = c.id;
+     c.unread = false;
+     $("reply-draft").value = "";
+
+     renderInbox();
+     renderSelected();
+     updateCounts();
+    });
+    list.append(button);
+  });
+}
+
+function renderMessages(c) {
+  const container = $("messages");
+  container.replaceChildren();
+  container.append(make("div","date-separator","TODAY · DEMO CONVERSATION"));
+  c.messages.forEach(m => {
+    const wrap = make("div","message " + (m.from === "business" ? "business" : "customer"));
+    const bubble = make("div","message-bubble",m.text);
+    const meta = make("div","message-meta",(m.from === "business" ? "Business draft · " : "Customer · ") + m.time);
+    wrap.append(bubble,meta);
+    container.append(wrap);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderSelected() {
+  const c = selectedConversation();
+  if (!c) return;
+  $("selected-avatar").textContent = c.initials;
+  $("selected-name").textContent = c.name;
+  $("selected-channel").textContent = c.channel + " · Demo";
+  $("detail-name").textContent = c.name;
+  $("detail-channel").textContent = c.channel;
+  $("detail-customer-status").textContent = c.customerStatus;
+  $("detail-order").textContent = c.order;
+  $("detail-intent").textContent = c.category;
+  $("detail-priority").textContent = c.priority;
+  $("detail-confidence").textContent = c.confidence;
+  $("intent-explanation").replaceChildren();
+  const strong = make("strong","",c.review ? "◉ Human review recommended" : "✧ Suggested next step");
+  const explanation = c.review
+    ? "This case needs a person to inspect the context and make the decision. The AI must not decide a refund or resolve a serious complaint on its own."
+    : c.resolved
+      ? "This demo conversation has been marked resolved. You can still inspect its history."
+      : "A draft can be prepared from the sample business knowledge. Check accuracy before any real-world use.";
+  $("intent-explanation").append(strong,document.createTextNode(explanation));
+  $("order-status").textContent = c.orderStatus;
+  $("linked-order-id").textContent = c.order;
+  $("linked-order-items").textContent = c.items;
+  $("linked-order-amount").textContent = c.amount;
+  $("approve-send-btn").textContent = c.review ? "Draft only · Review required" : "Approve draft";
+  $("approve-send-btn").disabled = c.review || c.resolved;
+  $("escalate-btn").disabled = c.review || c.resolved;
+  $("draft-btn").disabled = c.resolved;
+  $("resolve-btn").disabled = c.resolved;
+  renderMessages(c);
+}
+
+
+
+
+async function renderOrders() {
+  const tbody = $("orders-table");
+  tbody.replaceChildren();
+
+  const loadingRow = document.createElement("tr");
+  loadingRow.append(make("td", "", "Loading orders..."));
+  tbody.append(loadingRow);
+
+  try {
+    
+
+
+
+    
+const { data: sessionData, error: sessionError } =
+  await supabaseClient.auth.getSession();
+
+if (sessionError || !sessionData.session) {
+  throw new Error("Please sign in to load orders.");
+}
+
+const response = await fetch("/api/orders", {
+  headers: {
+    Authorization: `Bearer ${sessionData.session.access_token}`
+  }
+});
+
+
+
+
+
+
+
+
+    if (!response.ok) {
+      throw new Error("Could not load orders.");
+    }
+
+    const result = await response.json();
+    tbody.replaceChildren();
+
+    if (!result.orders || result.orders.length === 0) {
+      const tr = document.createElement("tr");
+      tr.append(make("td", "", "No orders found."));
+      tbody.append(tr);
+      return;
+    }
+
+    result.orders.forEach(order => {
+      const tr = document.createElement("tr");
+
+      const status = String(order.status || "pending");
+      const statusClass =
+        status.toLowerCase() === "completed" ||
+        status.toLowerCase() === "delivered"
+          ? "green"
+          : "purple";
+
+      const values = [
+        order.order_number || "—",
+        order.customers?.name || "Not linked",
+        
+        
+        (order.items || [])
+        .map(item => {
+          const options = item.options
+            ? ` (${item.options})`
+            : "";
+
+          return `${item.product_name}${options} × ${item.quantity}`;
+        })
+        .join(", ") || "No items",
+
+
+        `${order.currency || "PKR"} ${Number(order.total).toLocaleString()}`,
+        status
+      ];
+
+      values.forEach((value, index) => {
+        const td = make("td");
+
+        if (index === 4) {
+          td.append(make("span", "pill " + statusClass, value));
+        } else {
+          td.textContent = safeText(String(value));
+        }
+
+        tr.append(td);
+      });
+
+      tbody.append(tr);
+    });
+  } catch (error) {
+    console.error("Could not load orders:", error);
+    tbody.replaceChildren();
+
+    const tr = document.createElement("tr");
+    tr.append(make("td", "", "Could not load orders. Please try again."));
+    tbody.append(tr);
+  }
+}
+
+
+
+
+async function renderCustomers() {
+  const tbody = $("customers-table");
+  tbody.replaceChildren();
+
+  const loadingRow = document.createElement("tr");
+  loadingRow.append(make("td", "", "Loading customers..."));
+  tbody.append(loadingRow);
+
+  try {
+    const response = await fetch("/api/customers");
+
+    if (!response.ok) {
+      throw new Error("Could not load customers.");
+    }
+
+    const result = await response.json();
+    tbody.replaceChildren();
+
+    if (!result.customers || result.customers.length === 0) {
+      tbody.append(
+        make("tr", "", "")
+      );
+      tbody.lastElementChild.append(
+        make("td", "", "No customers found.")
+      );
+      return;
+    }
+
+    result.customers.forEach(customer => {
+      const tr = document.createElement("tr");
+
+      const createdAt = customer.created_at
+        ? new Date(customer.created_at).toLocaleDateString()
+        : "—";
+
+      [
+        customer.name || "—",
+        customer.email || "—",
+        customer.phone || "—",
+        createdAt
+      ].forEach(value => {
+        tr.append(make("td", "", value));
+      });
+
+      tbody.append(tr);
+    });
+  } catch (error) {
+    tbody.replaceChildren();
+    tbody.append(make("tr", "", ""));
+    tbody.lastElementChild.append(
+      make("td", "", "Could not load customers. Please try again.")
+    );
+  }
+}
+
+function renderApprovals() {
+  const list = $("approval-list");
+  list.replaceChildren();
+  const pending = approvals.filter(a => !a.done);
+  if (!pending.length) {
+    list.append(make("div","panel empty-state","The demo approval queue is clear. New sensitive cases can be routed here."));
+    return;
+  }
+  pending.forEach(a => {
+    const card = make("div","panel approval-item");
+    const header = make("div");
+    header.style.cssText = "display:flex;justify-content:space-between;gap:10px;align-items:center";
+    header.append(make("h3","",a.type),make("span","pill red","Human review"));
+    const name = make("div","",a.name);
+    name.style.marginTop = "8px";
+    const description = make("p","",a.description);
+    const actions = make("div","approval-actions");
+    const open = make("button","btn btn-soft","Open conversation");
+    open.type = "button";
+    open.addEventListener("click",() => { selectedId = a.conversationId; showView("inbox"); });
+    const reviewed = make("button","btn","Mark reviewed");
+    reviewed.type = "button";
+    reviewed.addEventListener("click",() => {
+      a.done = true;
+      const c = conversations.find(x => x.id === a.conversationId);
+      if (c) {
+        c.review = false;
+        c.messages.push({from:"business",text:"A team member has reviewed this case in the demo. No real customer action was taken.",time:"Just now"});
+      }
+      renderApprovals();
+      updateCounts();
+      notify("Marked reviewed in the demo. No refund or other real action was performed.");
+    });
+    actions.append(open,reviewed);
+    card.append(header,name,description,actions);
+    list.append(card);
+  });
+}
+
+function updateCounts() {
+  const unread = conversations.filter(c => c.unread && !c.resolved).length;
+  const pending = approvals.filter(a => !a.done).length;
+  $("inbox-count").textContent = unread;
+  $("approval-count").textContent = pending;
+  $("metric-inbox").textContent = conversations.length;
+  $("metric-approval").textContent = pending;
+  $("analytics-conversations").textContent = conversations.length;
+  $("analytics-reviews").textContent = pending;
+  $("analytics-resolved").textContent = resolvedCount;
+  $("analytics-drafts").textContent = draftCount;
+}
+
+function classifyMessage(text) {
+  const t = text.toLowerCase();
+  if (/refund|money back|chargeback|payment dispute/.test(t)) return {category:"Refund request",review:true,priority:"High"};
+  if (/complaint|damaged|broken|angry|unacceptable|wrong item/.test(t)) return {category:"Complaint",review:true,priority:"High"};
+  if (/cancel|cancellation/.test(t)) return {category:"Cancellation request",review:true,priority:"High"};
+  if (/deliver|arrive|shipping|tracking/.test(t)) return {category:"Delivery question",review:false,priority:"Normal"};
+  if (/price|cost|available|stock|size|colour|color|product/.test(t)) return {category:"Product inquiry",review:false,priority:"Normal"};
+  if (/confirm|received my order|order status/.test(t)) return {category:"Order confirmation",review:false,priority:"Normal"};
+  if (/hour|open|timing/.test(t)) return {category:"Business hours",review:false,priority:"Low"};
+  return {category:"Unclear request",review:true,priority:"High"};
+}
+
+function generateDraft(c) {
+  const latest = c.messages.filter(m => m.from === "customer").slice(-1)[0];
+  const t = latest ? latest.text.toLowerCase() : "";
+  if (c.review) return "Thanks for contacting us. We understand your concern and will have a team member review this case. We won't confirm a refund or other exception until the details have been checked.";
+  if (/deliver|arrive|shipping|tracking/.test(t)) return "Hi " + c.name.split(" ")[0] + "! Thanks for reaching out. Our sample delivery estimate is 2–3 business days, but the exact arrival date should be confirmed against the live order tracking. Please let us know if you'd like our team to check the latest status.";
+  if (/price|cost|available|stock|size|colour|color|product/.test(t)) return "Hi " + c.name.split(" ")[0] + "! Thanks for your interest. Our sample listing shows the black shirt at Rs. 2,500. Availability in your requested size needs to be checked before we confirm. Would you like us to check the stock for you?";
+  if (/confirm|received my order|order status/.test(t)) return "Hi " + c.name.split(" ")[0] + "! Thanks for your message. We can see a sample order record in this demo. A real confirmation would need to be checked against the live order system before we confirm it.";
+  if (/hour|open|timing/.test(t)) return "Hello " + c.name.split(" ")[0] + "! Thanks for reaching out. Our business hours aren't configured in this demo yet, so I don't want to give you an incorrect time. Please check with our team for the current schedule.";
+  return "Hi " + c.name.split(" ")[0] + "! Thanks for contacting us. Could you share a little more detail so we can help you accurately?";
+}
+
+
+$("draft-btn").addEventListener("click", async () => {
+  const c = selectedConversation();
+  if (!c || c.resolved) return;
+
+  const latest = c.messages
+    .filter(m => m.from === "customer")
+    .slice(-1)[0];
+
+  if (!latest) {
+    notify("No customer message is available to reply to.");
+    return;
+  }
+
+  const button = $("draft-btn");
+  const originalLabel = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "✧ Asking Gemini...";
+
+  try {
+    const response = await fetch("/api/draft-reply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: latest.text,
+        businessInfo: [
+          "Demo clothing shop.",
+          "Black shirt sample price: Rs. 2,500.",
+          "Sample delivery estimate: 2–3 business days, subject to confirmation.",
+          "Stock availability and live order status are not verified.",
+          "Never promise a refund. Refunds, complaints and cancellations require human review.",
+          "Business hours have not been configured."
+        ].join("\n")
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI request failed.");
+    }
+
+    if (selectedId !== c.id) {
+      notify("Draft generated, but the selected conversation changed. Reopen the original conversation to review it.");
+      return;
+    }
+
+    $("reply-draft").value = data.reply;
+    draftCount++;
+    updateCounts();
+
+    notify(
+      c.review
+        ? "AI draft ready. Human review is still required."
+        : "Gemini generated a real reply. Review it before approving."
+    );
+  } catch (error) {
+    console.error("AI draft error:", error);
+    notify("Could not generate a reply. Check the server terminal for details.");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+});
+
+
+
+
+
+function renderOrderReviewForm(draft) {
+  const form = $("extracted-order-form");
+  form.replaceChildren();
+
+  function addField(labelText, name, value, type = "text") {
+    const label = document.createElement("label");
+    label.textContent = labelText;
+
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = name;
+    input.value = value ?? "";
+    input.style.width = "100%";
+    input.style.boxSizing = "border-box";
+    input.style.margin = "6px 0 14px";
+
+    if (type === "number") {
+      input.min = name.startsWith("quantity_") ? "1" : "0";
+      input.step = name.startsWith("quantity_") ? "1" : "0.01";
+    }
+
+    label.appendChild(input);
+    form.appendChild(label);
+    return input;
+  }
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Review order details";
+  form.appendChild(heading);
+
+  addField("Customer name", "customer_name", draft.customer_name);
+  addField("Phone", "phone", draft.phone);
+  addField("Email", "email", draft.email, "email");
+  addField("Shipping address", "shipping_address", draft.shipping_address);
+
+  const currency = addField("Currency (e.g. USD)", "currency", draft.currency);
+  currency.maxLength = 3;
+  currency.value = (currency.value || "USD").toUpperCase();
+
+  const totalDisplay = document.createElement("h3");
+  totalDisplay.id = "order-review-total";
+  form.appendChild(totalDisplay);
+
+  const itemsHeading = document.createElement("h4");
+  itemsHeading.textContent = "Order items";
+  form.appendChild(itemsHeading);
+
+  const itemFields = [];
+
+  (draft.items || []).forEach((item, index) => {
+    const itemHeading = document.createElement("p");
+    itemHeading.textContent = `Item ${index + 1}`;
+    form.appendChild(itemHeading);
+
+    const product = addField(
+      "Product name",
+      `product_name_${index}`,
+      item.product_name
+    );
+
+    const options = addField(
+      "Options / size / colour",
+      `options_${index}`,
+      item.options
+    );
+
+    const quantity = addField(
+      "Quantity",
+      `quantity_${index}`,
+      item.quantity,
+      "number"
+    );
+
+    const price = addField(
+      "Unit price",
+      `unit_price_${index}`,
+      item.unit_price,
+      "number"
+    );
+
+    itemFields.push({ product, options, quantity, price });
+  });
+
+  function updateTotal() {
+    let total = 0;
+    let valid = itemFields.length > 0;
+
+    for (const item of itemFields) {
+      const quantity = Number(item.quantity.value);
+      const price = Number(item.price.value);
+
+      if (
+        !item.product.value.trim() ||
+        !Number.isInteger(quantity) ||
+        quantity < 1 ||
+        !Number.isFinite(price) ||
+        price < 0 ||
+        item.price.value.trim() === ""
+      ) {
+        valid = false;
+        break;
+      }
+
+      total += quantity * price;
+    }
+
+    const code = currency.value.trim().toUpperCase();
+
+    if (!/^[A-Z]{3}$/.test(code)) {
+      totalDisplay.textContent = "Enter a valid three-letter currency code.";
+      return;
+    }
+
+    if (!valid) {
+      totalDisplay.textContent =
+        "Order total: check product names, quantities, and prices.";
+      return;
+    }
+
+    totalDisplay.textContent =
+      `Order total: ${new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: code
+      }).format(total)}`;
+  }
+
+  form.addEventListener("input", updateTotal);
+  updateTotal();
+
+  const missing = document.createElement("p");
+  missing.textContent = (draft.missing_information || []).length
+    ? "Still needed: " + draft.missing_information.join(", ")
+    : "No missing information reported by AI.";
+  form.appendChild(missing);
+
+  const note = document.createElement("p");
+  note.className = "subtitle";
+  note.textContent =
+    "Review and correct every field. This form does not save or confirm an order yet.";
+  form.appendChild(note);
+
+
+    const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = "btn btn-primary";
+  saveButton.textContent = "Save reviewed order";
+  saveButton.style.marginTop = "12px";
+
+  
+  
+  saveButton.addEventListener("click", async () => {
+    const customerName = form.querySelector('[name="customer_name"]').value.trim();
+    const phone = form.querySelector('[name="phone"]').value.trim();
+    const email = form.querySelector('[name="email"]').value.trim();
+    const address = form.querySelector('[name="shipping_address"]').value.trim();
+    const currencyCode = currency.value.trim().toUpperCase();
+
+    if (!customerName || !phone || !address) {
+      notify("Customer name, phone, and address are required.");
+      return;
+    }
+
+    if (!/^[A-Z]{3}$/.test(currencyCode)) {
+      notify("Enter a valid three-letter currency code.");
+      return;
+    }
+
+    const items = itemFields.map(item => ({
+      product_name: item.product.value.trim(),
+      options: item.options.value.trim(),
+      quantity: Number(item.quantity.value),
+      unit_price: Number(item.price.value)
+    }));
+
+    
+if (items.some(item =>
+  !item.product_name ||
+  !Number.isSafeInteger(item.quantity) ||
+  item.quantity < 1 ||
+  !Number.isFinite(item.unit_price) ||
+  item.unit_price < 0
+)) {
+  notify("Please check every product, quantity, and price.");
+  return;
+}
+
+// Block saving when a T-shirt size is still missing.
+const needsTshirtSize = (draft.missing_information || []).some(
+  detail => /t[\s-]*shirt\s+size/i.test(detail)
+);
+
+const tshirtSizeMissing = items.some(item => {
+  if (!/t[\s-]*shirts?/i.test(item.product_name)) return false;
+
+  const options = item.options.trim();
+  const hasSize = /\b(xs|s|m|l|xl|xxl|xxxl|[2-9]xl|small|medium|large)\b/i.test(options);
+
+  return !hasSize;
+});
+
+if (needsTshirtSize && tshirtSizeMissing) {
+  notify("Please enter the T-shirt size before saving.");
+  return;
+}
+
+
+    const originalLabel = saveButton.textContent;
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving order...";
+
+    try {
+      
+
+      
+      const lookupResponse = await fetch("/api/customers/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, email: email || null })
+      });
+
+      const lookupData = await lookupResponse.json();
+
+      if (!lookupResponse.ok) {
+        throw new Error(lookupData.error || "Could not look up customer.");
+      }
+
+      let customerId;
+
+      if (lookupData.customer) {
+        customerId = lookupData.customer.id;
+      } else {
+        const customerResponse = await fetch("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: customerName,
+            phone,
+            email: email || null,
+            address
+          })
+        });
+
+        const customerData = await customerResponse.json();
+
+        if (!customerResponse.ok) {
+          throw new Error(customerData.error || "Could not create customer.");
+        }
+
+        customerId = customerData.customer.id;
+      }
+
+
+
+
+      const orderResponse = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_id: customerId,
+          items,
+          currency: currencyCode,
+          shipping_address: address
+        })
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderResponse.ok) {
+        throw new Error(orderData.error || "Could not save order.");
+      }
+
+      saveButton.textContent = `Saved: ${orderData.order.order_number}`;
+      notify(`Order ${orderData.order.order_number} saved as Pending.`);
+    } catch (error) {
+      console.error("Save order error:", error);
+      notify(error.message || "Could not save the order.");
+      saveButton.disabled = false;
+      saveButton.textContent = originalLabel;
+    }
+  });
+
+
+
+
+  form.appendChild(saveButton);
+
+
+}
+
+
+
+
+
+$("extract-order-btn").addEventListener("click", async () => {
+  const message = $("order-message-input").value.trim();
+  const businessInfo = $("order-business-info").value.trim();
+  const currency = $("order-currency").value;
+
+  const button = $("extract-order-btn");
+  const errorBox = $("extract-order-error");
+  const resultBox = $("extracted-order-result");
+  const orderForm = $("extracted-order-form");
+
+  errorBox.hidden = true;
+
+  if (!message) {
+    errorBox.textContent = "Paste a customer message first.";
+    errorBox.hidden = false;
+    return;
+  }
+
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "✧ Extracting order...";
+
+  try {
+    const response = await fetch("/api/extract-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        businessInfo,
+        currency
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Order extraction failed.");
+    }
+
+    if (!data.draft) {
+      throw new Error("The server did not return an order draft.");
+    }
+
+    // Render the draft as text, never as executable HTML.
+    orderForm.innerHTML = "";
+renderOrderReviewForm(data.draft);
+resultBox.hidden = false;
+
+    notify("Order draft extracted. Review the details before saving.");
+  } catch (error) {
+    console.error("Order extraction error:", error);
+    errorBox.textContent = error.message || "Could not extract the order.";
+    errorBox.hidden = false;
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+});
+
+
+
+
+
+$("approve-send-btn").addEventListener("click",() => {
+  const c = selectedConversation();
+  const text = $("reply-draft").value.trim();
+  if (!c || c.resolved) return;
+  if (c.review) {
+    notify("This case requires human review. Draft approval is disabled.");
+    return;
+  }
+  if (!text) {
+    notify("Generate or write a draft first.");
+    return;
+  }
+  c.messages.push({from:"business",text,time:"Just now"});
+  c.time = "now";
+  $("reply-draft").value = "";
+  renderInbox();
+  renderSelected();
+  notify("Demo reply added to the conversation only. No message was sent externally.");
+});
+
+$("escalate-btn").addEventListener("click",() => {
+  const c = selectedConversation();
+  if (!c || c.resolved) return;
+  if (c.review) {
+    notify("This conversation is already marked for human review.");
+    return;
+  }
+  c.review = true;
+  c.priority = "High";
+  c.category = "Needs human review";
+  approvals.push({id:Date.now(),conversationId:c.id,name:c.name,type:"Manual escalation",priority:"High",description:"A staff member or the prototype user escalated this conversation for a human decision."});
+  renderInbox();
+  renderSelected();
+  updateCounts();
+  notify("Added to the demo human-review queue.");
+});
+
+$("mark-read-btn").addEventListener("click",() => {
+  const c = selectedConversation();
+  if (!c) return;
+  c.unread = false;
+  renderInbox();
+  updateCounts();
+  notify("Marked as read in the demo.");
+});
+
+$("resolve-btn").addEventListener("click",() => {
+  const c = selectedConversation();
+  if (!c || c.resolved) return;
+  if (c.review) {
+    notify("Resolve is disabled while human review is pending.");
+    return;
+  }
+  c.resolved = true;
+  resolvedCount++;
+  renderInbox();
+  renderSelected();
+  updateCounts();
+  notify("Conversation marked resolved in the demo.");
+});
+
+$("view-order-btn").addEventListener("click",() => {
+  const c = selectedConversation();
+  if (!c || c.order === "—") {
+    notify("There is no linked demo order for this conversation.");
+    return;
+  }
+  showView("orders");
+  notify("Showing fictional order records.");
+});
+
+$("inbox-search").addEventListener("input",renderInbox);
+document.querySelectorAll("[data-filter]").forEach(button => {
+  button.addEventListener("click",() => {
+    activeFilter = button.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach(b => b.classList.toggle("active",b === button));
+    renderInbox();
+  });
+});
+
+$("new-message-btn").addEventListener("click",() => {
+  const name = "Demo Customer " + (conversations.length + 1);
+  const c = {
+    id:Math.max(0,...conversations.map(x=>x.id))+1,
+    name,initials:"DC",channel:"Website chat",time:"now",category:"New inquiry",
+    priority:"Normal",confidence:"Low",customerStatus:"New customer",order:"—",
+    orderStatus:"No order",items:"—",amount:"—",unread:true,review:false,resolved:false,
+    messages:[{from:"customer",text:"Hello! I would like some information about your products.",time:"Just now"}]
+  };
+  conversations.unshift(c);
+  selectedId = c.id;
+  $("reply-draft").value = "";
+  renderInbox();
+  renderSelected();
+  updateCounts();
+  notify("Created a fictional conversation.");
+});
+
+
+
+
+$("add-order-btn").addEventListener("click", async () => {
+  const modal = $("create-order-modal");
+  const customerSelect = $("order-customer");
+  const errorMessage = $("create-order-error");
+
+  errorMessage.hidden = true;
+
+
+  $("order-item-list").replaceChildren();
+$("new-order-total").textContent = "PKR 0.00";
+addOrderItemRow();
+
+
+// Always open in existing-customer mode.
+
+$("new-customer-fields").hidden = true;
+$("toggle-new-customer").hidden = false;
+$("cancel-new-customer").hidden = true;
+$("order-customer").required = true;
+
+
+$("new-customer-name").value = "";
+$("new-customer-phone").value = "";
+$("new-customer-address").value = "";
+$("new-customer-email").value = "";
+
+
+showExistingCustomerMode();
+
+  modal.hidden = false;
+
+  customerSelect.innerHTML = '<option value="">Loading customers...</option>';
+
+  try {
+    const response = await fetch("/api/customers");
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Could not load customers.");
+    }
+
+    customerSelect.replaceChildren(
+      new Option("Select a customer", ""),
+      ...result.customers.map(customer =>
+        new Option(
+          `${customer.name}${customer.email ? " — " + customer.email : ""}`,
+          customer.id
+        )
+      )
+    );
+  } catch (error) {
+    customerSelect.replaceChildren(
+      new Option("Could not load customers", "")
+    );
+
+    errorMessage.textContent = error.message;
+    errorMessage.hidden = false;
+  }
+});
+
+
+
+
+
+function closeCreateOrderModal() {
+  $("create-order-modal").hidden = true;
+  $("create-order-error").hidden = true;
+}
+
+$("close-order-modal").addEventListener("click", closeCreateOrderModal);
+$("cancel-order-modal").addEventListener("click", closeCreateOrderModal);
+
+$("create-order-modal").addEventListener("click", event => {
+  if (event.target === $("create-order-modal")) {
+    closeCreateOrderModal();
+  }
+});
+
+function addOrderItemRow() {
+  const list = $("order-item-list");
+  const row = document.createElement("div");
+  row.className = "order-item-row";
+
+  const productField = document.createElement("div");
+  const productLabel = document.createElement("label");
+  productLabel.textContent = "Product name";
+  const productInput = document.createElement("input");
+  productInput.type = "text";
+  productInput.name = "product_name";
+  productInput.placeholder = "e.g. T-shirt";
+  productInput.maxLength = 150;
+  productInput.required = true;
+  productField.append(productLabel, productInput);
+
+  const quantityField = document.createElement("div");
+  const quantityLabel = document.createElement("label");
+  quantityLabel.textContent = "Quantity";
+  const quantityInput = document.createElement("input");
+  quantityInput.type = "number";
+  quantityInput.name = "quantity";
+  quantityInput.min = "1";
+  quantityInput.max = "999";
+  quantityInput.step = "1";
+  quantityInput.value = "1";
+  quantityInput.required = true;
+  quantityField.append(quantityLabel, quantityInput);
+
+  const priceField = document.createElement("div");
+  const priceLabel = document.createElement("label");
+  priceLabel.textContent = "Unit price (PKR)";
+  const priceInput = document.createElement("input");
+  priceInput.type = "number";
+  priceInput.name = "unit_price";
+  priceInput.min = "0";
+  priceInput.max = "100000000";
+  priceInput.step = "0.01";
+  priceInput.value = "0";
+  priceInput.required = true;
+  priceField.append(priceLabel, priceInput);
+
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "remove-order-item";
+  removeButton.textContent = "✕";
+  removeButton.setAttribute("aria-label", "Remove item");
+  removeButton.addEventListener("click", () => {
+    row.remove();
+    updateNewOrderTotal();
+  });
+
+  row.append(productField, quantityField, priceField, removeButton);
+  list.appendChild(row);
+
+  quantityInput.addEventListener("input", updateNewOrderTotal);
+  priceInput.addEventListener("input", updateNewOrderTotal);
+  updateNewOrderTotal();
+}
+
+function updateNewOrderTotal() {
+  let total = 0;
+
+  document.querySelectorAll(".order-item-row").forEach(row => {
+    const quantity = Number(row.querySelector('[name="quantity"]').value);
+    const price = Number(row.querySelector('[name="unit_price"]').value);
+
+    if (
+      Number.isSafeInteger(quantity) &&
+      quantity > 0 &&
+      Number.isFinite(price) &&
+      price >= 0
+    ) {
+      total += quantity * price;
+    }
+  });
+
+  $("new-order-total").textContent =
+    "PKR " + total.toLocaleString("en-PK", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+}
+
+$("add-order-item").addEventListener("click", addOrderItemRow);
+
+
+
+
+
+
+
+
+function showExistingCustomerMode() {
+  $("new-customer-fields").hidden = true;
+  $("order-customer").hidden = false;
+  $("order-customer").required = true;
+
+  $("toggle-new-customer").hidden = false;
+  $("cancel-new-customer").hidden = true;
+}
+
+function showNewCustomerMode() {
+  $("new-customer-fields").hidden = false;
+  $("order-customer").hidden = true;
+  $("order-customer").required = false;
+
+  $("toggle-new-customer").hidden = true;
+  $("cancel-new-customer").hidden = false;
+}
+
+$("toggle-new-customer").addEventListener("click", showNewCustomerMode);
+
+$("cancel-new-customer").addEventListener("click", () => {
+  showExistingCustomerMode();
+
+  $("new-customer-name").value = "";
+  $("new-customer-phone").value = "";
+  $("new-customer-address").value = "";
+  $("new-customer-email").value = "";
+
+  $("create-order-error").hidden = true;
+});
+
+
+
+
+
+
+
+$("create-order-form").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const saveButton = $("save-order-btn");
+  const errorMessage = $("create-order-error");
+
+  errorMessage.hidden = true;
+
+  const isNewCustomer = !$("new-customer-fields").hidden;
+  let customerId = $("order-customer").value;
+  let shippingAddress = "";
+
+  const items = Array.from(
+    document.querySelectorAll(".order-item-row")
+  ).map(row => ({
+    product_name: row.querySelector('[name="product_name"]').value.trim(),
+    quantity: Number(row.querySelector('[name="quantity"]').value),
+    unit_price: Number(row.querySelector('[name="unit_price"]').value)
+  }));
+
+  if (isNewCustomer) {
+    const name = $("new-customer-name").value.trim();
+    const phone = $("new-customer-phone").value.trim();
+    shippingAddress = $("new-customer-address").value.trim();
+    const email = $("new-customer-email").value.trim();
+
+    if (!name || !phone || !shippingAddress) {
+      errorMessage.textContent =
+        "Enter the new customer's name, phone number, and delivery address.";
+      errorMessage.hidden = false;
+      return;
+    }
+
+    if (!customerId && (
+      name.length > 150 ||
+      phone.length > 30 ||
+      shippingAddress.length > 500 ||
+      email.length > 254
+    )) {
+      errorMessage.textContent =
+        "One or more customer fields exceed the allowed length.";
+      errorMessage.hidden = false;
+      return;
+    }
+  } else if (!customerId) {
+    errorMessage.textContent = "Please select a customer.";
+    errorMessage.hidden = false;
+    return;
+  }
+
+  if (
+    items.length === 0 ||
+    items.some(item =>
+      !item.product_name ||
+      item.product_name.length > 200 ||
+      !Number.isSafeInteger(item.quantity) ||
+      item.quantity < 1 ||
+      item.quantity > 999 ||
+      !Number.isFinite(item.unit_price) ||
+      item.unit_price < 0 ||
+      item.unit_price > 100000000
+    )
+  ) {
+    errorMessage.textContent =
+      "Check each item's name, quantity, and price, then try again.";
+    errorMessage.hidden = false;
+    return;
+  }
+
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
+
+  try {
+    if (isNewCustomer) {
+      const customerResponse = await fetch("/api/customers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: $("new-customer-name").value.trim(),
+          phone: $("new-customer-phone").value.trim(),
+          address: shippingAddress,
+          email: $("new-customer-email").value.trim()
+        })
+      });
+
+      const customerResult = await customerResponse.json();
+
+      if (!customerResponse.ok) {
+        throw new Error(
+          customerResult.error || "Could not create the customer."
+        );
+      }
+
+      customerId = customerResult.customer.id;
+    } else {
+      const selectedOption =
+        $("order-customer").selectedOptions[0];
+
+      // Use the selected customer's saved address when available.
+      shippingAddress = selectedOption?.dataset.address || "";
+    }
+
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        customer_id: customerId,
+        shipping_address: shippingAddress,
+        items
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not create the order."
+      );
+    }
+
+    closeCreateOrderModal();
+    $("create-order-form").reset();
+    $("order-item-list").replaceChildren();
+    $("new-order-total").textContent = "PKR 0.00";
+
+    await renderOrders();
+
+    notify(
+      "Order " + result.order.order_number + " created successfully."
+    );
+  } catch (error) {
+    errorMessage.textContent = error.message;
+    errorMessage.hidden = false;
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = "Create Order";
+  }
+});
+
+
+
+
+
+
+
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const dark = theme === "dark";
+  $("theme-icon").textContent = dark ? "☀" : "☾";
+  $("theme-label").textContent = dark ? "Light mode" : "Dark mode";
+  $("theme-toggle").setAttribute("aria-pressed",String(dark));
+  try { localStorage.setItem("orderflow-theme",theme); } catch (_) {}
+}
+
+let initialTheme = "light";
+try {
+  const savedTheme = localStorage.getItem("orderflow-theme");
+  if (savedTheme === "dark" || savedTheme === "light") initialTheme = savedTheme;
+} catch (_) {}
+setTheme(initialTheme);
+
+$("theme-toggle").addEventListener("click",() => {
+  setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+});
+
+renderInbox();
+renderSelected();
+renderOrders();
+renderCustomers();
+renderApprovals();
+updateCounts();
+</script>
+
+
+<div id="ai-test-panel" style="max-width:760px;margin:30px auto;padding:24px;background:#171b26;color:#f4f5f7;border:1px solid #343b4b;border-radius:14px;font-family:Arial,sans-serif;">
+  <h2 style="margin-top:0;">🧪 Test AI Reply</h2>
+  <p style="color:#aab3c5;">Test Gemini with a customer message without changing your inbox conversations.</p>
+
+  <label for="ai-test-message">Customer message</label>
+  <textarea id="ai-test-message" rows="4" placeholder="Example: Do you have the blue shirt in XL? I need it delivered tomorrow." style="display:block;box-sizing:border-box;width:100%;margin:8px 0 16px;padding:12px;border-radius:8px;background:#0e121b;color:#fff;border:1px solid #41495b;"></textarea>
+
+  <label for="ai-test-business">Business information</label>
+  <textarea id="ai-test-business" rows="4" placeholder="Enter business name, products, prices, stock, delivery details, policies, and business hours..." style="display:block;box-sizing:border-box;width:100%;margin:8px 0 16px;padding:12px;border-radius:8px;background:#0e121b;color:#fff;border:1px solid #41495b;"></textarea>
+
+  <button id="ai-test-run" type="button" style="padding:11px 18px;border:0;border-radius:8px;background:#7c6cff;color:white;font-weight:bold;cursor:pointer;">Generate test reply</button>
+
+  <p id="ai-test-status" role="status" style="color:#aab3c5;"></p>
+  <div id="ai-test-result" style="white-space:pre-wrap;line-height:1.6;"></div>
+</div>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/intlTelInput.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js@11/public/assets/scripts/choices.min.js"></script>
+
+
+<script>
+(() => {
+  const button = document.getElementById("ai-test-run");
+  const message = document.getElementById("ai-test-message");
+  const business = document.getElementById("ai-test-business");
+  const status = document.getElementById("ai-test-status");
+  const result = document.getElementById("ai-test-result");
+
+  button.addEventListener("click", async () => {
+    if (!message.value.trim()) {
+      status.textContent = "Please enter a customer message first.";
+      message.focus();
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Generating...";
+    status.textContent = "Asking Gemini to draft a reply...";
+    result.textContent = "";
+
+    try {
+      const response = await fetch("/api/draft-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message.value.trim(),
+          businessInfo: business.value.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "The request failed.");
+      }
+
+      result.textContent = data.reply || "No reply was returned.";
+      status.textContent = "Test complete. Review the reply for accuracy and safety.";
+    } catch (error) {
+      status.textContent = "Could not generate a reply. Check that the Node server is running on port 3000.";
+      console.error("AI test failed:", error);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Generate test reply";
+    }
+  });
+})();
+</script>
+
+
+
+
+
+
+<script>
+(() => {
+  const authScreen = document.getElementById("auth-screen");
+  const authForm = document.getElementById("auth-form");
+  const authMessage = document.getElementById("auth-message");
+  const authSubmit = document.getElementById("auth-submit");
+  const authModeToggle = document.getElementById("auth-mode-toggle");
+  const businessNameInput = document.getElementById("auth-business-name");
+
+
+    const phoneInput = document.getElementById("auth-phone");
+
+  let phoneWidget = null;
+
+  if (phoneInput && window.intlTelInput) {
+    phoneWidget = window.intlTelInput(phoneInput, {
+      initialCountry: "auto",
+      separateDialCode: true,
+      nationalMode: true,
+      loadUtils: () =>
+        import(
+          "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/utils.js"
+        ),
+    });
+  }
+
+
+
+
+
+ const countrySelect = document.getElementById("auth-country");
+
+if (countrySelect && window.Choices && window.intlTelInput) {
+  const countries = window.intlTelInput.getCountryData();
+
+  countrySelect.replaceChildren(
+    new Option("Select your business country", "")
+  );
+
+  countries
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(country => {
+      countrySelect.add(
+        new Option(country.name, country.iso2.toUpperCase())
+      );
+    });
+
+  new Choices(countrySelect, {
+  searchEnabled: true,
+  searchPlaceholderValue: "Search countries...",
+  itemSelectText: "",
+  shouldSort: false,
+  allowHTML: true,
+  position: "bottom",
+
+  callbackOnCreateTemplates: function (template) {
+    const flagMarkup = (value) => {
+      const code = String(value || "").toLowerCase();
+
+      if (!/^[a-z]{2}$/.test(code)) {
+        return "";
+      }
+
+      return `<span class="fi fi-${code}" aria-hidden="true"></span>`;
+    };
+
+    return {
+      item: (classNames, data) => {
+        return template(`
+          <div class="${classNames.item || 'choices__item'} ${
+            data.highlighted ? classNames.highlightedState : ""
+          } ${
+            data.placeholder ? classNames.placeholder : ""
+          }"
+          data-item
+          data-id="${data.id}"
+          data-value="${data.value}"
+          ${data.active ? 'aria-selected="true"' : ""}
+          ${data.disabled ? 'aria-disabled="true"' : ""}>
+            ${flagMarkup(data.value)}
+            <span>${data.label}</span>
+          </div>
+        `);
+      },
+
+      choice: (classNames, data) => {
+        return template(`
+          <div class="${classNames.item || 'choices__item'} ${
+            classNames.itemChoice
+          } ${
+            data.disabled ? classNames.itemDisabled : classNames.itemSelectable
+          }"
+          data-select-text="${this.config.itemSelectText}"
+          data-choice
+          ${data.disabled ? 'data-choice-disabled aria-disabled="true"' : "data-choice-selectable"}
+          data-id="${data.id}"
+          data-value="${data.value}"
+          role="option">
+            ${flagMarkup(data.value)}
+            <span>${data.label}</span>
+          </div>
+        `);
+      },
+    };
+  },
+});
+}
+
+
+
+
+
+
+
+  if (!authScreen || !authForm || !authMessage || !authSubmit || !authModeToggle) {
+    console.error("OrderFlow authentication UI is incomplete.");
+    return;
+  }
+
+  let isSignup = false;
+
+
+
+
+    async function checkSession() {
+    try {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) throw error;
+
+      if (data.session) {
+        authScreen.style.display = "none";
+      } else {
+        authScreen.style.display = "flex";
+      }
+    } catch (error) {
+      authScreen.style.display = "flex";
+      authMessage.textContent = "Unable to check your session. Please refresh.";
+      console.error("Session check failed:", error);
+    }
+  }
+
+  checkSession();
+
+
+
+
+
+
+
+  const businessField = document.getElementById("auth-business-field");
+  const authTitle = document.getElementById("auth-title");
+  const authSubtitle = document.getElementById("auth-subtitle");
+  const authSwitchText = document.getElementById("auth-switch-text");
+
+  authModeToggle.addEventListener("click", () => {
+    isSignup = !isSignup;
+
+    businessField.style.display = isSignup ? "block" : "none";
+
+businessField.querySelectorAll("input, select, textarea").forEach(field => {
+  field.required = isSignup;
+});
+
+    authTitle.textContent = isSignup
+      ? "Create your account"
+      : "Welcome back";
+
+    authSubtitle.textContent = isSignup
+      ? "Set up your business workspace."
+      : "Sign in to manage your business.";
+
+    authSubmit.textContent = isSignup
+      ? "Create account"
+      : "Sign in";
+
+    authSwitchText.textContent = isSignup
+      ? "Already have an account?"
+      : "New to OrderFlow AI?";
+
+    authModeToggle.textContent = isSignup
+      ? "Sign in"
+      : "Create an account";
+
+    document.getElementById("auth-password").autocomplete =
+      isSignup ? "new-password" : "current-password";
+
+    authMessage.textContent = "";
+  });
+
+
+
+  
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const email = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const businessName = businessNameInput.value.trim();
+
+  const ownerName = document.getElementById("auth-owner-name").value.trim();
+  const phone = document.getElementById("auth-phone").value.trim();
+  const country = document.getElementById("auth-country").value;
+  const currency = document.getElementById("auth-currency").value;
+  const termsAccepted = document.getElementById("auth-terms").checked;
+
+  authSubmit.disabled = true;
+  authMessage.textContent = "Please wait…";
+
+  try {
+    if (isSignup && !termsAccepted) {
+      throw new Error("Please accept the terms to create an account.");
+    }
+
+    if (isSignup) {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            business_name: businessName,
+            owner_name: ownerName,
+            phone: phone,
+            country: country,
+            currency: currency,
+            terms_accepted: termsAccepted
+          },
+          emailRedirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data.session || !data.user) {
+        authMessage.textContent =
+          "Account created. Check your email to confirm your address, then log in. Your profile and workspace will be created by the database after signup.";
+        return;
+      }
+
+      // The database trigger creates the workspace,
+      // owner membership, and user profile.
+      // Do not insert these records again here.
+      authMessage.textContent =
+        "Account and business workspace created.";
+    } else {
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      authMessage.textContent = "Login successful.";
+    }
+
+    window.location.reload();
+  } catch (error) {
+    console.error("OrderFlow authentication error:", error);
+    authMessage.textContent =
+      error.message || "Authentication failed.";
+  } finally {
+    authSubmit.disabled = false;
+  }
+});
+
+
+
+
+
+
+
+  businessNameInput.required = false;
+  businessNameInput.style.display = "none";
+})();
+
+
+
+// Profile dropdown open/close
+const profileMenuButton = document.getElementById("profile-menu-button");
+const profileDropdown = document.getElementById("profile-dropdown");
+
+profileMenuButton.addEventListener("click", () => {
+  const isOpen = !profileDropdown.hidden;
+
+  profileDropdown.hidden = isOpen;
+  profileMenuButton.setAttribute("aria-expanded", String(!isOpen));
+});
+
+
+
+// Display the signed-in user's email
+const profileEmail = document.getElementById("profile-email");
+
+async function loadProfileEmail() {
+  const { data, error } = await supabaseClient.auth.getUser();
+
+  if (error) {
+    console.error("Could not load user profile:", error);
+    profileEmail.textContent = "Account";
+    return;
+  }
+
+  profileEmail.textContent = data.user?.email || "Account";
+}
+
+loadProfileEmail();
+
+// Open the existing Settings section
+document
+  .getElementById("profile-settings-button")
+  .addEventListener("click", () => {
+    profileDropdown.hidden = true;
+    profileMenuButton.setAttribute("aria-expanded", "false");
+
+    // Find the existing Settings navigation item and click it
+    const settingsNav = [...document.querySelectorAll("button, a")]
+      .find(el => el.textContent.trim() === "Settings");
+
+    if (settingsNav) {
+      settingsNav.click();
+    }
+  });
+
+// Sign out through Supabase
+document
+  .getElementById("profile-signout-button")
+  .addEventListener("click", async () => {
+    const signoutButton = document.getElementById("profile-signout-button");
+
+    signoutButton.disabled = true;
+    signoutButton.textContent = "Signing out…";
+
+    try {
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) throw error;
+
+      window.location.reload();
+    } catch (error) {
+      console.error("OrderFlow sign-out error:", error);
+      signoutButton.disabled = false;
+      signoutButton.textContent = "Sign out";
+      alert("Could not sign out. Please try again.");
+    }
+  });
+
+
+
+
+
+
+// Close dropdown when clicking outside
+document.addEventListener("click", (event) => {
+  if (
+    !profileMenuButton.contains(event.target) &&
+    !profileDropdown.contains(event.target)
+  ) {
+    profileDropdown.hidden = true;
+    profileMenuButton.setAttribute("aria-expanded", "false");
+  }
+});
+
+
+
+
+</script>
+
+
+
+
+
+
+</body>
+</html>
