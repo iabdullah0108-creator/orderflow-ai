@@ -1,0 +1,2 @@
+{ "version": 2, "builds": [ {
+"src": "server/server.js", "use": "@vercel/node" }, { "src": "index.html", "use": "@vercel/static" } ], "routes": [ { "source": "/api/(.*)", "destination": "server/server.js" }, { "source": "/(.*)", "destination": "index.html" } ] }
