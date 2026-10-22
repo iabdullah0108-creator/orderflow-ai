@@ -2929,10 +2929,16 @@ app.post("/api/integrations/n8n/delivery-status", async (req, res) => {
 });
 
 
-if (require.main === module) {
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`OrderFlow AI server running on port ${PORT}`);
-  });
-}
+//if (require.main === module) {
+  //app.listen(PORT, "0.0.0.0", () => {
+    //console.log(`OrderFlow AI server running on port ${PORT}`);
+  //});
+//}
 
-module.exports = app;
+//module.exports = app;
+
+app.listen(PORT, "0.0.0.0", () => {
+
+  console.log(`OrderFlow AI server running on port ${PORT}`);
+
+});
