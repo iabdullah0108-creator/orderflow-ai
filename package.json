@@ -1,0 +1,28 @@
+{
+  "name": "orderflow-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iabdullah0108-creator/orderflow-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/iabdullah0108-creator/orderflow-ai/issues"
+  },
+  "homepage": "https://github.com/iabdullah0108-creator/orderflow-ai#readme",
+  "dependencies": {
+    "@google/genai": "^2.28.0",
+    "@supabase/server": "^1.9.1",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
+    "express": "^5.3.0"
+  }
+}

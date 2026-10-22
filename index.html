@@ -660,6 +660,7 @@ td{font-size:13px}
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a5a0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
+  
 }
 
 #auth-screen .auth-field select:focus,
@@ -914,6 +915,493 @@ td{font-size:13px}
 
 
 
+/* Business Knowledge — Quill editor styling */
+.knowledge-editor {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.knowledge-editor:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Toolbar */
+.knowledge-editor .ql-toolbar.ql-snow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.knowledge-editor .ql-toolbar button {
+  border-radius: 6px;
+}
+
+.knowledge-editor .ql-toolbar button:hover,
+.knowledge-editor .ql-toolbar button.ql-active {
+  background: var(--accent-soft);
+}
+
+.knowledge-editor .ql-snow .ql-stroke {
+  stroke: var(--text);
+}
+
+.knowledge-editor .ql-snow .ql-fill {
+  fill: var(--text);
+}
+
+.knowledge-editor .ql-snow .ql-picker {
+  color: var(--text);
+}
+
+.knowledge-editor .ql-snow .ql-picker-options {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+/* Editable area */
+.knowledge-editor .ql-container.ql-snow {
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.knowledge-editor .ql-editor {
+  min-height: 150px;
+  padding: 18px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.knowledge-editor .ql-editor.ql-blank::before {
+  color: var(--muted);
+  font-style: normal;
+  opacity: 0.85;
+}
+
+.knowledge-editor .ql-editor h2,
+.knowledge-editor .ql-editor h3 {
+  color: var(--text);
+}
+
+.knowledge-editor .ql-editor a {
+  color: var(--accent);
+}
+
+.knowledge-editor .ql-toolbar button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .knowledge-editor .ql-toolbar.ql-snow {
+    padding: 8px;
+  }
+
+  .knowledge-editor .ql-editor {
+    min-height: 160px;
+    padding: 15px;
+  }
+}
+
+
+
+
+
+/* Business Knowledge save button */
+
+#knowledge-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+#knowledge-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+.knowledge-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px 22px;
+  background: var(--surface);
+}
+
+.knowledge-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .knowledge-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 18px 16px;
+  }
+
+  #knowledge-save-btn {
+    width: 100%;
+  }
+}
+
+
+
+
+/* Business Knowledge section spacing */
+.knowledge-header {
+  padding: 24px 22px;
+  margin-bottom: 0;
+}
+
+.knowledge-section {
+  padding: 26px 22px 30px;
+  margin-bottom: 0;
+}
+
+.knowledge-section h3 {
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.knowledge-description {
+  margin: 0 0 18px;
+  line-height: 1.7;
+}
+
+.knowledge-editor {
+  margin-bottom: 8px;
+}
+
+.knowledge-footer {
+  margin-top: 0;
+  padding: 22px;
+}
+
+@media (max-width: 640px) {
+  .knowledge-section {
+    padding: 22px 16px 26px;
+  }
+
+  .knowledge-description {
+    margin-bottom: 15px;
+  }
+
+  .knowledge-footer {
+    padding: 18px 16px;
+  }
+}
+
+
+
+
+/* Business Knowledge section headings */
+.knowledge-section h3 {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+/* Main heading inside the Business Knowledge panel */
+.knowledge-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .knowledge-section h3 {
+    font-size: 18px;
+  }
+
+  .knowledge-header h2 {
+    font-size: 20px;
+  }
+}
+
+
+
+
+
+/* ===== Smart Inbox: neutral conversation rows ===== */
+
+.conversation.of-row-whatsapp,
+.conversation.of-row-gmail,
+.conversation.of-row-instagram {
+  background: var(--surface, #ffffff);
+  color: var(--text, #202938);
+  border-color: var(--border, #e3e8f0);
+}
+
+/* Hover: neutral highlight, not platform-coloured */
+.conversation.of-row-whatsapp:hover,
+.conversation.of-row-gmail:hover,
+.conversation.of-row-instagram:hover {
+  background: var(--surface-hover, #f5f7fa);
+}
+
+/* Selected conversation */
+.conversation.of-row-whatsapp.selected,
+.conversation.of-row-gmail.selected,
+.conversation.of-row-instagram.selected {
+  background: var(--surface-hover, #f0f3f7);
+  border-color: var(--border, #d6dde7);
+}
+
+/* Customer name and platform logo */
+.convo-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.convo-name {
+  min-width: 0;
+}
+
+/* Small platform logo beside the customer name */
+.of-list-channel-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+
+.of-list-channel-logo svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+/* Gmail */
+.of-list-channel-logo.gmail {
+  color: #EA4335;
+}
+
+/* WhatsApp */
+.of-list-channel-logo.whatsapp {
+  color: #25D366;
+}
+
+/* Instagram */
+.of-list-channel-logo.instagram {
+  color: #C13584;
+}
+
+/* Other channels don't get a platform logo */
+.of-list-channel-logo.other {
+  display: none;
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .conversation.of-row-whatsapp,
+:root[data-theme="dark"] .conversation.of-row-gmail,
+:root[data-theme="dark"] .conversation.of-row-instagram {
+  background: var(--surface, #1b2230);
+  color: var(--text, #edf2f7);
+  border-color: var(--border, #343d4d);
+}
+
+:root[data-theme="dark"] .conversation.of-row-whatsapp:hover,
+:root[data-theme="dark"] .conversation.of-row-gmail:hover,
+:root[data-theme="dark"] .conversation.of-row-instagram:hover,
+:root[data-theme="dark"] .conversation.of-row-whatsapp.selected,
+:root[data-theme="dark"] .conversation.of-row-gmail.selected,
+:root[data-theme="dark"] .conversation.of-row-instagram.selected {
+  background: var(--surface-hover, #252e3d);
+}
+
+
+
+
+
+
+
+/* ===== Middle conversation header: platform logo + name ===== */
+
+#selected-channel.of-header-platform {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  padding: 3px 0;
+}
+
+.of-header-platform-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.of-header-platform-logo svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+#selected-channel.of-header-platform.whatsapp,
+.of-header-platform-logo.whatsapp {
+  color: #25a957;
+}
+
+#selected-channel.of-header-platform.instagram,
+.of-header-platform-logo.instagram {
+  color: #c13584;
+}
+
+#selected-channel.of-header-platform.gmail,
+.of-header-platform-logo.gmail {
+  color: #ea4335;
+}
+
+/* ===== Tint individual message bubbles ===== */
+
+/* WhatsApp */
+.message-bubble.of-bubble-whatsapp {
+  background: #dcf8e6 !important;
+  color: #173b26;
+  border-color: #bce8ca;
+}
+
+/* Instagram */
+.message-bubble.of-bubble-instagram {
+  background: #fce4f2 !important;
+  color: #582544;
+  border-color: #f2c4df;
+}
+
+/* Gmail */
+.message-bubble.of-bubble-gmail {
+  background: #fce8e6 !important;
+  color: #5f2925;
+  border-color: #f1c7c3;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .message-bubble.of-bubble-whatsapp {
+  background: #254b34 !important;
+  color: #e0f6e7;
+  border-color: #38694a;
+}
+
+:root[data-theme="dark"] .message-bubble.of-bubble-instagram {
+  background: #502b43 !important;
+  color: #ffe5f3;
+  border-color: #70405e;
+}
+
+:root[data-theme="dark"] .message-bubble.of-bubble-gmail {
+  background: #512d2b !important;
+  color: #ffe8e6;
+  border-color: #74413d;
+}
+
+/* ===== Right-side Human Review warning ===== */
+
+#intent-explanation.of-human-review-warning {
+  background: #fff2cc !important;
+  color: #704b00 !important;
+  border: 1px solid #e8c96b !important;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+#intent-explanation.of-human-review-warning strong {
+  display: block;
+  color: #704b00 !important;
+  margin-bottom: 6px;
+}
+
+:root[data-theme="dark"] #intent-explanation.of-human-review-warning {
+  background: #3a3018 !important;
+  color: #ffe39a !important;
+  border-color: #77602b !important;
+}
+
+:root[data-theme="dark"] #intent-explanation.of-human-review-warning strong {
+  color: #ffe39a !important;
+}
+
+
+
+
+
+
+/* Keep the platform name and logo in sync */
+#selected-channel.of-header-platform.whatsapp {
+  color: #25a957 !important;
+}
+
+#selected-channel.of-header-platform.instagram {
+  color: #c13584 !important;
+}
+
+#selected-channel.of-header-platform.gmail {
+  color: #ea4335 !important;
+}
+
+.of-header-platform-name {
+  color: inherit;
+}
+
+.of-header-platform-logo {
+  flex-shrink: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
 </style>
 
 
@@ -938,6 +1426,16 @@ td{font-size:13px}
 
 
 
+<!-- Quill rich-text editor styles -->
+<link
+  href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css"
+  rel="stylesheet"
+/>
+
+
+
+
+
 
 </head>
 <body>
@@ -947,7 +1445,7 @@ td{font-size:13px}
 
 
 
-  <div id="auth-screen" class="auth-screen" style="display: none;">
+<div id="auth-screen" class="auth-screen" style="display: none;">
   <div class="auth-brand">
     <div class="auth-logo">O</div>
     <span>OrderFlow <strong>AI</strong></span>
@@ -961,143 +1459,191 @@ td{font-size:13px}
 
     <div id="auth-message" class="auth-message" role="status"></div>
 
+    <!-- PASSWORD RECOVERY FORM -->
+    <form id="auth-recovery-form" style="display:none;">
+      <div class="auth-field">
+        <label for="auth-new-password">New password</label>
+        <input
+          id="auth-new-password"
+          type="password"
+          placeholder="Enter your new password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+      </div>
+
+      <div class="auth-field">
+        <label for="auth-new-password-confirm">Confirm new password</label>
+        <input
+          id="auth-new-password-confirm"
+          type="password"
+          placeholder="Confirm your new password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+      </div>
+
+      <button type="submit" class="auth-submit" id="auth-recovery-submit">
+        Update password
+      </button>
+
+      <button
+        type="button"
+        id="auth-recovery-cancel"
+        style="display:block;margin:16px auto 0;padding:0;border:0;background:none;color:#7c6cff;cursor:pointer;"
+      >
+        Back to sign in
+      </button>
+    </form>
+
+    <!-- EXISTING SIGN-IN / SIGN-UP FORM -->
     <form id="auth-form" novalidate>
+      <div id="auth-business-field" style="display:none;">
+        <div class="auth-field">
+          <label for="auth-owner-name">Your full name</label>
+          <input
+            id="auth-owner-name"
+            type="text"
+            placeholder="Your full name"
+            autocomplete="name"
+            required
+          />
+        </div>
 
-  <!-- BUSINESS DETAILS: SHOWN DURING SIGNUP -->
-  <div id="auth-business-field" style="display: none;">
+        <div class="auth-field">
+          <label for="auth-business-name">Business name</label>
+          <input
+            id="auth-business-name"
+            name="business_name"
+            type="text"
+            placeholder="Your business name"
+            autocomplete="organization"
+            required
+          />
+        </div>
 
-    <div class="auth-field">
-      <label for="auth-owner-name">Your full name</label>
-      <input
-        id="auth-owner-name"
-        type="text"
-        placeholder="Your full name"
-        autocomplete="name"
-        required
-      />
-    </div>
+        <div class="auth-field">
+          <label for="auth-phone">Phone number</label>
+          <input
+            id="auth-phone"
+            type="tel"
+            autocomplete="tel"
+            placeholder="Enter your phone number"
+            required
+          />
+          <small>
+            Your phone country can differ from your business country.
+          </small>
+        </div>
 
-    <div class="auth-field">
-  <label for="auth-business-name">Business name</label>
-  <input
-    id="auth-business-name"
-    name="business_name"
-    type="text"
-    placeholder="Your business name"
-    autocomplete="organization"
-    required
-  />
-</div>
+        <div class="auth-field">
+          <label for="auth-country">Business country</label>
+          <select id="auth-country" required>
+            <option value="">Select your business country</option>
+          </select>
+        </div>
 
-    <div class="auth-field">
-      <label for="auth-phone">Phone number</label>
-      <input
-        id="auth-phone"
-        type="tel"
-        autocomplete="tel"
-        placeholder="Enter your phone number"
-        required
-      />
-      <small>
-        Your phone country can differ from your business country.
-      </small>
-    </div>
+        <div class="auth-field">
+          <label for="auth-currency">Business currency</label>
+          <select id="auth-currency" required>
+            <option value="">Select your currency</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="PKR">PKR — Pakistani Rupee</option>
+            <option value="INR">INR — Indian Rupee</option>
+            <option value="CAD">CAD — Canadian Dollar</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="SAR">SAR — Saudi Riyal</option>
+            <option value="BDT">BDT — Bangladeshi Taka</option>
+            <option value="SGD">SGD — Singapore Dollar</option>
+            <option value="MYR">MYR — Malaysian Ringgit</option>
+            <option value="CNY">CNY — Chinese Yuan</option>
+            <option value="NGN">NGN — Nigerian Naira</option>
+            <option value="ZAR">ZAR — South African Rand</option>
+            <option value="NZD">NZD — New Zealand Dollar</option>
+          </select>
+        </div>
 
-    <div class="auth-field">
-  <label for="auth-country">Business country</label>
-  <select id="auth-country" required>
-    <option value="">Select your business country</option>
-  </select>
-</div>
+        <div class="auth-field">
+          <label for="auth-business-type">Business type (optional)</label>
+          <select id="auth-business-type">
+            <option value="">Choose business type</option>
+            <option value="online_store">Online store</option>
+            <option value="retail">Retail</option>
+            <option value="wholesale">Wholesale</option>
+            <option value="services">Services</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
 
-    <div class="auth-field">
-      <label for="auth-currency">Business currency</label>
-      <select id="auth-currency" required>
-        <option value="">Select your currency</option>
-        <option value="USD">USD — US Dollar</option>
-        <option value="GBP">GBP — British Pound</option>
-        <option value="EUR">EUR — Euro</option>
-        <option value="PKR">PKR — Pakistani Rupee</option>
-        <option value="INR">INR — Indian Rupee</option>
-        <option value="CAD">CAD — Canadian Dollar</option>
-        <option value="AUD">AUD — Australian Dollar</option>
-        <option value="AED">AED — UAE Dirham</option>
-        <option value="SAR">SAR — Saudi Riyal</option>
-        <option value="BDT">BDT — Bangladeshi Taka</option>
-        <option value="SGD">SGD — Singapore Dollar</option>
-        <option value="MYR">MYR — Malaysian Ringgit</option>
-        <option value="CNY">CNY — Chinese Yuan</option>
-        <option value="NGN">NGN — Nigerian Naira</option>
-        <option value="ZAR">ZAR — South African Rand</option>
-        <option value="NZD">NZD — New Zealand Dollar</option>
-      </select>
-    </div>
+        <label class="auth-terms">
+          <input id="auth-terms" type="checkbox" required />
+          <span>
+            I agree to the Terms of Service and Privacy Policy.
+          </span>
+        </label>
+      </div>
 
-    <div class="auth-field">
-      <label for="auth-business-type">Business type (optional)</label>
-      <select id="auth-business-type">
-        <option value="">Choose business type</option>
-        <option value="online_store">Online store</option>
-        <option value="retail">Retail</option>
-        <option value="wholesale">Wholesale</option>
-        <option value="services">Services</option>
-        <option value="other">Other</option>
-      </select>
-    </div>
+      <div class="auth-field">
+        <label for="auth-email">Business email</label>
+        <input
+          id="auth-email"
+          type="email"
+          placeholder="you@company.com"
+          autocomplete="email"
+          required
+        />
+      </div>
 
-    <label class="auth-terms">
-      <input id="auth-terms" type="checkbox" required />
-      <span>
-        I agree to the Terms of Service and Privacy Policy.
-      </span>
-    </label>
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <input
+          id="auth-password"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          minlength="8"
+          required
+        />
 
-  </div>
+        <button
+          type="button"
+          id="forgot-password-btn"
+          style="display:block;margin-top:8px;padding:0;border:0;background:none;color:#7c6cff;cursor:pointer;"
+        >
+          Forgot password?
+        </button>
+      </div>
 
-  <!-- LOGIN AND SIGNUP CREDENTIALS -->
-  <div class="auth-field">
-    <label for="auth-email">Business email</label>
-    <input
-      id="auth-email"
-      type="email"
-      placeholder="you@company.com"
-      autocomplete="email"
-      required
-    />
-  </div>
+      <div
+        id="auth-confirm-password-field"
+        class="auth-field"
+        style="display:none;"
+      >
+        <label for="auth-confirm-password">Confirm password</label>
+        <input
+          id="auth-confirm-password"
+          type="password"
+          placeholder="Re-enter your password"
+          autocomplete="new-password"
+          minlength="8"
+        />
+      </div>
 
-  <div class="auth-field">
-    <label for="auth-password">Password</label>
-    <input
-      id="auth-password"
-      type="password"
-      placeholder="Enter your password"
-      autocomplete="current-password"
-      minlength="8"
-      required
-    />
-  </div>
+      <button type="submit" id="auth-submit" class="auth-submit">
+        Sign in
+      </button>
+    </form>
 
-  <div id="auth-confirm-password-field" class="auth-field" style="display: none;">
-    <label for="auth-confirm-password">Confirm password</label>
-    <input
-      id="auth-confirm-password"
-      type="password"
-      placeholder="Re-enter your password"
-      autocomplete="new-password"
-      minlength="8"
-    />
-  </div>
-
-  <button type="submit" id="auth-submit" class="auth-submit">
-    Sign in
-  </button>
-
-</form>
-
-    <p class="auth-switch">
+    <p class="auth-switch" id="auth-switch">
       <span id="auth-switch-text">New to OrderFlow AI?</span>
-      <button type="button" id="auth-mode-toggle">Create an account</button>
+      <button type="button" id="auth-mode-toggle">
+        Create an account
+      </button>
     </p>
 
     <div class="auth-security">
@@ -1106,8 +1652,11 @@ td{font-size:13px}
     </div>
   </div>
 
-  <p class="auth-footer">OrderFlow AI · Business operations, simplified.</p>
+  <p class="auth-footer">
+    OrderFlow AI · Business operations, simplified.
+  </p>
 </div>
+
   
 
 
@@ -1474,18 +2023,114 @@ td{font-size:13px}
 
       <section class="view" id="view-invoices"><div class="page-heading"><div><div class="eyebrow">Billing</div><h1>Invoices</h1><p class="subtitle">Invoice generation will be connected to real orders later.</p></div></div><div class="panel"><h2>Invoice workspace</h2><p class="subtitle" style="margin-top:10px">This prototype does not create or issue real invoices yet. Once the secure backend is ready, we can generate printable PDFs from verified order records.</p></div></section>
       <section class="view" id="view-analytics"><div class="page-heading"><div><div class="eyebrow">Business insights</div><h1>Analytics</h1><p class="subtitle">Illustrative metrics only; not connected to real business data.</p></div></div><div class="metrics"><div class="metric"><div class="metric-top">Demo conversations</div><div class="metric-number" id="analytics-conversations">6</div></div><div class="metric"><div class="metric-top">Pending reviews</div><div class="metric-number" id="analytics-reviews">2</div></div><div class="metric"><div class="metric-top">Resolved demos</div><div class="metric-number" id="analytics-resolved">0</div></div><div class="metric"><div class="metric-top">Drafts prepared</div><div class="metric-number" id="analytics-drafts">0</div></div></div></section>
-      <section class="view" id="view-knowledge"><div class="page-heading"><div><div class="eyebrow">Business configuration</div><h1>Business Knowledge</h1><p class="subtitle">Example facts used by the simulated reply generator.</p></div></div><div class="panel"><div class="activity"><div class="activity-item"><div class="activity-icon">▤</div><p><strong>Products</strong><small>Black shirt: Rs. 2,500. These are fictional sample details.</small></p></div><div class="activity-item"><div class="activity-icon">↗</div><p><strong>Delivery</strong><small>Sample estimate: 2–3 business days, subject to confirmation.</small></p></div><div class="activity-item"><div class="activity-icon">↺</div><p><strong>Refund policy</strong><small>Never promise a refund. Send refund requests to an authorized human reviewer.</small></p></div><div class="activity-item"><div class="activity-icon">✧</div><p><strong>Automation rules</strong><small>Routine FAQs may be eligible for automation in a future connected version. Uncertain or sensitive cases require review.</small></p></div></div></div></section>
+
+
+
+
+<section class="view" id="view-knowledge">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">BUSINESS CONFIGURATION</div>
+      <h1>Business Knowledge</h1>
+      <p class="subtitle">
+        Give your AI assistant the information it needs to help your customers.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel knowledge-workspace">
+    <div class="knowledge-header">
+      <div>
+        <h2>Your business information</h2>
+        <p>Keep your business details accurate and up to date.</p>
+      </div>
+      <span class="knowledge-count">4 required sections</span>
+    </div>
+
+    <div class="knowledge-section">
+      <h3>About Our Business</h3>
+      <p class="knowledge-description">
+        Describe your business, what you sell, and who your customers are.
+      </p>
+      <div class="knowledge-editor">
+        <div id="knowledge-editor-about"></div>
+      </div>
+    </div>
+
+    <div class="knowledge-section">
+      <h3>Products &amp; Pricing</h3>
+      <p class="knowledge-description">
+        Add products, prices, descriptions, and availability.
+      </p>
+      <div class="knowledge-editor">
+        <div id="knowledge-editor-products"></div>
+      </div>
+    </div>
+
+    <div class="knowledge-section">
+      <h3>Delivery &amp; Returns</h3>
+      <p class="knowledge-description">
+        Add delivery charges, estimated delivery times, and return policies.
+      </p>
+      <div class="knowledge-editor">
+        <div id="knowledge-editor-delivery"></div>
+      </div>
+    </div>
+
+    <div class="knowledge-section">
+      <h3>Frequently Asked Questions</h3>
+      <p class="knowledge-description">
+        Add common customer questions and their approved answers.
+      </p>
+      <div class="knowledge-editor">
+        <div id="knowledge-editor-faqs"></div>
+      </div>
+    </div>
+
+    <div class="knowledge-footer">
+      <p id="knowledge-save-status">
+        Your changes have not been saved yet.
+      </p>
+      <button type="button" id="knowledge-save-btn" disabled>
+        Save Business Knowledge
+      </button>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
       <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div></section>
     </div>
   </main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   window.ORDERFLOW_SUPABASE_URL = "https://uibdvejhftkfhqzfofmt.supabase.co";
   window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jCsaqtrZBagP-cigN_8X-A_JaKUqmxv";
 </script>
+
+
+
+
+
+
+
+
+
+
 <script>
 
 
@@ -1501,15 +2146,15 @@ const supabaseClient = window.supabase.createClient(
 // Prototype data only. Do not put real customer data or secrets here.
 const conversations = [
   {id:1,name:"Sarah Ahmed",initials:"SA",channel:"WhatsApp",time:"2m",category:"Delivery question",priority:"Normal",confidence:"High",customerStatus:"Returning",order:"#OF-1042",orderStatus:"In transit",items:"2 items",amount:"Rs. 4,500",unread:true,review:false,resolved:false,
-   messages:[{from:"customer",text:"Hi! Can you tell me when my order will arrive?",time:"2:32 PM"}]},
+   messages:[{from:"customer",text:"Hi! I want to buy 2 sets of white dinner plates. Each set has 6 plates. What is the total price, including delivery, and are they in stock?",time:"2:32 PM"}]},
   {id:2,name:"Hamza Khan",initials:"HK",channel:"Instagram",time:"8m",category:"Product inquiry",priority:"Normal",confidence:"High",customerStatus:"New customer",order:"—",orderStatus:"No order",items:"—",amount:"—",unread:true,review:false,resolved:false,
-   messages:[{from:"customer",text:"Is the black shirt available in large, and how much is it?",time:"2:26 PM"}]},
+   messages:[{from:"customer",text:"Hi, do you have red dinner plates, and what is the price?",time:"2:26 PM"}]},
   {id:3,name:"Ayesha Malik",initials:"AM",channel:"WhatsApp",time:"15m",category:"Refund request",priority:"High",confidence:"Medium",customerStatus:"Returning",order:"#OF-1038",orderStatus:"Delivered",items:"1 item",amount:"Rs. 2,500",unread:true,review:true,resolved:false,
    messages:[{from:"customer",text:"I received my order but want my money back. Can you refund me?",time:"2:19 PM"}]},
   {id:4,name:"Usman Ali",initials:"UA",channel:"Email",time:"31m",category:"Order confirmation",priority:"Normal",confidence:"High",customerStatus:"Returning",order:"#OF-1045",orderStatus:"Processing",items:"3 items",amount:"Rs. 7,200",unread:false,review:false,resolved:false,
-   messages:[{from:"customer",text:"Please confirm that you received my order. Thank you.",time:"2:03 PM"}]},
+   messages:[{from:"customer",text:"I received a damaged dinner plate. I want a full refund immediately. Please confirm that you have approved it.",time:"2:03 PM"}]},
   {id:5,name:"Mariam Noor",initials:"MN",channel:"Instagram",time:"46m",category:"Complaint",priority:"High",confidence:"Medium",customerStatus:"Returning",order:"#OF-1029",orderStatus:"Delivered",items:"2 items",amount:"Rs. 3,800",unread:false,review:true,resolved:false,
-   messages:[{from:"customer",text:"This is the second time the item arrived damaged. Someone needs to help me.",time:"1:48 PM"}]},
+   messages:[{from:"customer",text:"I paid for my order, but my bank statement shows that I was charged twice. Refund the extra payment immediately and confirm when it will arrive.",time:"1:48 PM"}]},
   {id:6,name:"Bilal Raza",initials:"BR",channel:"WhatsApp",time:"1h",category:"Business hours",priority:"Low",confidence:"High",customerStatus:"New customer",order:"—",orderStatus:"No order",items:"—",amount:"—",unread:false,review:false,resolved:false,
    messages:[{from:"customer",text:"Hello, what are your business hours?",time:"1:32 PM"}]}
 ];
@@ -1590,13 +2235,91 @@ function renderInbox() {
     return;
   }
   visible.forEach(c => {
-    const button = make("button","conversation" + (c.id === selectedId ? " selected" : ""));
+    
+
+    
+const channelText = String(c.channel || "").toLowerCase();
+
+const rowChannel = channelText.includes("whatsapp")
+  ? " of-row-whatsapp"
+  : channelText.includes("instagram")
+    ? " of-row-instagram"
+    : (channelText.includes("email") || channelText.includes("gmail"))
+      ? " of-row-gmail"
+      : "";
+
+const button = make(
+  "button",
+  "conversation" +
+    (c.id === selectedId ? " selected" : "") +
+    rowChannel
+);
+
+
+
+
     button.type = "button";
     button.setAttribute("aria-label","Open conversation with " + c.name);
     const avatar = make("div","person-avatar",c.initials);
     const main = make("div","convo-main");
-    const top = make("div","convo-top");
-    top.append(make("span","convo-name",c.name),make("span","convo-time",c.time));
+    
+    
+const top = make("div", "convo-top");
+
+const identity = make("span", "convo-identity");
+identity.append(make("span", "convo-name", c.name));
+
+let logoChannel = "other";
+
+if (channelText.includes("whatsapp")) {
+  logoChannel = "whatsapp";
+} else if (channelText.includes("instagram")) {
+  logoChannel = "instagram";
+} else if (
+  channelText.includes("email") ||
+  channelText.includes("gmail")
+) {
+  logoChannel = "gmail";
+}
+
+if (logoChannel !== "other") {
+  const logo = make("span", "of-list-channel-logo " + logoChannel);
+  logo.setAttribute("aria-label", logoChannel);
+  logo.setAttribute("title", logoChannel);
+
+  if (logoChannel === "gmail") {
+    logo.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor"
+          d="M2.5 6.8v10.4c0 .9.7 1.6 1.6 1.6h1.8V8.1L12 13l6.1-4.9v10.7h1.8c.9 0 1.6-.7 1.6-1.6V6.8c0-1.7-1.9-2.6-3.2-1.6L12 10 5.7 5.2C4.4 4.2 2.5 5.1 2.5 6.8Z"/>
+      </svg>
+    `;
+  } else if (logoChannel === "whatsapp") {
+    logo.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor"
+          d="M12 2.1a9.7 9.7 0 0 0-8.3 14.8L2.4 21.6l4.8-1.3A9.8 9.8 0 1 0 12 2.1Zm0 17.5a7.8 7.8 0 0 1-4-1.1l-.3-.2-2.8.8.8-2.7-.2-.3A7.8 7.8 0 1 1 12 19.6Zm4.3-5.8c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8.9-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.3.1-.4l.4-.5c.1-.1.2-.3.3-.4.1-.2 0-.3 0-.4s-.5-1.2-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.3c.1.2 1.6 2.5 3.9 3.4.5.2.9.3 1.2.4.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.7-1.1.2-.5.2-1 .1-1.1-.1-.1-.3-.2-.5-.3Z"/>
+      </svg>
+    `;
+  } else if (logoChannel === "instagram") {
+    logo.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="5"
+          fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <circle cx="12" cy="12" r="4.2"
+          fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <circle cx="17.6" cy="6.7" r="1.2" fill="currentColor"/>
+      </svg>
+    `;
+  }
+
+  identity.append(logo);
+}
+
+top.append(identity, make("span", "convo-time", c.time));
+
+
+
     const last = c.messages[c.messages.length-1];
     const preview = make("div","convo-preview",last ? last.text : "No messages");
     const bottom = make("div","convo-bottom");
@@ -1618,26 +2341,156 @@ function renderInbox() {
   });
 }
 
+
 function renderMessages(c) {
   const container = $("messages");
   container.replaceChildren();
-  container.append(make("div","date-separator","TODAY · DEMO CONVERSATION"));
+
+  const channelText = String(c.channel || "").toLowerCase();
+
+  const platform = channelText.includes("whatsapp")
+    ? "whatsapp"
+    : channelText.includes("instagram")
+      ? "instagram"
+      : (channelText.includes("gmail") || channelText.includes("email"))
+        ? "gmail"
+        : "other";
+
+  container.append(
+    make("div", "date-separator", "TODAY · DEMO CONVERSATION")
+  );
+
   c.messages.forEach(m => {
-    const wrap = make("div","message " + (m.from === "business" ? "business" : "customer"));
-    const bubble = make("div","message-bubble",m.text);
-    const meta = make("div","message-meta",(m.from === "business" ? "Business draft · " : "Customer · ") + m.time);
-    wrap.append(bubble,meta);
+    const wrap = make(
+      "div",
+      "message " + (m.from === "business" ? "business" : "customer")
+    );
+
+    const bubble = make("div", "message-bubble", m.text);
+
+    if (platform !== "other") {
+      bubble.classList.add("of-bubble-" + platform);
+    }
+
+    const meta = make(
+      "div",
+      "message-meta",
+      (m.from === "business" ? "Business draft · " : "Customer · ") + m.time
+    );
+
+    wrap.append(bubble, meta);
     container.append(wrap);
   });
+
   container.scrollTop = container.scrollHeight;
 }
+
+
+
+
+
 
 function renderSelected() {
   const c = selectedConversation();
   if (!c) return;
+
+  const channelText = String(c.channel || "").toLowerCase();
+
+  const platform = channelText.includes("whatsapp")
+    ? "whatsapp"
+    : channelText.includes("instagram")
+      ? "instagram"
+      : (channelText.includes("gmail") || channelText.includes("email"))
+        ? "gmail"
+        : "other";
+
+  // Customer header
   $("selected-avatar").textContent = c.initials;
   $("selected-name").textContent = c.name;
-  $("selected-channel").textContent = c.channel + " · Demo";
+
+  const channelLabel = $("selected-channel");
+
+channelLabel.replaceChildren();
+
+// Clear the previous conversation's platform styling
+channelLabel.classList.remove(
+  "of-header-platform",
+  "gmail",
+  "whatsapp",
+  "instagram"
+);
+
+  // Display the platform logo and name under the customer name
+  if (platform !== "other") {
+    const logo = make("span", "of-header-platform-logo " + platform);
+
+    if (platform === "whatsapp") {
+      logo.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.9c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1-1.5-.7-2.5-1.6-3.2-2.9-.1-.2 0-.3.1-.4l.5-.6c.1-.1.2-.3.2-.4s0-.3-.1-.4l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.7.7-1 1.5-1 2.3s.3 1.7 1 2.5c1.1 1.6 2.5 2.7 4.3 3.5.6.3 1.1.4 1.5.5.6.2 1.2.1 1.7.1.5-.1 1.5-.6 1.7-1.2.2-.5.2-1 .1-1.1-.1-.1-.3-.2-.5-.3Z"/>
+        </svg>`;
+    } else if (platform === "instagram") {
+      logo.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="5"
+            fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <circle cx="12" cy="12" r="4.2"
+            fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+        </svg>`;
+    
+} else {
+  logo.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 18V6"
+        fill="none"
+        stroke="#4285F4"
+        stroke-width="3"
+        stroke-linecap="round"
+      />
+      <path
+        d="M3 6L12 13L21 6"
+        fill="none"
+        stroke="#EA4335"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M21 6V18"
+        fill="none"
+        stroke="#34A853"
+        stroke-width="3"
+        stroke-linecap="round"
+      />
+      <path
+        d="M3 18V6"
+        fill="none"
+        stroke="#FBBC04"
+        stroke-width="1.2"
+        stroke-linecap="round"
+      />
+    </svg>`;
+}
+
+
+    const platformName = make("span", "of-header-platform-name",
+      platform === "gmail" ? "Gmail"
+        : platform === "whatsapp" ? "WhatsApp"
+          : "Instagram"
+    );
+
+    channelLabel.classList.add("of-header-platform", platform);
+    channelLabel.append(logo, platformName);
+  } else {
+    channelLabel.classList.remove(
+      "gmail", "whatsapp", "instagram", "of-header-platform"
+    );
+    channelLabel.textContent = c.channel + " · Demo";
+  }
+
+  // Customer details
   $("detail-name").textContent = c.name;
   $("detail-channel").textContent = c.channel;
   $("detail-customer-status").textContent = c.customerStatus;
@@ -1645,25 +2498,43 @@ function renderSelected() {
   $("detail-intent").textContent = c.category;
   $("detail-priority").textContent = c.priority;
   $("detail-confidence").textContent = c.confidence;
-  $("intent-explanation").replaceChildren();
-  const strong = make("strong","",c.review ? "◉ Human review recommended" : "✧ Suggested next step");
+
+  // Human Review warning
+  const reviewCard = $("intent-explanation");
+  reviewCard.classList.toggle("of-human-review-warning", Boolean(c.review));
+  reviewCard.replaceChildren();
+
+  const strong = make("strong", "", c.review
+    ? "◉ Human review recommended"
+    : "✧ Suggested next step");
+
   const explanation = c.review
     ? "This case needs a person to inspect the context and make the decision. The AI must not decide a refund or resolve a serious complaint on its own."
     : c.resolved
       ? "This demo conversation has been marked resolved. You can still inspect its history."
       : "A draft can be prepared from the sample business knowledge. Check accuracy before any real-world use.";
-  $("intent-explanation").append(strong,document.createTextNode(explanation));
+
+  reviewCard.append(strong, document.createTextNode(explanation));
+
+  // Order details and action buttons
   $("order-status").textContent = c.orderStatus;
   $("linked-order-id").textContent = c.order;
   $("linked-order-items").textContent = c.items;
   $("linked-order-amount").textContent = c.amount;
-  $("approve-send-btn").textContent = c.review ? "Draft only · Review required" : "Approve draft";
+
+  $("approve-send-btn").textContent = c.review
+    ? "Draft only · Review required"
+    : "Approve draft";
+
   $("approve-send-btn").disabled = c.review || c.resolved;
   $("escalate-btn").disabled = c.review || c.resolved;
   $("draft-btn").disabled = c.resolved;
   $("resolve-btn").disabled = c.resolved;
+
   renderMessages(c);
 }
+
+
 
 
 
@@ -1782,11 +2653,31 @@ async function renderCustomers() {
   tbody.append(loadingRow);
 
   try {
-    const response = await fetch("/api/customers");
+    
+
+    const { data: sessionData, error: sessionError } =
+  await supabaseClient.auth.getSession();
+
+if (sessionError || !sessionData.session) {
+  throw new Error("Please sign in to load customers.");
+}
+
+const response = await fetch("/api/customers", {
+  headers: {
+    Authorization: `Bearer ${sessionData.session.access_token}`
+  }
+});
+
+
+console.log("Customers HTTP status:", response.status);
+console.log("Customers response:", await response.clone().text());
+
 
     if (!response.ok) {
-      throw new Error("Could not load customers.");
-    }
+  const errorDetails = await response.json();
+  console.error("Customers API error:", response.status, errorDetails);
+  throw new Error(errorDetails.message || errorDetails.error || "Could not load customers.");
+}
 
     const result = await response.json();
     tbody.replaceChildren();
@@ -1904,6 +2795,7 @@ function generateDraft(c) {
 }
 
 
+
 $("draft-btn").addEventListener("click", async () => {
   const c = selectedConversation();
   if (!c || c.resolved) return;
@@ -1924,9 +2816,23 @@ $("draft-btn").addEventListener("click", async () => {
   button.textContent = "✧ Asking Gemini...";
 
   try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      throw new Error("Please sign in again to generate an AI reply.");
+    }
+
     const response = await fetch("/api/draft-reply", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      },
       body: JSON.stringify({
         message: latest.text,
         businessInfo: [
@@ -1968,6 +2874,7 @@ $("draft-btn").addEventListener("click", async () => {
     button.textContent = originalLabel;
   }
 });
+
 
 
 
@@ -2184,69 +3091,78 @@ if (needsTshirtSize && tshirtSizeMissing) {
     saveButton.textContent = "Saving order...";
 
     try {
-      
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
 
-      
-      const lookupResponse = await fetch("/api/customers/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, email: email || null })
-      });
+  if (sessionError || !sessionData.session) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
 
-      const lookupData = await lookupResponse.json();
+  const authHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${sessionData.session.access_token}`
+  };
 
-      if (!lookupResponse.ok) {
-        throw new Error(lookupData.error || "Could not look up customer.");
-      }
+  // 1. Look up the customer in this workspace
+  const lookupResponse = await fetch("/api/customers/lookup", {
+    method: "POST",
+    headers: authHeaders,
+    body: JSON.stringify({ phone, email: email || null })
+  });
 
-      let customerId;
+  const lookupData = await lookupResponse.json();
 
-      if (lookupData.customer) {
-        customerId = lookupData.customer.id;
-      } else {
-        const customerResponse = await fetch("/api/customers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: customerName,
-            phone,
-            email: email || null,
-            address
-          })
-        });
+  if (!lookupResponse.ok) {
+    throw new Error(lookupData.error || "Could not look up customer.");
+  }
 
-        const customerData = await customerResponse.json();
+  let customerId;
 
-        if (!customerResponse.ok) {
-          throw new Error(customerData.error || "Could not create customer.");
-        }
+  if (lookupData.customer) {
+    customerId = lookupData.customer.id;
+  } else {
+    // 2. Create the customer if one wasn't found
+    const customerResponse = await fetch("/api/customers", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: customerName,
+        phone,
+        email: email || null,
+        address
+      })
+    });
 
-        customerId = customerData.customer.id;
-      }
+    const customerData = await customerResponse.json();
 
+    if (!customerResponse.ok) {
+      throw new Error(customerData.error || "Could not create customer.");
+    }
 
+    customerId = customerData.customer.id;
+  }
 
+  // 3. Save the order
+  const orderResponse = await fetch("/api/orders", {
+    method: "POST",
+    headers: authHeaders,
+    body: JSON.stringify({
+      customer_id: customerId,
+      items,
+      currency: currencyCode,
+      shipping_address: address
+    })
+  });
 
-      const orderResponse = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: customerId,
-          items,
-          currency: currencyCode,
-          shipping_address: address
-        })
-      });
+  const orderData = await orderResponse.json();
 
-      const orderData = await orderResponse.json();
+  if (!orderResponse.ok) {
+    throw new Error(orderData.error || "Could not save order.");
+  }
 
-      if (!orderResponse.ok) {
-        throw new Error(orderData.error || "Could not save order.");
-      }
-
-      saveButton.textContent = `Saved: ${orderData.order.order_number}`;
-      notify(`Order ${orderData.order.order_number} saved as Pending.`);
-    } catch (error) {
+  saveButton.textContent = `Saved: ${orderData.order.order_number}`;
+  notify(`Order ${orderData.order.order_number} saved as Pending.`);
+}   catch (error) {
       console.error("Save order error:", error);
       notify(error.message || "Could not save the order.");
       saveButton.disabled = false;
@@ -2261,6 +3177,7 @@ if (needsTshirtSize && tshirtSizeMissing) {
 
 
 }
+
 
 
 
@@ -2289,9 +3206,23 @@ $("extract-order-btn").addEventListener("click", async () => {
   button.textContent = "✧ Extracting order...";
 
   try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      throw new Error("Please sign in before extracting an order.");
+    }
+
     const response = await fetch("/api/extract-order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      },
       body: JSON.stringify({
         message,
         businessInfo,
@@ -2302,17 +3233,18 @@ $("extract-order-btn").addEventListener("click", async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || "Order extraction failed.");
+      throw new Error(
+        data.error || data.message || "Order extraction failed."
+      );
     }
 
     if (!data.draft) {
       throw new Error("The server did not return an order draft.");
     }
 
-    // Render the draft as text, never as executable HTML.
     orderForm.innerHTML = "";
-renderOrderReviewForm(data.draft);
-resultBox.hidden = false;
+    renderOrderReviewForm(data.draft);
+    resultBox.hidden = false;
 
     notify("Order draft extracted. Review the details before saving.");
   } catch (error) {
@@ -2324,6 +3256,7 @@ resultBox.hidden = false;
     button.textContent = originalLabel;
   }
 });
+
 
 
 
@@ -2464,7 +3397,24 @@ showExistingCustomerMode();
   customerSelect.innerHTML = '<option value="">Loading customers...</option>';
 
   try {
-    const response = await fetch("/api/customers");
+    
+
+
+    const { data: sessionData, error: sessionError } =
+  await supabaseClient.auth.getSession();
+
+if (sessionError || !sessionData.session) {
+  throw new Error("Please sign in again to load customers.");
+}
+
+const response = await fetch("/api/customers", {
+  headers: {
+    Authorization: `Bearer ${sessionData.session.access_token}`
+  }
+});
+
+
+
     const result = await response.json();
 
     if (!response.ok) {
@@ -2712,18 +3662,29 @@ $("create-order-form").addEventListener("submit", async event => {
 
   try {
     if (isNewCustomer) {
-      const customerResponse = await fetch("/api/customers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          name: $("new-customer-name").value.trim(),
-          phone: $("new-customer-phone").value.trim(),
-          address: shippingAddress,
-          email: $("new-customer-email").value.trim()
-        })
-      });
+      
+      
+const { data: customerSession, error: customerSessionError } =
+  await supabaseClient.auth.getSession();
+
+if (customerSessionError || !customerSession.session) {
+  throw new Error("Please sign in again.");
+}
+
+const customerResponse = await fetch("/api/customers", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${customerSession.session.access_token}`
+  },
+  body: JSON.stringify({
+    name: $("new-customer-name").value.trim(),
+    phone: $("new-customer-phone").value.trim(),
+    address: shippingAddress,
+    email: $("new-customer-email").value.trim()
+  })
+});
+
 
       const customerResult = await customerResponse.json();
 
@@ -2742,17 +3703,27 @@ $("create-order-form").addEventListener("submit", async event => {
       shippingAddress = selectedOption?.dataset.address || "";
     }
 
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        customer_id: customerId,
-        shipping_address: shippingAddress,
-        items
-      })
-    });
+    
+const { data: orderSession, error: orderSessionError } =
+  await supabaseClient.auth.getSession();
+
+if (orderSessionError || !orderSession.session) {
+  throw new Error("Please sign in again.");
+}
+
+const response = await fetch("/api/orders", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${orderSession.session.access_token}`
+  },
+  body: JSON.stringify({
+    customer_id: customerId,
+    shipping_address: shippingAddress,
+    items
+  })
+});
+
 
     const result = await response.json();
 
@@ -2861,27 +3832,45 @@ updateCounts();
     status.textContent = "Asking Gemini to draft a reply...";
     result.textContent = "";
 
-    try {
-      const response = await fetch("/api/draft-reply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: message.value.trim(),
-          businessInfo: business.value.trim()
-        })
-      });
+    
+try {
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "The request failed.");
-      }
+  if (sessionError) throw sessionError;
 
-      result.textContent = data.reply || "No reply was returned.";
-      status.textContent = "Test complete. Review the reply for accuracy and safety.";
-    } catch (error) {
-      status.textContent = "Could not generate a reply. Check that the Node server is running on port 3000.";
-      console.error("AI test failed:", error);
-    } finally {
+  const accessToken = sessionData.session?.access_token;
+
+  if (!accessToken) {
+    throw new Error("Please sign in before testing AI replies.");
+  }
+
+  const response = await fetch("/api/draft-reply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({
+      message: message.value.trim(),
+      businessInfo: business.value.trim()
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "The request failed.");
+  }
+
+  result.textContent = data.reply || "No reply was returned.";
+  status.textContent = "Test complete. Review the reply for accuracy and safety.";
+} catch (error) {
+  status.textContent = error.message ||
+    "Could not generate a reply. Check that the Node server is running on port 3000.";
+  console.error("AI test failed:", error);
+
+} finally {
       button.disabled = false;
       button.textContent = "Generate test reply";
     }
@@ -2895,6 +3884,10 @@ updateCounts();
 
 
 <script>
+
+
+
+
 (() => {
   const authScreen = document.getElementById("auth-screen");
   const authForm = document.getElementById("auth-form");
@@ -2902,12 +3895,335 @@ updateCounts();
   const authSubmit = document.getElementById("auth-submit");
   const authModeToggle = document.getElementById("auth-mode-toggle");
   const businessNameInput = document.getElementById("auth-business-name");
+  const phoneInput = document.getElementById("auth-phone");
+  const forgotPasswordButton = document.getElementById("forgot-password-btn");
 
+  const recoveryForm = document.getElementById("auth-recovery-form");
+  const recoverySubmit = document.getElementById("auth-recovery-submit");
+  const recoveryCancel = document.getElementById("auth-recovery-cancel");
+  const recoveryPassword = document.getElementById("auth-new-password");
+  const recoveryConfirm = document.getElementById("auth-new-password-confirm");
+  const authSwitch = document.getElementById("auth-switch");
 
-    const phoneInput = document.getElementById("auth-phone");
+  if (
+    !authScreen ||
+    !authForm ||
+    !authMessage ||
+    !authSubmit ||
+    !authModeToggle ||
+    !businessNameInput
+  ) {
+    console.error("OrderFlow authentication UI is incomplete.");
+    return;
+  }
 
+  let isSignup = false;
+  let isRecovery = false;
   let phoneWidget = null;
 
+  const businessField = document.getElementById("auth-business-field");
+  const authTitle = document.getElementById("auth-title");
+  const authSubtitle = document.getElementById("auth-subtitle");
+  const authSwitchText = document.getElementById("auth-switch-text");
+
+  function showRecoveryForm() {
+    if (!recoveryForm) return;
+
+    isRecovery = true;
+    authForm.style.display = "none";
+    recoveryForm.style.display = "block";
+
+    if (authSwitch) authSwitch.style.display = "none";
+    if (authTitle) authTitle.textContent = "Choose a new password";
+    if (authSubtitle) {
+      authSubtitle.textContent = "Create a new password for your account.";
+    }
+
+    authMessage.textContent = "";
+    authScreen.style.display = "flex";
+  }
+
+  function showLoginForm(message = "") {
+    isRecovery = false;
+    isSignup = false;
+
+    authForm.style.display = "block";
+    if (recoveryForm) recoveryForm.style.display = "none";
+    if (authSwitch) authSwitch.style.display = "";
+
+    if (businessField) businessField.style.display = "none";
+    businessNameInput.style.display = "none";
+    businessNameInput.required = false;
+
+    if (authTitle) authTitle.textContent = "Welcome back";
+    if (authSubtitle) {
+      authSubtitle.textContent = "Sign in to manage your business.";
+    }
+
+    authSubmit.textContent = "Sign in";
+    authModeToggle.textContent = "Create an account";
+
+    if (authSwitchText) {
+      authSwitchText.textContent = "New to OrderFlow AI?";
+    }
+
+    if (forgotPasswordButton) {
+      forgotPasswordButton.style.display = "block";
+    }
+
+    document.getElementById("auth-password").autocomplete =
+      "current-password";
+
+    authMessage.textContent = message;
+  }
+
+
+  // Password recovery must remain a separate flow from normal sign-in.
+  const recoveryPendingKey = "orderflow_password_recovery_pending";
+  let recoveryEventHandled = false;
+
+  async function checkInitialSession() {
+    try {
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams(
+        url.hash.startsWith("#") ? url.hash.slice(1) : url.hash
+      );
+      const queryParams = url.searchParams;
+
+      const urlError =
+        hashParams.get("error_description") ||
+        queryParams.get("error_description");
+
+      const hasRecoveryType =
+        hashParams.get("type") === "recovery" ||
+        queryParams.get("type") === "recovery";
+
+      const hasRecoveryCode =
+        queryParams.has("code") &&
+        queryParams.get("flow") === "recovery";
+
+      const hasRecoveryFlow =
+        queryParams.get("flow") === "recovery";
+
+      const hasRecoveryToken =
+        hashParams.has("access_token") &&
+        hasRecoveryType;
+
+      const recoveryWasPending =
+        sessionStorage.getItem(recoveryPendingKey) === "true";
+
+      if (urlError) {
+        sessionStorage.removeItem(recoveryPendingKey);
+        authScreen.style.display = "flex";
+        showLoginForm(
+          "This recovery link is invalid or expired. Request a new one."
+        );
+        return;
+      }
+
+      // Never let an incomplete recovery URL fall through to
+      // the ordinary existing-session path.
+      if (
+        (hasRecoveryFlow && !hasRecoveryCode && !hasRecoveryToken) ||
+        (queryParams.has("code") && !hasRecoveryCode)
+      ) {
+        authScreen.style.display = "flex";
+        showLoginForm(
+          "This password-reset link is incomplete. Request a new one."
+        );
+        return;
+      }
+
+      if (hasRecoveryType || hasRecoveryCode || recoveryWasPending) {
+        sessionStorage.setItem(recoveryPendingKey, "true");
+
+        const code = hasRecoveryCode ? queryParams.get("code") : null;
+
+        if (code) {
+          const { error } =
+            await supabaseClient.auth.exchangeCodeForSession(code);
+
+          if (error) throw error;
+        }
+
+        const { data, error } =
+          await supabaseClient.auth.getSession();
+
+        if (error) throw error;
+
+        if (!data.session) {
+          throw new Error(
+            "Your recovery session is invalid or expired. Request a new reset link."
+          );
+        }
+
+        recoveryEventHandled = true;
+        showRecoveryForm();
+        return;
+      }
+
+      const { data, error } =
+        await supabaseClient.auth.getSession();
+
+      if (error) throw error;
+
+      authScreen.style.display = data.session ? "none" : "flex";
+    } catch (error) {
+      console.error("Initial authentication check failed:", error);
+      authScreen.style.display = "flex";
+      showLoginForm(
+        "This recovery link may be invalid or expired. Request a new password reset link."
+      );
+    }
+  }
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY" && session) {
+      sessionStorage.setItem(recoveryPendingKey, "true");
+      recoveryEventHandled = true;
+      showRecoveryForm();
+    }
+  });
+
+  checkInitialSession();
+
+
+  // Forgot password: request the email.
+  if (forgotPasswordButton) {
+    forgotPasswordButton.addEventListener("click", async () => {
+      const emailInput = document.getElementById("auth-email");
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        authMessage.textContent = "Enter your email address first.";
+        emailInput.focus();
+        return;
+      }
+
+      forgotPasswordButton.disabled = true;
+      authMessage.textContent = "Sending password reset email...";
+
+      try {
+        const recoveryRedirect =
+  `${window.location.origin}${window.location.pathname}?flow=recovery`;
+
+const { error } =
+  await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: recoveryRedirect
+  });
+
+        if (error) throw error;
+
+        authMessage.textContent =
+          "If an account exists for this email, a password reset link will be sent. Check your inbox.";
+      } catch (error) {
+        console.error("Password reset request failed:", error);
+        authMessage.textContent =
+          "Could not request a password reset. Please try again.";
+      } finally {
+        forgotPasswordButton.disabled = false;
+      }
+    });
+  }
+
+  // Save the new password after a valid recovery link is opened.
+  if (recoveryForm && recoveryPassword && recoveryConfirm) {
+    recoveryForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const newPassword = recoveryPassword.value;
+      const confirmPassword = recoveryConfirm.value;
+
+      if (newPassword.length < 8) {
+        authMessage.textContent =
+          "Your new password must contain at least 8 characters.";
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        authMessage.textContent = "The passwords do not match.";
+        recoveryConfirm.focus();
+        return;
+      }
+
+      if (recoverySubmit) recoverySubmit.disabled = true;
+      authMessage.textContent = "Updating your password...";
+
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session) {
+          throw new Error(
+            "Your recovery session has expired. Request a new reset link."
+          );
+        }
+
+        const { error } = await supabaseClient.auth.updateUser({password: newPassword});
+
+        if (error) throw error;
+
+       
+  // Password was updated successfully. End the recovery session.
+  const { error: signOutError } =
+    await supabaseClient.auth.signOut();
+
+  if (signOutError) {
+    console.error("Could not end recovery session:", signOutError);
+  }
+
+  sessionStorage.removeItem("orderflow_password_recovery_pending");
+
+  recoveryForm.reset();
+  authForm.reset();
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+
+  showLoginForm(
+    "Password updated successfully. Please sign in with your new password."
+  );
+  authScreen.style.display = "flex";
+
+      } catch (error) {
+        console.error("Password update failed:", error);
+        authMessage.textContent =
+          error.message ||
+          "Could not update your password. Request a new reset link and try again.";
+      } finally {
+        if (recoverySubmit) recoverySubmit.disabled = false;
+      }
+    });
+  }
+
+  if (recoveryCancel) {
+    recoveryCancel.addEventListener("click", async () => {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (error) {
+        console.error("Could not close recovery session:", error);
+      }
+
+      if (recoveryForm) recoveryForm.reset();
+
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+
+      sessionStorage.removeItem("orderflow_password_recovery_pending");
+
+      showLoginForm();
+    });
+  }
+
+  // International phone input.
   if (phoneInput && window.intlTelInput) {
     phoneWidget = window.intlTelInput(phoneInput, {
       initialCountry: "auto",
@@ -2916,164 +4232,131 @@ updateCounts();
       loadUtils: () =>
         import(
           "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/utils.js"
-        ),
+        )
     });
   }
 
+  // Business country selector.
+  const countrySelect = document.getElementById("auth-country");
 
+  if (countrySelect && window.Choices && window.intlTelInput) {
+    const countries = window.intlTelInput.getCountryData();
 
+    countrySelect.replaceChildren(
+      new Option("Select your business country", "")
+    );
 
+    countries
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach(country => {
+        countrySelect.add(
+          new Option(country.name, country.iso2.toUpperCase())
+        );
+      });
 
- const countrySelect = document.getElementById("auth-country");
+    new Choices(countrySelect, {
+      searchEnabled: true,
+      searchPlaceholderValue: "Search countries...",
+      itemSelectText: "",
+      shouldSort: false,
+      allowHTML: true,
+      position: "bottom",
 
-if (countrySelect && window.Choices && window.intlTelInput) {
-  const countries = window.intlTelInput.getCountryData();
+      callbackOnCreateTemplates: function (template) {
+        const flagMarkup = value => {
+          const code = String(value || "").toLowerCase();
 
-  countrySelect.replaceChildren(
-    new Option("Select your business country", "")
-  );
+          if (!/^[a-z]{2}$/.test(code)) return "";
 
-  countries
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .forEach(country => {
-      countrySelect.add(
-        new Option(country.name, country.iso2.toUpperCase())
-      );
+          return `<span class="fi fi-${code}" aria-hidden="true"></span>`;
+        };
+
+        return {
+          item: (classNames, data) => {
+            return template(`
+              <div class="${classNames.item || "choices__item"} ${
+                data.highlighted ? classNames.highlightedState : ""
+              } ${
+                data.placeholder ? classNames.placeholder : ""
+              }"
+              data-item
+              data-id="${data.id}"
+              data-value="${data.value}"
+              ${data.active ? 'aria-selected="true"' : ""}
+              ${data.disabled ? 'aria-disabled="true"' : ""}>
+                ${flagMarkup(data.value)}
+                <span>${data.label}</span>
+              </div>
+            `);
+          },
+
+          choice: (classNames, data) => {
+            return template(`
+              <div class="${classNames.item || "choices__item"} ${
+                classNames.itemChoice
+              } ${
+                data.disabled
+                  ? classNames.itemDisabled
+                  : classNames.itemSelectable
+              }"
+              data-select-text="${this.config.itemSelectText}"
+              data-choice
+              ${
+                data.disabled
+                  ? "data-choice-disabled aria-disabled=\"true\""
+                  : "data-choice-selectable"
+              }
+              data-id="${data.id}"
+              data-value="${data.value}"
+              role="option">
+                ${flagMarkup(data.value)}
+                <span>${data.label}</span>
+              </div>
+            `);
+          }
+        };
+      }
     });
-
-  new Choices(countrySelect, {
-  searchEnabled: true,
-  searchPlaceholderValue: "Search countries...",
-  itemSelectText: "",
-  shouldSort: false,
-  allowHTML: true,
-  position: "bottom",
-
-  callbackOnCreateTemplates: function (template) {
-    const flagMarkup = (value) => {
-      const code = String(value || "").toLowerCase();
-
-      if (!/^[a-z]{2}$/.test(code)) {
-        return "";
-      }
-
-      return `<span class="fi fi-${code}" aria-hidden="true"></span>`;
-    };
-
-    return {
-      item: (classNames, data) => {
-        return template(`
-          <div class="${classNames.item || 'choices__item'} ${
-            data.highlighted ? classNames.highlightedState : ""
-          } ${
-            data.placeholder ? classNames.placeholder : ""
-          }"
-          data-item
-          data-id="${data.id}"
-          data-value="${data.value}"
-          ${data.active ? 'aria-selected="true"' : ""}
-          ${data.disabled ? 'aria-disabled="true"' : ""}>
-            ${flagMarkup(data.value)}
-            <span>${data.label}</span>
-          </div>
-        `);
-      },
-
-      choice: (classNames, data) => {
-        return template(`
-          <div class="${classNames.item || 'choices__item'} ${
-            classNames.itemChoice
-          } ${
-            data.disabled ? classNames.itemDisabled : classNames.itemSelectable
-          }"
-          data-select-text="${this.config.itemSelectText}"
-          data-choice
-          ${data.disabled ? 'data-choice-disabled aria-disabled="true"' : "data-choice-selectable"}
-          data-id="${data.id}"
-          data-value="${data.value}"
-          role="option">
-            ${flagMarkup(data.value)}
-            <span>${data.label}</span>
-          </div>
-        `);
-      },
-    };
-  },
-});
-}
-
-
-
-
-
-
-
-  if (!authScreen || !authForm || !authMessage || !authSubmit || !authModeToggle) {
-    console.error("OrderFlow authentication UI is incomplete.");
-    return;
   }
 
-  let isSignup = false;
-
-
-
-
-    async function checkSession() {
-    try {
-      const { data, error } = await supabaseClient.auth.getSession();
-
-      if (error) throw error;
-
-      if (data.session) {
-        authScreen.style.display = "none";
-      } else {
-        authScreen.style.display = "flex";
-      }
-    } catch (error) {
-      authScreen.style.display = "flex";
-      authMessage.textContent = "Unable to check your session. Please refresh.";
-      console.error("Session check failed:", error);
-    }
-  }
-
-  checkSession();
-
-
-
-
-
-
-
-  const businessField = document.getElementById("auth-business-field");
-  const authTitle = document.getElementById("auth-title");
-  const authSubtitle = document.getElementById("auth-subtitle");
-  const authSwitchText = document.getElementById("auth-switch-text");
-
+  // Switch between sign-in and sign-up.
   authModeToggle.addEventListener("click", () => {
     isSignup = !isSignup;
 
-    businessField.style.display = isSignup ? "block" : "none";
+    if (forgotPasswordButton) {
+      forgotPasswordButton.style.display = isSignup ? "none" : "block";
+    }
 
-businessField.querySelectorAll("input, select, textarea").forEach(field => {
-  field.required = isSignup;
-});
+    if (businessField) {
+      businessField.style.display = isSignup ? "block" : "none";
 
-    authTitle.textContent = isSignup
-      ? "Create your account"
-      : "Welcome back";
+      businessField
+        .querySelectorAll("input, select, textarea")
+        .forEach(field => {
+          field.required = isSignup;
+        });
+    }
 
-    authSubtitle.textContent = isSignup
-      ? "Set up your business workspace."
-      : "Sign in to manage your business.";
+    if (authTitle) {
+      authTitle.textContent = isSignup
+        ? "Create your account"
+        : "Welcome back";
+    }
 
-    authSubmit.textContent = isSignup
-      ? "Create account"
-      : "Sign in";
+    if (authSubtitle) {
+      authSubtitle.textContent = isSignup
+        ? "Set up your business workspace."
+        : "Sign in to manage your business.";
+    }
 
-    authSwitchText.textContent = isSignup
-      ? "Already have an account?"
-      : "New to OrderFlow AI?";
+    authSubmit.textContent = isSignup ? "Create account" : "Sign in";
+
+    if (authSwitchText) {
+      authSwitchText.textContent = isSignup
+        ? "Already have an account?"
+        : "New to OrderFlow AI?";
+    }
 
     authModeToggle.textContent = isSignup
       ? "Sign in"
@@ -3085,91 +4368,105 @@ businessField.querySelectorAll("input, select, textarea").forEach(field => {
     authMessage.textContent = "";
   });
 
+  // Submit sign-in or sign-up.
+  authForm.addEventListener("submit", async event => {
+    event.preventDefault();
 
+    const email = document.getElementById("auth-email").value.trim();
+    const password = document.getElementById("auth-password").value;
+    const businessName = businessNameInput.value.trim();
+    const ownerName = document.getElementById("auth-owner-name").value.trim();
+    const country = document.getElementById("auth-country").value;
+    const currency = document.getElementById("auth-currency").value;
+    const businessType =
+      document.getElementById("auth-business-type").value;
+    const termsAccepted =
+      document.getElementById("auth-terms").checked;
 
-  
+    authSubmit.disabled = true;
+    authMessage.textContent = "Please wait…";
 
-authForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const email = document.getElementById("auth-email").value.trim();
-  const password = document.getElementById("auth-password").value;
-  const businessName = businessNameInput.value.trim();
-
-  const ownerName = document.getElementById("auth-owner-name").value.trim();
-  const phone = document.getElementById("auth-phone").value.trim();
-  const country = document.getElementById("auth-country").value;
-  const currency = document.getElementById("auth-currency").value;
-  const termsAccepted = document.getElementById("auth-terms").checked;
-
-  authSubmit.disabled = true;
-  authMessage.textContent = "Please wait…";
-
-  try {
-    if (isSignup && !termsAccepted) {
-      throw new Error("Please accept the terms to create an account.");
-    }
-
-    if (isSignup) {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            business_name: businessName,
-            owner_name: ownerName,
-            phone: phone,
-            country: country,
-            currency: currency,
-            terms_accepted: termsAccepted
-          },
-          emailRedirectTo: window.location.origin
-        }
-      });
-
-      if (error) throw error;
-
-      if (!data.session || !data.user) {
-        authMessage.textContent =
-          "Account created. Check your email to confirm your address, then log in. Your profile and workspace will be created by the database after signup.";
-        return;
+    try {
+      if (isSignup && !termsAccepted) {
+        throw new Error("Please accept the terms to create an account.");
       }
 
-      // The database trigger creates the workspace,
-      // owner membership, and user profile.
-      // Do not insert these records again here.
+      if (isSignup) {
+        if (phoneWidget && phoneWidget.promise) {
+          await phoneWidget.promise;
+        }
+
+        if (phoneWidget && !phoneWidget.isValidNumber()) {
+          throw new Error(
+            "Please enter a valid phone number with the correct country code."
+          );
+        }
+
+        const phone = phoneWidget
+          ? phoneWidget.getNumber()
+          : phoneInput.value.trim();
+
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              business_name: businessName,
+              business_type: businessType,
+              owner_name: ownerName,
+              phone,
+              country,
+              currency,
+              terms_accepted: termsAccepted
+            },
+            emailRedirectTo: window.location.origin
+          }
+        });
+
+        if (error) throw error;
+
+        if (!data.session || !data.user) {
+          authMessage.textContent =
+            "Account created. Check your email to confirm your address, then log in. Your profile and workspace will be created by the database after signup.";
+          return;
+        }
+
+        authMessage.textContent =
+          "Account and business workspace created.";
+      } else {
+        const { error } =
+          await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+          });
+
+        if (error) throw error;
+
+        authMessage.textContent = "Login successful.";
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("OrderFlow authentication error:", error);
       authMessage.textContent =
-        "Account and business workspace created.";
-    } else {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      authMessage.textContent = "Login successful.";
+        error.message || "Authentication failed.";
+    } finally {
+      authSubmit.disabled = false;
     }
+  });
 
-    window.location.reload();
-  } catch (error) {
-    console.error("OrderFlow authentication error:", error);
-    authMessage.textContent =
-      error.message || "Authentication failed.";
-  } finally {
-    authSubmit.disabled = false;
-  }
-});
-
-
-
-
-
-
-
+  // Initial sign-up field state.
   businessNameInput.required = false;
   businessNameInput.style.display = "none";
+
+  if (forgotPasswordButton) {
+    forgotPasswordButton.style.display = "block";
+  }
 })();
+
+
+
+
 
 
 
@@ -3262,6 +4559,1242 @@ document.addEventListener("click", (event) => {
 
 
 </script>
+
+
+
+
+
+
+
+<!-- Quill rich-text editor library -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const saveButton = document.getElementById("knowledge-save-btn");
+  const saveStatus = document.getElementById("knowledge-save-status");
+
+  if (typeof Quill === "undefined") {
+    console.error("Quill did not load.");
+    if (saveStatus) {
+      saveStatus.textContent = "The editor could not load. Please refresh.";
+    }
+    return;
+  }
+
+  if (typeof supabaseClient === "undefined") {
+    console.error("Supabase client is unavailable.");
+    if (saveStatus) {
+      saveStatus.textContent = "Authentication is unavailable. Please refresh.";
+    }
+    return;
+  }
+
+  const sections = {
+    about: {
+      field: "about_business",
+      placeholder:
+        "Describe your business, services, customers, and preferred tone. Add general AI rules, such as never inventing information and sending refund requests or serious complaints to a person."
+    },
+    products: {
+      field: "products_pricing",
+      placeholder:
+        "List your products and/or services, prices, descriptions, variants, and availability. For physical products, you can track stock using markers such as {8} small, {10} medium, {10} large, black shirts available. For services, describe pricing, duration, service area, booking requirements, and availability. Do not use stock markers for services unless tracking limited service slots."
+    },
+    delivery: {
+      field: "delivery_returns",
+      placeholder:
+        "Describe your actual delivery, return, exchange, and cancellation policies. Specify which cases require human approval, such as refund requests, damaged products, and payment disputes. The AI must not promise an outcome before approval."
+    },
+    faqs: {
+      field: "faqs",
+      placeholder:
+        "Add common customer questions and your approved answers. Keep answers accurate and consistent with your business policies."
+    }
+  };
+
+  window.businessKnowledgeEditors =
+    window.businessKnowledgeEditors || {};
+
+  let isLoading = false;
+  let isSaving = false;
+  let hasUnsavedChanges = false;
+
+  function setStatus(message) {
+    if (saveStatus) saveStatus.textContent = message;
+  }
+
+  function setDirty() {
+    if (isLoading || isSaving) return;
+
+    hasUnsavedChanges = true;
+
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save Business Knowledge";
+    }
+
+    setStatus("You have unsaved changes.");
+  }
+
+  for (const [key, config] of Object.entries(sections)) {
+    const element = document.getElementById(
+      "knowledge-editor-" + key
+    );
+
+    if (!element) {
+      console.error("Missing Business Knowledge editor:", key);
+      setStatus("An editor is missing. Please refresh the page.");
+      return;
+    }
+
+    if (!window.businessKnowledgeEditors[key]) {
+      window.businessKnowledgeEditors[key] = new Quill(element, {
+        theme: "snow",
+        placeholder: config.placeholder,
+        modules: {
+          toolbar: [
+            ["bold", "italic", "underline"],
+            [{ list: "ordered" }, { list: "bullet" }]
+          ]
+        }
+      });
+    }
+
+    window.businessKnowledgeEditors[key].on(
+      "text-change",
+      setDirty
+    );
+  }
+
+  function getEditorText(key) {
+    const editor = window.businessKnowledgeEditors[key];
+    return editor.getText().trim();
+  }
+
+  function getEditorHtml(key) {
+    const editor = window.businessKnowledgeEditors[key];
+    const text = getEditorText(key);
+
+    // Store an empty string instead of Quill's empty-paragraph HTML.
+    return text ? editor.root.innerHTML : "";
+  }
+
+  async function getAccessToken() {
+    const { data, error } =
+      await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    const token = data?.session?.access_token;
+
+    if (!token) {
+      throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    return token;
+  }
+
+  async function apiRequest(method, body) {
+    const token = await getAccessToken();
+
+    const response = await fetch("/api/business-knowledge", {
+      method,
+      headers: {
+        "Authorization": "Bearer " + token,
+        ...(body ? { "Content-Type": "application/json" } : {})
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Business Knowledge request failed."
+      );
+    }
+
+    return result;
+  }
+
+  async function loadBusinessKnowledge() {
+    if (saveButton) saveButton.disabled = true;
+
+    setStatus("Loading saved business information...");
+
+    try {
+      const result = await apiRequest("GET");
+
+      const knowledge = result.knowledge || {};
+
+      isLoading = true;
+
+      for (const [key, config] of Object.entries(sections)) {
+        const editor = window.businessKnowledgeEditors[key];
+        const html = knowledge[config.field] || "";
+
+        // Saved values are inserted as HTML by Quill.
+        // The saved values should only come from trusted, authorized
+        // Business Knowledge records in your own database.
+        editor.root.innerHTML = html;
+        editor.update("silent");
+      }
+
+      hasUnsavedChanges = false;
+      setStatus("Business Knowledge loaded.");
+
+    } catch (error) {
+      console.error("Could not load Business Knowledge:", error);
+
+      setStatus(
+        error.message +
+        " Your edits have not been saved."
+      );
+    } finally {
+  isLoading = false;
+
+  hasUnsavedChanges = false;
+
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "Save Business Knowledge";
+  }
+}
+  }
+
+  async function saveBusinessKnowledge() {
+    if (isSaving || !saveButton) return;
+
+    isSaving = true;
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+    setStatus("Saving Business Knowledge...");
+
+    try {
+      const body = {};
+
+      for (const [key, config] of Object.entries(sections)) {
+        body[config.field] = getEditorHtml(key);
+      }
+
+      await apiRequest("PUT", body);
+
+      hasUnsavedChanges = false;
+      setStatus("Business Knowledge saved successfully.");
+      saveButton.textContent = "Saved";
+
+    } catch (error) {
+      console.error("Could not save Business Knowledge:", error);
+
+      setStatus(error.message);
+      saveButton.textContent = "Save Business Knowledge";
+
+    } finally {
+      isSaving = false;
+      saveButton.disabled = !hasUnsavedChanges;
+    }
+  }
+
+  if (saveButton) {
+    saveButton.addEventListener("click", saveBusinessKnowledge);
+  }
+
+  loadBusinessKnowledge();
+});
+</script>
+
+
+
+
+
+
+<!--
+OrderFlow AI Smart Inbox frontend adapter
+----------------------------------------
+Add this script near the end of index.html, after Supabase client initialization
+and after the app's existing script definitions. It is deliberately additive.
+
+To activate the real inbox:
+1. In the existing Smart Inbox render/selection flow, call:
+     await loadPersistentConversations();
+   when the Smart Inbox opens.
+2. When a conversation is selected, call:
+     await loadPersistentMessages(conversation.id);
+   and render the returned messages into your existing message-history element.
+3. For the actual Send button, call:
+     await sendPersistentReply(selectedConversationId, composerTextarea.value);
+   then refresh the selected messages.
+4. Do not call the demo "add message to conversations array" behavior for real
+   provider conversations. Keep it only for an explicitly labeled demo mode.
+
+The existing page has different IDs/state names across its current scripts, so this
+adapter intentionally exposes functions instead of guessing/overwriting those IDs.
+-->
+<script>
+window.OrderFlowPersistentInbox = (() => {
+  async function api(path, options = {}) {
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error("Please sign in again to use Smart Inbox.");
+
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+        ...(options.headers || {})
+      }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.error || `Request failed (${response.status}).`);
+    }
+    return payload;
+  }
+
+  async function loadPersistentConversations({ channel = "", status = "", limit = 50 } = {}) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (channel) params.set("channel", channel);
+    if (status) params.set("status", status);
+    return api(`/api/inbox/conversations?${params.toString()}`);
+  }
+
+  async function loadPersistentMessages(conversationId) {
+    if (!conversationId) throw new Error("Select a conversation first.");
+    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/messages`);
+  }
+
+  async function sendPersistentReply(conversationId, body) {
+    if (!conversationId) throw new Error("Select a conversation first.");
+    if (!String(body || "").trim()) throw new Error("Enter a reply before sending.");
+    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ body: String(body).trim() })
+    });
+  }
+
+  return { loadPersistentConversations, loadPersistentMessages, sendPersistentReply };
+})();
+</script>
+
+
+
+
+
+<script src="/smart-inbox-ui-patch.js" defer></script>
+
+
+<script>
+
+/* OrderFlow AI Smart Inbox UI integration patch.
+ * Add this script before </body> in the current index.html.
+ * It adds channel connection cards, colour-coded channel badges, and a live-inbox
+ * mode backed by the persistent inbox API. Provider OAuth still requires provider setup.
+ */
+
+(() => {
+  "use strict";
+
+  const css = `
+  .of-channel-connectors {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin:0 0 18px;
+  }
+  .of-channel-card {
+    background:var(--channel-bg,#fff);
+    border:1px solid var(--channel-border,#e3e8f0);
+    border-radius:14px;
+    padding:16px;
+    min-width:0;
+    transition:transform .18s ease,box-shadow .18s ease;
+  }
+  .of-channel-card:hover {
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(20,30,50,.07);
+  }
+  .of-channel-card[data-channel="gmail"] {
+    --channel-bg:#fff5f4;
+    --channel-border:#f6d4d0;
+    --channel-button:#c5221f;
+    --channel-button-hover:#a50e0e;
+  }
+  .of-channel-card[data-channel="whatsapp"] {
+    --channel-bg:#effbf3;
+    --channel-border:#c6ecd2;
+    --channel-button:#168744;
+    --channel-button-hover:#116b35;
+  }
+  .of-channel-card[data-channel="instagram"] {
+    --channel-bg:#fff1f8;
+    --channel-border:#f1cde5;
+    --channel-button:#c13584;
+    --channel-button-hover:#9d2468;
+  }
+  .of-channel-card-top {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .of-channel-icon {
+    width:48px;
+    height:48px;
+    flex:0 0 48px;
+    display:grid;
+    place-items:center;
+    background:#fff;
+    border:1px solid rgba(0,0,0,.06);
+    border-radius:13px;
+    padding:7px;
+    box-sizing:border-box;
+  }
+  .of-channel-icon svg {
+    display:block;
+    width:100%;
+    height:100%;
+  }
+  /* Keep Gmail, WhatsApp and Instagram headings readable in both themes */
+.of-channel-card strong {
+  display: block;
+  font-size: 14px;
+  color: #202124 !important;
+}
+
+/* Keep connection status and descriptions readable on the light cards */
+.of-channel-card .of-channel-status,
+.of-channel-card p {
+  color: #505968 !important;
+}
+  .of-channel-status {
+    display:block;
+    color:var(--muted,#718096);
+    font-size:11px;
+    margin-top:4px;
+  }
+  .of-channel-card p {
+    font-size:12px;
+    line-height:1.55;
+    color:var(--muted,#596579);
+    margin:10px 0 15px;
+    min-height:38px;
+  }
+  .of-channel-card button {
+    width:100%;
+    border:1px solid transparent;
+    border-radius:9px;
+    padding:10px 12px;
+    background:var(--channel-button);
+    color:#fff;
+    font-weight:750;
+    font-size:12px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .of-channel-card button:hover {
+    background:var(--channel-button-hover);
+  }
+  .of-channel-card button:disabled {
+    opacity:.65;
+    cursor:not-allowed;
+  }
+  .of-inbox-toolbar {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin:0 0 12px;
+  }
+  .of-inbox-toolbar button {
+    border:1px solid var(--border,#e3e8f0);
+    border-radius:8px;
+    padding:8px 11px;
+    background:var(--surface,#fff);
+    color:var(--text,#182230);
+    font-weight:650;
+    cursor:pointer;
+  }
+  .of-inbox-toolbar button.active {
+    background:var(--accent,#635bff);
+    color:#fff;
+    border-color:transparent;
+  }
+  .of-live-state {
+    font-size:12px;
+    color:var(--muted,#718096);
+    margin-left:auto;
+  }
+  .of-channel-bubble {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    border-radius:999px;
+    padding:4px 8px;
+    font-size:10px;
+    font-weight:800;
+    line-height:1.2;
+    white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .of-bubble-logo {
+    display:inline-flex;
+    width:13px;
+    height:13px;
+    align-items:center;
+    justify-content:center;
+  }
+  .of-bubble-logo svg {
+    display:block;
+    width:13px;
+    height:13px;
+  }
+  .of-channel-bubble.gmail {
+    background:#fff0ee;
+    color:#b3261e;
+    border-color:#f6d4d0;
+  }
+  .of-channel-bubble.whatsapp {
+    background:#e9f9ef;
+    color:#116b35;
+    border-color:#c6ecd2;
+  }
+  .of-channel-bubble.instagram {
+    background:#fff0f8;
+    color:#a52870;
+    border-color:#f1cde5;
+  }
+  .of-channel-bubble.other {
+    background:var(--surface2,#f0f3f9);
+    color:var(--muted,#718096);
+    border-color:var(--border,#e3e8f0);
+  }
+
+  
+/* Smart Inbox action buttons */
+.of-inbox-actions button,
+.of-inbox-toolbar button,
+button.of-load-live-btn,
+button.of-return-demo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  min-height: 40px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 10px;
+  background: var(--surface, #ffffff);
+  color: var(--text, #202938);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Hover makes it obvious that these are clickable */
+.of-inbox-actions button:hover,
+.of-inbox-toolbar button:hover,
+button.of-load-live-btn:hover,
+button.of-return-demo-btn:hover {
+  background: var(--surface-hover, #edf2f8);
+  border-color: var(--primary, #6478e8);
+  box-shadow: 0 3px 10px rgba(40, 55, 90, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Keyboard accessibility */
+.of-inbox-actions button:focus-visible,
+.of-inbox-toolbar button:focus-visible,
+button.of-load-live-btn:focus-visible,
+button.of-return-demo-btn:focus-visible {
+  outline: 2px solid var(--primary, #6478e8);
+  outline-offset: 3px;
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .of-inbox-actions button,
+:root[data-theme="dark"] .of-inbox-toolbar button,
+:root[data-theme="dark"] button.of-load-live-btn,
+:root[data-theme="dark"] button.of-return-demo-btn {
+  background: #252b38;
+  color: #edf1f8;
+  border-color: #41495b;
+}
+
+:root[data-theme="dark"] .of-inbox-actions button:hover,
+:root[data-theme="dark"] .of-inbox-toolbar button:hover,
+:root[data-theme="dark"] button.of-load-live-btn:hover,
+:root[data-theme="dark"] button.of-return-demo-btn:hover {
+  background: #323b4d;
+  border-color: #8998ff;
+}
+
+
+
+
+  @media(max-width:850px) {
+    .of-channel-connectors {grid-template-columns:1fr;}
+    .of-live-state {margin-left:0;width:100%;}
+  }
+  `;
+
+  if (!document.getElementById("orderflow-smart-inbox-integration-css")) {
+    const style = document.createElement("style");
+    style.id = "orderflow-smart-inbox-integration-css";
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  // Brand-coloured SVG marks for the channel cards and conversation badges.
+  const CHANNELS = {
+    gmail: {
+      label: "Gmail",
+      css: "gmail",
+      description: "Connect your business Gmail inbox to receive emails and send approved replies.",
+      logo: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#4285F4" d="M5 14v20a5 5 0 0 0 5 5h4V14z"/>
+        <path fill="#34A853" d="M34 14v25h4a5 5 0 0 0 5-5V14z"/>
+        <path fill="#EA4335" d="M5 14a5 5 0 0 1 8-4l11 8.5L35 10a5 5 0 0 1 8 4L24 29z"/>
+        <path fill="#C5221F" d="M5 14v-1a5 5 0 0 1 8-3l4 3.1-8 8.2z"/>
+        <path fill="#FBBC04" d="M35 13.1 39 10a5 5 0 0 1 4 4v1l-4 7z"/>
+      </svg>`
+    },
+    whatsapp: {
+      label: "WhatsApp",
+      css: "whatsapp",
+      description: "Connect an eligible WhatsApp Business account through Meta and your automation workflow.",
+      logo: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#25D366" d="M24 3.5A20 20 0 0 0 6.8 33.7L4 44l10.6-2.8A20 20 0 1 0 24 3.5z"/>
+        <path fill="#fff" d="M24 7.3A16.2 16.2 0 0 0 10.1 32l-1.7 6.2 6.4-1.7A16.2 16.2 0 1 0 24 7.3z"/>
+        <path fill="#25D366" d="M32.9 27.6c-.5-.3-3-1.5-3.5-1.7-.5-.2-.8-.3-1.2.3-.3.5-1.3 1.7-1.6 2.1-.3.3-.6.4-1.1.1-3-1.5-5-2.7-7-6.1-.5-.8.5-.8 1.5-2.8.2-.4.1-.8 0-1.1-.1-.3-1.2-2.9-1.6-3.9-.4-1-.9-.9-1.2-.9h-1c-.4 0-1 .2-1.5.7-.5.5-1.9 1.9-1.9 4.5s2 5.2 2.3 5.6c.3.3 3.9 6 9.5 8.2 3.5 1.4 4.9 1.5 6.7 1.2 1.1-.2 3-.1 4.2-2.4.5-1.2.5-2.1.3-2.4-.2-.3-.6-.5-1.1-.8z"/>
+      </svg>`
+    },
+    instagram: {
+      label: "Instagram",
+      css: "instagram",
+      description: "Connect an eligible Instagram professional account through Meta and your automation workflow.",
+      logo: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="of-instagram-gradient" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#FFB12B"/>
+            <stop offset="48%" stop-color="#F02D78"/>
+            <stop offset="100%" stop-color="#8146EF"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="42" height="42" rx="13" fill="url(#of-instagram-gradient)"/>
+        <rect x="11" y="11" width="26" height="26" rx="8" fill="none" stroke="#fff" stroke-width="3.2"/>
+        <circle cx="24" cy="24" r="6.5" fill="none" stroke="#fff" stroke-width="3.2"/>
+        <circle cx="32.3" cy="15.9" r="2" fill="#fff"/>
+      </svg>`
+    }
+  };
+
+  let supabaseClient = window.supabaseClient || null;
+
+  try {
+    if (
+      !supabaseClient &&
+      window.supabase &&
+      window.ORDERFLOW_SUPABASE_URL &&
+      window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY
+    ) {
+      supabaseClient = window.supabase.createClient(
+        window.ORDERFLOW_SUPABASE_URL,
+        window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY
+      );
+    }
+  } catch (e) {
+    console.warn("OrderFlow inbox auth client could not be initialized.", e);
+  }
+
+  let liveMode = false;
+  let liveConversations = [];
+  let selectedLive = null;
+  let activeChannel = "all";
+  let originalListMarkup = null;
+
+  const $ = id => document.getElementById(id);
+
+  function notifyUser(message) {
+    const toast = $("toast");
+    if (toast) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 4500);
+    } else {
+      window.alert(message);
+    }
+  }
+
+  async function authHeaders() {
+    if (!supabaseClient) {
+      throw new Error("Supabase client is unavailable on this page.");
+    }
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error || !data?.session?.access_token) {
+      throw new Error("Please sign in before using Smart Inbox.");
+    }
+    return {
+      Authorization: "Bearer " + data.session.access_token,
+      "Content-Type": "application/json"
+    };
+  }
+
+  async function api(path, options = {}) {
+    const headers = await authHeaders();
+    const response = await fetch(path, {
+      ...options,
+      headers: { ...headers, ...(options.headers || {}) }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+    }
+    return data;
+  }
+
+  function channelKey(value) {
+    const s = String(value || "").toLowerCase();
+    if (s.includes("gmail") || s === "email" || s.includes("email")) return "gmail";
+    if (s.includes("whatsapp")) return "whatsapp";
+    if (s.includes("instagram")) return "instagram";
+    return "other";
+  }
+
+  function badge(channel) {
+    const key = channelKey(channel);
+    const c = CHANNELS[key];
+    const el = document.createElement("span");
+    el.className = "of-channel-bubble " + (c ? c.css : "other");
+
+    if (c) {
+      const logo = document.createElement("span");
+      logo.className = "of-bubble-logo";
+      logo.innerHTML = c.logo;
+
+      const label = document.createElement("span");
+      label.textContent = c.label;
+      el.append(logo, label);
+    } else {
+      el.textContent = channel || "Other";
+    }
+    return el;
+  }
+
+  function makeConnectionCards() {
+    const view = $("view-inbox");
+    if (!view || $("orderflow-channel-connectors")) return;
+
+    const heading = view.querySelector(".page-heading");
+    if (!heading) return;
+
+    const wrap = document.createElement("div");
+    wrap.id = "orderflow-channel-connectors";
+    wrap.className = "of-channel-connectors";
+
+    Object.entries(CHANNELS).forEach(([key, c]) => {
+      const card = document.createElement("div");
+      card.className = "of-channel-card";
+      card.dataset.channel = key;
+
+      const top = document.createElement("div");
+      top.className = "of-channel-card-top";
+
+      const icon = document.createElement("div");
+      icon.className = "of-channel-icon " + c.css;
+      icon.innerHTML = c.logo;
+      icon.setAttribute("role", "img");
+      icon.setAttribute("aria-label", c.label + " logo");
+
+      const identity = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = c.label;
+
+      const status = document.createElement("span");
+      status.className = "of-channel-status";
+      status.dataset.connectionStatus = key;
+      status.textContent = "Checking connection…";
+
+      identity.append(name, status);
+      top.append(icon, identity);
+
+      const p = document.createElement("p");
+      p.textContent = c.description;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.connectChannel = key;
+      btn.textContent = "Connect " + c.label;
+      btn.addEventListener("click", () => showConnectInfo(key));
+
+      card.append(top, p, btn);
+      wrap.append(card);
+    });
+
+    heading.insertAdjacentElement("afterend", wrap);
+
+    const toolbar = document.createElement("div");
+    toolbar.id = "orderflow-live-inbox-toolbar";
+    toolbar.className = "of-inbox-toolbar";
+
+    const live = document.createElement("button");
+    live.type = "button";
+    live.id = "orderflow-live-toggle";
+    live.textContent = "Load live conversations";
+    live.addEventListener("click", () => loadLiveInbox());
+
+    const demo = document.createElement("button");
+    demo.type = "button";
+    demo.textContent = "Return to demo inbox";
+    demo.addEventListener("click", () => {
+      liveMode = false;
+      selectedLive = null;
+      restoreDemoUI();
+    });
+
+    const state = document.createElement("span");
+    state.id = "orderflow-live-state";
+    state.className = "of-live-state";
+    state.textContent = "Demo conversations are shown until live data is loaded.";
+
+    toolbar.append(live, demo, state);
+    wrap.insertAdjacentElement("afterend", toolbar);
+  }
+
+  function showConnectInfo(channel) {
+    const c = CHANNELS[channel];
+    const docs = {
+      gmail: "https://developers.google.com/gmail/api/quickstart",
+      whatsapp: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
+      instagram: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login"
+    };
+
+    notifyUser(
+      `${c.label} is not connected yet. A real account connection requires provider OAuth credentials and a configured callback/workflow. No account has been connected and no messages have been sent.`
+    );
+
+    window.open(docs[channel], "_blank", "noopener,noreferrer");
+  }
+
+  async function refreshConnectionStatus() {
+    try {
+      const data = await api("/api/integrations/connections");
+      const rows = data.connections || [];
+
+      Object.keys(CHANNELS).forEach(key => {
+        const row =
+          rows.filter(x => x.channel === key).find(x => x.status === "connected") ||
+          rows.find(x => x.channel === key);
+
+        const node = document.querySelector(`[data-connection-status="${key}"]`);
+        const button = document.querySelector(`[data-connect-channel="${key}"]`);
+
+        if (node) {
+          node.textContent = row
+            ? row.status === "connected"
+              ? `Connected${row.display_name ? " · " + row.display_name : ""}`
+              : row.status === "error"
+                ? "Connection error"
+                : "Not connected"
+            : "Not connected";
+        }
+
+        if (button) {
+          button.textContent =
+            row?.status === "connected"
+              ? "Manage " + CHANNELS[key].label
+              : "Connect " + CHANNELS[key].label;
+        }
+      });
+    } catch (e) {
+      Object.keys(CHANNELS).forEach(key => {
+        const node = document.querySelector(`[data-connection-status="${key}"]`);
+        if (node) node.textContent = "Not connected";
+      });
+      console.info("Connection status unavailable:", e.message);
+    }
+  }
+
+  function mapConversation(row) {
+    const channel = CHANNELS[row.channel]?.label || row.channel || "Other";
+    const name = row.customer_name || row.customer_email || row.customer_phone || "Customer";
+
+    return {
+      ...row,
+      name,
+      channel,
+      initials: name.split(/\s+/).slice(0, 2).map(x => x[0] || "").join("").toUpperCase(),
+      time: row.last_message_at ? new Date(row.last_message_at).toLocaleString() : "",
+      category: row.subject || "Customer message",
+      review: row.status === "needs_review",
+      resolved: row.status === "resolved",
+      unread: Number(row.unread_count || 0) > 0,
+      messages: []
+    };
+  }
+
+  function renderLiveList() {
+    const list = $("conversation-list");
+    if (!list) return;
+
+    list.replaceChildren();
+
+    const rows = liveConversations.filter(
+      c => activeChannel === "all" || channelKey(c.channel) === activeChannel
+    );
+
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent =
+        "No saved conversations for this channel yet. Once n8n delivers provider messages, they will appear here.";
+      list.append(empty);
+      return;
+    }
+
+    rows.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "conversation" + (selectedLive?.id === c.id ? " selected" : "");
+
+      const avatar = document.createElement("div");
+      avatar.className = "person-avatar";
+      avatar.textContent = c.initials;
+
+      const main = document.createElement("div");
+      main.className = "convo-main";
+
+      const top = document.createElement("div");
+      top.className = "convo-top";
+
+      const ident = document.createElement("div");
+      ident.style.cssText =
+        "display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0";
+
+      const n = document.createElement("span");
+      n.className = "convo-name";
+      n.textContent = c.name;
+      ident.append(n, badge(c.channel));
+
+      const time = document.createElement("span");
+      time.className = "convo-time";
+      time.textContent = c.time;
+      top.append(ident, time);
+
+      const preview = document.createElement("div");
+      preview.className = "convo-preview";
+      preview.textContent = c.subject || "Open to load message history";
+
+      const bottom = document.createElement("div");
+      bottom.className = "convo-bottom";
+
+      const tag = document.createElement("span");
+      tag.className = "convo-tag";
+      tag.textContent = c.review
+        ? "Needs human review"
+        : c.resolved
+          ? "Resolved"
+          : "Live conversation";
+
+      bottom.append(tag);
+      main.append(top, preview, bottom);
+      b.append(avatar, main);
+      b.addEventListener("click", () => selectLiveConversation(c));
+      list.append(b);
+    });
+
+    const total = $("conversation-total");
+    if (total) total.textContent = String(rows.length);
+  }
+
+  async function selectLiveConversation(c) {
+    selectedLive = c;
+    renderLiveList();
+
+    const name = $("selected-name");
+    if (name) name.textContent = c.name;
+
+    const avatar = $("selected-avatar");
+    if (avatar) avatar.textContent = c.initials;
+
+    const ch = $("selected-channel");
+    if (ch) {
+      ch.replaceChildren();
+      ch.append(badge(c.channel));
+    }
+
+    const dn = $("detail-name");
+    if (dn) dn.textContent = c.name;
+
+    const dc = $("detail-channel");
+    if (dc) {
+      dc.replaceChildren();
+      dc.append(badge(c.channel));
+    }
+
+    const status = $("detail-customer-status");
+    if (status) status.textContent = "Connected inbox";
+
+    const order = $("detail-order");
+    if (order) order.textContent = "—";
+
+    const intent = $("detail-intent");
+    if (intent) intent.textContent = c.subject || "Customer message";
+
+    const messages = $("messages");
+    if (messages) {
+      messages.replaceChildren();
+      const loading = document.createElement("div");
+      loading.className = "empty-state";
+      loading.textContent = "Loading saved messages…";
+      messages.append(loading);
+    }
+
+    const draft = $("reply-draft");
+    if (draft) draft.value = "";
+
+    try {
+      const data = await api(
+        `/api/inbox/conversations/${encodeURIComponent(c.id)}/messages`
+      );
+
+      if (!messages) return;
+      messages.replaceChildren();
+
+      (data.messages || []).forEach(m => {
+        const wrap = document.createElement("div");
+        wrap.className = "message " + (m.direction === "outbound" ? "business" : "customer");
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+        bubble.textContent = m.body_text || "";
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+        meta.textContent =
+          (m.direction === "outbound" ? "Business" : "Customer") +
+          " · " +
+          (m.created_at ? new Date(m.created_at).toLocaleString() : "") +
+          (m.delivery_status && m.direction === "outbound" ? " · " + m.delivery_status : "");
+
+        wrap.append(bubble, meta);
+        messages.append(wrap);
+      });
+
+      if (!(data.messages || []).length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "No messages saved in this conversation yet.";
+        messages.append(empty);
+      }
+    } catch (e) {
+      if (messages) {
+        messages.replaceChildren();
+        const err = document.createElement("div");
+        err.className = "empty-state";
+        err.textContent = "Could not load messages: " + e.message;
+        messages.append(err);
+      }
+    }
+  }
+
+  async function loadLiveInbox() {
+    const button = $("orderflow-live-toggle");
+    const state = $("orderflow-live-state");
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Loading…";
+    }
+
+    try {
+      const data = await api("/api/inbox/conversations?limit=100");
+      liveConversations = (data.conversations || []).map(mapConversation);
+      liveMode = true;
+      activeChannel = "all";
+
+      renderLiveList();
+
+      if (state) {
+        state.textContent =
+          `Live database mode · ${liveConversations.length} saved conversation(s).`;
+      }
+      if (button) button.textContent = "Refresh live conversations";
+
+      document.querySelectorAll("[data-filter]").forEach(x => x.classList.remove("active"));
+
+      if (liveConversations.length) {
+        await selectLiveConversation(liveConversations[0]);
+      } else {
+        const messages = $("messages");
+        if (messages) {
+          messages.replaceChildren();
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          empty.textContent =
+            "No live messages yet. Connect a provider and configure its n8n inbound workflow to populate this inbox.";
+          messages.append(empty);
+        }
+      }
+
+      notifyUser("Loaded persistent inbox data. This does not mean any provider is connected.");
+    } catch (e) {
+      if (state) state.textContent = "Could not load live data: " + e.message;
+      notifyUser("Live inbox could not load: " + e.message);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        if (button.textContent === "Loading…") {
+          button.textContent = "Load live conversations";
+        }
+      }
+    }
+  }
+
+  function restoreDemoUI() {
+    const state = $("orderflow-live-state");
+    if (state) state.textContent = "Demo conversations are shown. Live database mode is off.";
+
+    const list = $("conversation-list");
+    if (list && originalListMarkup !== null) list.innerHTML = originalListMarkup;
+    if (list) decorateExistingRows();
+
+    notifyUser("Returned to the original demo conversation list.");
+  }
+
+  document.addEventListener("click", async event => {
+    if (!liveMode || !selectedLive) return;
+
+    if (event.target.closest("#approve-send-btn")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const input = $("reply-draft");
+      const body = input?.value.trim();
+
+      if (!body) {
+        notifyUser("Write a reply before sending.");
+        return;
+      }
+
+      const button = $("approve-send-btn");
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Queueing…";
+      }
+
+      try {
+        const data = await api(
+          `/api/inbox/conversations/${encodeURIComponent(selectedLive.id)}/reply`,
+          { method: "POST", body: JSON.stringify({ body }) }
+        );
+
+        if (input) input.value = "";
+        notifyUser(
+          data.note ||
+          "Reply queued. Provider delivery is not confirmed until n8n reports success."
+        );
+        await selectLiveConversation(selectedLive);
+      } catch (e) {
+        notifyUser("Reply was not confirmed as sent: " + e.message);
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Queue reply";
+        }
+      }
+    }
+
+    if (event.target.closest("#draft-btn")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      try {
+        const data = await api(
+          `/api/inbox/conversations/${encodeURIComponent(selectedLive.id)}/messages`
+        );
+
+        const last = (data.messages || [])
+          .filter(m => m.direction === "inbound")
+          .slice(-1)[0];
+
+        if (!last) {
+          throw new Error("No incoming message is saved for this conversation.");
+        }
+
+        const headers = await authHeaders();
+        const response = await fetch("/api/draft-reply", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ message: last.body_text })
+        });
+
+        const draft = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(draft.error || "Draft request failed.");
+
+        const input = $("reply-draft");
+        if (input) input.value = draft.reply || "";
+
+        notifyUser("AI draft generated from the saved incoming message. Review it before queueing.");
+      } catch (e) {
+        notifyUser("Could not draft reply: " + e.message);
+      }
+    }
+  }, true);
+
+ 
+function decorateExistingRows() {
+  // Demo conversation logos are now rendered directly by renderInbox().
+  // Do not add duplicate platform badges to these rows.
+  if (liveMode) {
+    renderLiveList();
+  }
+}
+
+
+  function init() {
+    makeConnectionCards();
+    refreshConnectionStatus();
+
+    const list = $("conversation-list");
+    if (list) {
+      originalListMarkup = list.innerHTML;
+      new MutationObserver(decorateExistingRows).observe(list, {
+        childList: true,
+        subtree: true
+      });
+      decorateExistingRows();
+    }
+
+    const inboxNav = document.querySelector('[data-view="inbox"]');
+    if (inboxNav) {
+      inboxNav.addEventListener("click", () => refreshConnectionStatus());
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+
+</script>
+
+
+
+
+
+
 
 
 
