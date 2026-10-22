@@ -5441,6 +5441,7 @@ button.of-return-demo-btn:focus-visible {
     };
   }
 
+ 
   function renderLiveList() {
     const list = $("conversation-list");
     if (!list) return;
@@ -5457,13 +5458,24 @@ button.of-return-demo-btn:focus-visible {
       empty.textContent =
         "No saved conversations for this channel yet. Once n8n delivers provider messages, they will appear here.";
       list.append(empty);
+
+      const total = $("conversation-total");
+      if (total) total.textContent = "0";
       return;
     }
 
     rows.forEach(c => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "conversation" + (selectedLive?.id === c.id ? " selected" : "");
+      const platform = channelKey(c.channel);
+      const platformName = CHANNELS[platform]?.label || c.channel || "Other";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className =
+        "conversation" +
+        (selectedLive?.id === c.id ? " selected" : "") +
+        (platform !== "other" ? " of-row-" + platform : "");
+
+      button.setAttribute("aria-label", "Open conversation with " + c.name);
 
       const avatar = document.createElement("div");
       avatar.className = "person-avatar";
@@ -5475,19 +5487,47 @@ button.of-return-demo-btn:focus-visible {
       const top = document.createElement("div");
       top.className = "convo-top";
 
-      const ident = document.createElement("div");
-      ident.style.cssText =
-        "display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0";
+      const identity = document.createElement("span");
+      identity.className = "convo-identity";
 
-      const n = document.createElement("span");
-      n.className = "convo-name";
-      n.textContent = c.name;
-      ident.append(n, badge(c.channel));
+      const name = document.createElement("span");
+      name.className = "convo-name";
+      name.textContent = c.name;
+      identity.append(name);
 
-      const time = document.createElement("span");
-      time.className = "convo-time";
-      time.textContent = c.time;
-      top.append(ident, time);
+      if (platform !== "other") {
+        const logo = document.createElement("span");
+        logo.className = "of-list-channel-logo " + platform;
+        logo.setAttribute("aria-label", platformName);
+        logo.setAttribute("title", platformName);
+
+        if (platform === "gmail") {
+          logo.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor"
+                d="M2.5 6.8v10.4c0 .9.7 1.6 1.6 1.6h1.8V8.1L12 13l6.1-4.9v10.7h1.8c.9 0 1.6-.7 1.6-1.6V6.8c0-1.7-1.9-2.6-3.2-1.6L12 10 5.7 5.2C4.4 4.2 2.5 5.1 2.5 6.8Z"/>
+            </svg>`;
+        } else if (platform === "whatsapp") {
+          logo.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor"
+                d="M12 2.1a9.7 9.7 0 0 0-8.3 14.8L2.4 21.6l4.8-1.3A9.8 9.8 0 1 0 12 2.1Zm0 17.5a7.8 7.8 0 0 1-4-1.1l-.3-.2-2.8.8.8-2.7-.2-.3A7.8 7.8 0 1 1 12 19.6Zm4.3-5.8c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8.9-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.3.1-.4l.4-.5c.1-.1.2-.3.3-.4.1-.2 0-.3 0-.4s-.5-1.2-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.3c.1.2 1.6 2.5 3.9 3.4.5.2.9.3 1.2.4.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.7-1.1.2-.5.2-1 .1-1.1-.1-.1-.3-.2-.5-.3Z"/>
+            </svg>`;
+        } else if (platform === "instagram") {
+          logo.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"
+                fill="none" stroke="currentColor" stroke-width="2.2"/>
+              <circle cx="12" cy="12" r="4.2"
+                fill="none" stroke="currentColor" stroke-width="2.2"/>
+              <circle cx="17.6" cy="6.7" r="1.2" fill="currentColor"/>
+            </svg>`;
+        }
+
+        identity.append(logo);
+      }
+
+      top.append(identity, make("span", "convo-time", c.time));
 
       const preview = document.createElement("div");
       preview.className = "convo-preview";
@@ -5502,18 +5542,24 @@ button.of-return-demo-btn:focus-visible {
         ? "Needs human review"
         : c.resolved
           ? "Resolved"
-          : "Live conversation";
+          : platformName;
 
       bottom.append(tag);
+
+      if (c.unread) {
+        bottom.append(make("span", "unread", String(c.unread_count || 1)));
+      }
+
       main.append(top, preview, bottom);
-      b.append(avatar, main);
-      b.addEventListener("click", () => selectLiveConversation(c));
-      list.append(b);
+      button.append(avatar, main);
+      button.addEventListener("click", () => selectLiveConversation(c));
+      list.append(button);
     });
 
     const total = $("conversation-total");
     if (total) total.textContent = String(rows.length);
   }
+
 
   async function selectLiveConversation(c) {
     selectedLive = c;
