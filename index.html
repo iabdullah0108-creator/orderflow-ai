@@ -5765,14 +5765,9 @@ function decorateExistingRows() {
     refreshConnectionStatus();
 
     const list = $("conversation-list");
-    if (list) {
-      originalListMarkup = list.innerHTML;
-      new MutationObserver(decorateExistingRows).observe(list, {
-        childList: true,
-        subtree: true
-      });
-      decorateExistingRows();
-    }
+if (list) {
+  originalListMarkup = list.innerHTML;
+}
 
     const inboxNav = document.querySelector('[data-view="inbox"]');
     if (inboxNav) {
