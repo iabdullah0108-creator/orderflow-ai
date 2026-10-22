@@ -2368,9 +2368,9 @@ function renderMessages(c) {
 
     const bubble = make("div", "message-bubble", m.text);
 
-    if (platform !== "other") {
-      bubble.classList.add("of-bubble-" + platform);
-    }
+    if (m.from !== "business" && platform !== "other") {
+  bubble.classList.add("of-bubble-" + platform);
+}
 
     const meta = make(
       "div",
