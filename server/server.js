@@ -150,9 +150,9 @@ app.use(express.json({ limit: "20kb" }));
 
 // Never expose SUPABASE_SECRET_KEY to the browser.
 
-const supabaseUrl = process.SUPABASE_URL;
+const supabaseUrl = process.env.SUPABASE_URL;
 
-const supabaseSecretKey = process.SUPABASE_SECRET_KEY;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
 
 
 
