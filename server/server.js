@@ -2934,3 +2934,5 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`OrderFlow AI server running on port ${PORT}`);
 
 });
+
+modules.exports = app;
