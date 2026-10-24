@@ -1730,7 +1730,38 @@ td{font-size:13px}
 }
 
 
+.of-loading-row td {
+  padding: 14px 12px;
+}
 
+.of-shimmer {
+  height: 14px;
+  width: 85%;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--accent-soft) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: of-shimmer-move 1.4s ease-in-out infinite;
+}
+
+.of-shimmer.short {
+  width: 45%;
+}
+
+@keyframes of-shimmer-move {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-shimmer {
+    animation: none;
+  }
+}
   
 
   
@@ -2928,39 +2959,33 @@ channelLabel.classList.remove(
 
 
 
-  function showRecordSkeleton(container, type) {
-  if (!container) return;
 
-  const label = type === "orders" ? "orders" : "customers";
+  function showRecordSkeleton(tableBody, type) {
+  if (!tableBody) return;
 
-  container.innerHTML = `
-    <div class="of-loading-grid">
-      ${Array.from({ length: 6 }, () => `
-        <div class="of-skeleton-card">
-          <div class="of-skeleton-top">
-            <div class="of-skeleton-avatar"></div>
-            <div style="flex:1">
-              <div class="of-skeleton-line"></div>
-              <div class="of-skeleton-line short"></div>
-            </div>
-          </div>
-          <div class="of-skeleton-line"></div>
-          <div class="of-skeleton-line medium"></div>
-          <div class="of-skeleton-bottom">
-            <div class="of-skeleton-pill"></div>
-            <div class="of-skeleton-line short"></div>
-          </div>
-        </div>
-      `).join("")}
-    </div>
-    <div class="of-loading-caption">
-      <span class="of-loading-dot"></span>
-      Fetching your ${label}...
-    </div>
-  `;
+  const columns = type === "orders" ? 5 : 4;
+  tableBody.replaceChildren();
+
+  for (let i = 0; i < 5; i++) {
+    const row = document.createElement("tr");
+    row.className = "of-loading-row";
+
+    for (let j = 0; j < columns; j++) {
+      const cell = document.createElement("td");
+      const shimmer = document.createElement("div");
+      shimmer.className =
+        "of-shimmer" + (j === 1 ? " short" : "");
+
+      cell.appendChild(shimmer);
+      row.appendChild(cell);
+    }
+
+    tableBody.appendChild(row);
+  }
 }
 
   
+
 
   
 
@@ -3122,7 +3147,8 @@ function renderOrderCards() {
 
 async function renderOrders() {
 
-    showRecordSkeleton($("orders-card-list"), "orders");
+    const tbody = $("orders-table");
+showRecordSkeleton(tbody, "orders");
 
   
   const container = $("orders-card-list");
@@ -3251,8 +3277,8 @@ function renderCustomerCards() {
 
 async function renderCustomers() {
 
-    showRecordSkeleton($("customers-card-list"), "customers");
-
+const tbody = $("customers-table");
+showRecordSkeleton(tbody, "customers");
   
   const container = $("customers-card-list");
   if (!container) return;
