@@ -1762,6 +1762,81 @@ td{font-size:13px}
     animation: none;
   }
 }
+
+
+
+
+  
+.of-skeleton-card {
+  overflow: hidden;
+}
+
+.of-skeleton-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.of-skeleton-field {
+  margin-bottom: 18px;
+}
+
+.of-skeleton-title {
+  width: 48%;
+  height: 20px;
+}
+
+.of-skeleton-badge {
+  width: 76px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.of-skeleton-label {
+  width: 22%;
+  height: 10px;
+  margin-bottom: 8px;
+}
+
+.of-skeleton-value {
+  width: 65%;
+  height: 14px;
+}
+
+.of-skeleton-line {
+  width: 90%;
+  height: 12px;
+  margin-top: 8px;
+}
+
+.of-shimmer {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--accent-soft) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: of-shimmer-move 1.4s ease-in-out infinite;
+}
+
+@keyframes of-shimmer-move {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-shimmer {
+    animation: none;
+  }
+}
+
+
+
+
   
 
   
@@ -2960,29 +3035,43 @@ channelLabel.classList.remove(
 
 
 
-  function showRecordSkeleton(tableBody, type) {
-  if (!tableBody) return;
+ 
+function showRecordSkeleton(container, type) {
+  if (!container) return;
 
-  const columns = type === "orders" ? 5 : 4;
-  tableBody.replaceChildren();
+  container.replaceChildren();
 
-  for (let i = 0; i < 5; i++) {
-    const row = document.createElement("tr");
-    row.className = "of-loading-row";
+  for (let i = 0; i < 3; i++) {
+    const card = make("article", "of-record-card of-skeleton-card");
 
-    for (let j = 0; j < columns; j++) {
-      const cell = document.createElement("td");
-      const shimmer = document.createElement("div");
-      shimmer.className =
-        "of-shimmer" + (j === 1 ? " short" : "");
+    const header = make("div", "of-skeleton-header");
+    header.append(
+      make("div", "of-shimmer of-skeleton-title"),
+      make("div", "of-shimmer of-skeleton-badge")
+    );
+    card.append(header);
 
-      cell.appendChild(shimmer);
-      row.appendChild(cell);
+    const fields = type === "orders"
+      ? ["Customer", "Total", "Items"]
+      : ["Email", "Phone"];
+
+    fields.forEach(() => {
+      const field = make("div", "of-skeleton-field");
+      field.append(
+        make("div", "of-shimmer of-skeleton-label"),
+        make("div", "of-shimmer of-skeleton-value")
+      );
+      card.append(field);
+    });
+
+    if (type === "orders") {
+      card.append(make("div", "of-shimmer of-skeleton-line"));
     }
 
-    tableBody.appendChild(row);
+    container.append(card);
   }
 }
+
 
   
 
@@ -3147,15 +3236,10 @@ function renderOrderCards() {
 
 async function renderOrders() {
 
-    const tbody = $("orders-table");
-showRecordSkeleton(tbody, "orders");
+const container = $("orders-card-list");
+if (!container) return;
 
-  
-  const container = $("orders-card-list");
-  if (!container) return;
-
-  container.replaceChildren();
-  container.append(make("div", "of-record-empty", "Loading orders..."));
+showRecordSkeleton(container, "orders");
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -3277,14 +3361,10 @@ function renderCustomerCards() {
 
 async function renderCustomers() {
 
-const tbody = $("customers-table");
-showRecordSkeleton(tbody, "customers");
-  
-  const container = $("customers-card-list");
-  if (!container) return;
+const container = $("customers-card-list");
+if (!container) return;
 
-  container.replaceChildren();
-  container.append(make("div", "of-record-empty", "Loading customers..."));
+showRecordSkeleton(container, "customers");
 
   try {
     const { data: sessionData, error: sessionError } =
