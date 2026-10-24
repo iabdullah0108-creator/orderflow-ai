@@ -1408,6 +1408,124 @@ td{font-size:13px}
 
 
 
+
+
+
+<style>
+  /* Database-backed Orders and Customers cards */
+  .of-record-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .of-record-search {
+    width: 100%;
+    max-width: 420px;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 10px 13px;
+    border: 1px solid var(--border, #d8dee8);
+    border-radius: 10px;
+    background: var(--surface, var(--card, #ffffff));
+    color: inherit;
+    font: inherit;
+  }
+
+  .of-record-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 16px;
+  }
+
+  .of-record-card {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--border, #d8dee8);
+    border-radius: 14px;
+    background: var(--surface, var(--card, #ffffff));
+    overflow-wrap: anywhere;
+  }
+
+  .of-record-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .of-record-card h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+  }
+
+  .of-record-muted {
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  .of-record-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border, #d8dee8);
+  }
+
+  .of-record-field > span:first-child {
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+
+  .of-record-field > span:last-child {
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .of-record-items {
+    margin: 12px 0 0;
+    padding-left: 20px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .of-record-empty {
+    padding: 28px 18px;
+    text-align: center;
+    border: 1px dashed var(--border, #d8dee8);
+    border-radius: 12px;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 600px) {
+    .of-record-search {
+      max-width: none;
+    }
+
+    .of-record-card {
+      padding: 15px;
+    }
+  }
+</style>
+
+
+
+  
+
+
+
+
+
+
+
+  
+
+
 <link
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/css/intlTelInput.css"
@@ -1897,10 +2015,36 @@ td{font-size:13px}
         <p class="footer-note">No real AI model, messaging API, or order database is connected. Drafts use simple demo rules and sample policies. Review sensitive requests before taking action in a real product.</p>
       </section>
 
-      <section class="view" id="view-orders">
-        <div class="page-heading"><div><div class="eyebrow">Order management</div><h1>Orders</h1><p class="subtitle">Example order records for the prototype.</p></div><button class="btn btn-primary" id="add-order-btn">＋ Add demo order</button></div>
-        <div class="panel"><div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="orders-table"></tbody></table></div></div>
-      </section>
+      
+<section class="view" id="view-orders">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Order management</div>
+      <h1>Orders</h1>
+      <p class="subtitle">Search and manage orders saved in your workspace.</p>
+    </div>
+    <button class="btn btn-primary" id="add-order-btn" type="button">
+      ＋ Create order
+    </button>
+  </div>
+
+  <div class="of-record-toolbar">
+    <input
+      class="of-record-search"
+      id="orders-search"
+      type="search"
+      placeholder="Search order ID, customer, item or status..."
+      aria-label="Search orders"
+      autocomplete="off"
+    />
+    <span class="of-record-muted" id="orders-result-count"></span>
+  </div>
+
+  <div class="of-record-grid" id="orders-card-list">
+    <div class="of-record-empty">Orders will appear here.</div>
+  </div>
+</section>
+
 
 
 
@@ -2018,7 +2162,32 @@ td{font-size:13px}
       </section>
 
       
-      <section class="view" id="view-customers"><div class="page-heading"><div><div class="eyebrow">Customer directory</div><h1>Customers</h1><p class="subtitle">Customer records stored in your database.</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Created</th></tr></thead><tbody id="customers-table"></tbody></table></div></div></section>
+
+<section class="view" id="view-customers">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Customer directory</div>
+      <h1>Customers</h1>
+      <p class="subtitle">Search customer records saved in your workspace.</p>
+    </div>
+  </div>
+
+  <div class="of-record-toolbar">
+    <input
+      class="of-record-search"
+      id="customers-search"
+      type="search"
+      placeholder="Search customer name, email or phone..."
+      aria-label="Search customers"
+      autocomplete="off"
+    />
+    <span class="of-record-muted" id="customers-result-count"></span>
+  </div>
+
+  <div class="of-record-grid" id="customers-card-list">
+    <div class="of-record-empty">Customers will appear here.</div>
+  </div>
+</section>
 
 
       <section class="view" id="view-invoices"><div class="page-heading"><div><div class="eyebrow">Billing</div><h1>Invoices</h1><p class="subtitle">Invoice generation will be connected to real orders later.</p></div></div><div class="panel"><h2>Invoice workspace</h2><p class="subtitle" style="margin-top:10px">This prototype does not create or issue real invoices yet. Once the secure backend is ready, we can generate printable PDFs from verified order records.</p></div></section>
@@ -2537,187 +2706,343 @@ channelLabel.classList.remove(
 
 
 
+let databaseOrdersForCards = [];
+let databaseCustomersForCards = [];
 
-
-async function renderOrders() {
-  const tbody = $("orders-table");
-  tbody.replaceChildren();
-
-  const loadingRow = document.createElement("tr");
-  loadingRow.append(make("td", "", "Loading orders..."));
-  tbody.append(loadingRow);
-
-  try {
-    
-
-
-
-    
-const { data: sessionData, error: sessionError } =
-  await supabaseClient.auth.getSession();
-
-if (sessionError || !sessionData.session) {
-  throw new Error("Please sign in to load orders.");
+function addRecordField(card, label, value) {
+  const row = make("div", "of-record-field");
+  row.append(
+    make("span", "", label),
+    make("span", "", value == null || value === "" ? "—" : String(value))
+  );
+  card.append(row);
 }
 
-const response = await fetch("/api/orders", {
-  headers: {
-    Authorization: `Bearer ${sessionData.session.access_token}`
+function formatRecordDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleDateString();
+}
+
+/* ---------------------------
+   ORDERS: render individual cards
+---------------------------- */
+
+function renderOrderCards() {
+  const container = $("orders-card-list");
+  const searchInput = $("orders-search");
+  const count = $("orders-result-count");
+
+  if (!container || !searchInput || !count) return;
+
+  const query = searchInput.value.trim().toLowerCase();
+
+  const visibleOrders = databaseOrdersForCards.filter(order => {
+    const customerName = order.customers?.name || "";
+    const itemText = (order.items || [])
+      .map(item => [
+        item.product_name,
+        item.options,
+        item.quantity
+      ].filter(Boolean).join(" "))
+      .join(" ");
+
+    const searchableText = [
+      order.order_number,
+      order.id,
+      customerName,
+      order.status,
+      order.currency,
+      order.total,
+      itemText
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return searchableText.includes(query);
+  });
+
+  count.textContent =
+    `${visibleOrders.length} of ${databaseOrdersForCards.length} orders`;
+
+  container.replaceChildren();
+
+  if (visibleOrders.length === 0) {
+    container.append(make(
+      "div",
+      "of-record-empty",
+      databaseOrdersForCards.length
+        ? "No orders match your search."
+        : "No orders found. Create an order to get started."
+    ));
+    return;
   }
-});
 
+  visibleOrders.forEach(order => {
+    const card = make("article", "of-record-card");
 
+    const header = make("div", "of-record-card-header");
+    const heading = make("div");
 
+    const orderLabel = order.order_number
+      ? `Order ${order.order_number}`
+      : `Order ${String(order.id || "").slice(0, 8)}`;
 
+    heading.append(
+      make("h3", "", orderLabel),
+      make(
+        "div",
+        "of-record-muted",
+        `Created ${formatRecordDate(order.created_at)}`
+      )
+    );
 
+    const status = String(order.status || "Pending");
+    const normalizedStatus = status.toLowerCase();
 
-
-
-    if (!response.ok) {
-      throw new Error("Could not load orders.");
-    }
-
-    const result = await response.json();
-    tbody.replaceChildren();
-
-    if (!result.orders || result.orders.length === 0) {
-      const tr = document.createElement("tr");
-      tr.append(make("td", "", "No orders found."));
-      tbody.append(tr);
-      return;
-    }
-
-    result.orders.forEach(order => {
-      const tr = document.createElement("tr");
-
-      const status = String(order.status || "pending");
-      const statusClass =
-        status.toLowerCase() === "completed" ||
-        status.toLowerCase() === "delivered"
-          ? "green"
+    const statusClass =
+      ["completed", "delivered"].includes(normalizedStatus)
+        ? "green"
+        : ["cancelled", "canceled", "refunded"].includes(normalizedStatus)
+          ? "red"
           : "purple";
 
-      const values = [
-        order.order_number || "—",
-        order.customers?.name || "Not linked",
-        
-        
-        (order.items || [])
-        .map(item => {
-          const options = item.options
-            ? ` (${item.options})`
-            : "";
+    header.append(
+      heading,
+      make("span", `pill ${statusClass}`, status)
+    );
 
-          return `${item.product_name}${options} × ${item.quantity}`;
-        })
-        .join(", ") || "No items",
+    card.append(header);
 
+    addRecordField(
+      card,
+      "Customer",
+      order.customers?.name || "Not linked"
+    );
 
-        `${order.currency || "PKR"} ${Number(order.total).toLocaleString()}`,
-        status
-      ];
+    addRecordField(
+      card,
+      "Total",
+      `${order.currency || "PKR"} ${Number(order.total || 0).toLocaleString()}`
+    );
 
-      values.forEach((value, index) => {
-        const td = make("td");
+    const items = Array.isArray(order.items) ? order.items : [];
 
-        if (index === 4) {
-          td.append(make("span", "pill " + statusClass, value));
-        } else {
-          td.textContent = safeText(String(value));
-        }
+    addRecordField(
+      card,
+      "Items",
+      `${items.reduce(
+        (total, item) => total + (Number(item.quantity) || 0),
+        0
+      )} item(s)`
+    );
 
-        tr.append(td);
+    if (items.length > 0) {
+      const itemList = make("ul", "of-record-items");
+
+      items.forEach(item => {
+        const options = item.options ? ` (${item.options})` : "";
+        const quantity = Number(item.quantity) || 0;
+
+        itemList.append(make(
+          "li",
+          "",
+          `${item.product_name || "Product"}${options} × ${quantity}`
+        ));
       });
 
-      tbody.append(tr);
-    });
-  } catch (error) {
-    console.error("Could not load orders:", error);
-    tbody.replaceChildren();
-
-    const tr = document.createElement("tr");
-    tr.append(make("td", "", "Could not load orders. Please try again."));
-    tbody.append(tr);
-  }
-}
-
-
-
-
-async function renderCustomers() {
-  const tbody = $("customers-table");
-  tbody.replaceChildren();
-
-  const loadingRow = document.createElement("tr");
-  loadingRow.append(make("td", "", "Loading customers..."));
-  tbody.append(loadingRow);
-
-  try {
-    
-
-    const { data: sessionData, error: sessionError } =
-  await supabaseClient.auth.getSession();
-
-if (sessionError || !sessionData.session) {
-  throw new Error("Please sign in to load customers.");
-}
-
-const response = await fetch("/api/customers", {
-  headers: {
-    Authorization: `Bearer ${sessionData.session.access_token}`
-  }
-});
-
-
-console.log("Customers HTTP status:", response.status);
-console.log("Customers response:", await response.clone().text());
-
-
-    if (!response.ok) {
-  const errorDetails = await response.json();
-  console.error("Customers API error:", response.status, errorDetails);
-  throw new Error(errorDetails.message || errorDetails.error || "Could not load customers.");
-}
-
-    const result = await response.json();
-    tbody.replaceChildren();
-
-    if (!result.customers || result.customers.length === 0) {
-      tbody.append(
-        make("tr", "", "")
-      );
-      tbody.lastElementChild.append(
-        make("td", "", "No customers found.")
-      );
-      return;
+      card.append(itemList);
+    } else {
+      card.append(make("p", "of-record-muted", "No item details available."));
     }
 
-    result.customers.forEach(customer => {
-      const tr = document.createElement("tr");
+    container.append(card);
+  });
+}
 
-      const createdAt = customer.created_at
-        ? new Date(customer.created_at).toLocaleDateString()
-        : "—";
+async function renderOrders() {
+  const container = $("orders-card-list");
+  if (!container) return;
 
-      [
-        customer.name || "—",
-        customer.email || "—",
-        customer.phone || "—",
-        createdAt
-      ].forEach(value => {
-        tr.append(make("td", "", value));
-      });
+  container.replaceChildren();
+  container.append(make("div", "of-record-empty", "Loading orders..."));
 
-      tbody.append(tr);
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in to load orders.");
+    }
+
+    const response = await fetch("/api/orders", {
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`
+      }
     });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not load orders. Please try again."
+      );
+    }
+
+    databaseOrdersForCards = Array.isArray(result.orders)
+      ? result.orders
+      : [];
+
+    renderOrderCards();
+
+    const searchInput = $("orders-search");
+    if (searchInput) {
+      searchInput.oninput = renderOrderCards;
+    }
   } catch (error) {
-    tbody.replaceChildren();
-    tbody.append(make("tr", "", ""));
-    tbody.lastElementChild.append(
-      make("td", "", "Could not load customers. Please try again.")
+    console.error("Could not load orders:", error);
+
+    container.replaceChildren(
+      make(
+        "div",
+        "of-record-empty",
+        error.message || "Could not load orders. Please try again."
+      )
     );
+
+    const count = $("orders-result-count");
+    if (count) count.textContent = "";
   }
 }
+
+/* ---------------------------
+   CUSTOMERS: render individual cards
+---------------------------- */
+
+function renderCustomerCards() {
+  const container = $("customers-card-list");
+  const searchInput = $("customers-search");
+  const count = $("customers-result-count");
+
+  if (!container || !searchInput || !count) return;
+
+  const query = searchInput.value.trim().toLowerCase();
+
+  const visibleCustomers = databaseCustomersForCards.filter(customer => {
+    const searchableText = [
+      customer.name,
+      customer.email,
+      customer.phone,
+      customer.address,
+      customer.id
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return searchableText.includes(query);
+  });
+
+  count.textContent =
+    `${visibleCustomers.length} of ${databaseCustomersForCards.length} customers`;
+
+  container.replaceChildren();
+
+  if (visibleCustomers.length === 0) {
+    container.append(make(
+      "div",
+      "of-record-empty",
+      databaseCustomersForCards.length
+        ? "No customers match your search."
+        : "No customers found. Customers will appear here when added."
+    ));
+    return;
+  }
+
+  visibleCustomers.forEach(customer => {
+    const card = make("article", "of-record-card");
+
+    const header = make("div", "of-record-card-header");
+    const heading = make("div");
+
+    heading.append(
+      make("h3", "", customer.name || "Unnamed customer"),
+      make(
+        "div",
+        "of-record-muted",
+        `Added ${formatRecordDate(customer.created_at)}`
+      )
+    );
+
+    header.append(heading);
+    card.append(header);
+
+    addRecordField(card, "Email", customer.email || "Not provided");
+    addRecordField(card, "Phone", customer.phone || "Not provided");
+
+    if (customer.address) {
+      addRecordField(card, "Address", customer.address);
+    }
+
+    container.append(card);
+  });
+}
+
+async function renderCustomers() {
+  const container = $("customers-card-list");
+  if (!container) return;
+
+  container.replaceChildren();
+  container.append(make("div", "of-record-empty", "Loading customers..."));
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in to load customers.");
+    }
+
+    const response = await fetch("/api/customers", {
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`
+      }
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not load customers. Please try again."
+      );
+    }
+
+    databaseCustomersForCards = Array.isArray(result.customers)
+      ? result.customers
+      : [];
+
+    renderCustomerCards();
+
+    const searchInput = $("customers-search");
+    if (searchInput) {
+      searchInput.oninput = renderCustomerCards;
+    }
+  } catch (error) {
+    console.error("Could not load customers:", error);
+
+    container.replaceChildren(
+      make(
+        "div",
+        "of-record-empty",
+        error.message || "Could not load customers. Please try again."
+      )
+    );
+
+    const count = $("customers-result-count");
+    if (count) count.textContent = "";
+  }
+}
+
+
+
 
 function renderApprovals() {
   const list = $("approval-list");
