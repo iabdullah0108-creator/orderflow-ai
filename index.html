@@ -1575,6 +1575,165 @@ td{font-size:13px}
   margin-top: auto;
   padding-top: 12px;
 }
+
+
+
+
+  
+/* OrderFlow AI — animated loading skeletons */
+.of-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 340px));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.of-skeleton-card {
+  min-height: 176px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface, var(--card));
+  overflow: hidden;
+  animation: of-card-enter 0.35s ease both;
+}
+
+.of-skeleton-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.of-skeleton-avatar,
+.of-skeleton-line,
+.of-skeleton-pill {
+  position: relative;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 8px;
+}
+
+.of-skeleton-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 13px;
+}
+
+.of-skeleton-line {
+  height: 11px;
+  margin-bottom: 10px;
+}
+
+.of-skeleton-line.title {
+  width: 58%;
+  height: 13px;
+}
+
+.of-skeleton-line.short {
+  width: 35%;
+}
+
+.of-skeleton-line.medium {
+  width: 72%;
+}
+
+.of-skeleton-line.full {
+  width: 100%;
+}
+
+.of-skeleton-pill {
+  width: 76px;
+  height: 24px;
+  border-radius: 20px;
+}
+
+.of-skeleton-avatar::after,
+.of-skeleton-line::after,
+.of-skeleton-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.48),
+    transparent
+  );
+  animation: of-shimmer 1.45s ease-in-out infinite;
+}
+
+:root[data-theme="dark"] .of-skeleton-avatar::after,
+:root[data-theme="dark"] .of-skeleton-line::after,
+:root[data-theme="dark"] .of-skeleton-pill::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09),
+    transparent
+  );
+}
+
+.of-skeleton-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.of-loading-caption {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.of-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6485f5;
+  box-shadow: 0 0 0 4px rgba(100, 133, 245, 0.13);
+  animation: of-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes of-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes of-pulse {
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+
+@keyframes of-card-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-skeleton-avatar::after,
+  .of-skeleton-line::after,
+  .of-skeleton-pill::after,
+  .of-loading-dot {
+    animation: none;
+  }
+
+  .of-skeleton-card {
+    animation: none;
+  }
+}
+
+
+
+  
+
+  
 </style>
 
 
@@ -2769,6 +2928,42 @@ channelLabel.classList.remove(
 
 
 
+  function showRecordSkeleton(container, type) {
+  if (!container) return;
+
+  const label = type === "orders" ? "orders" : "customers";
+
+  container.innerHTML = `
+    <div class="of-loading-grid">
+      ${Array.from({ length: 6 }, () => `
+        <div class="of-skeleton-card">
+          <div class="of-skeleton-top">
+            <div class="of-skeleton-avatar"></div>
+            <div style="flex:1">
+              <div class="of-skeleton-line"></div>
+              <div class="of-skeleton-line short"></div>
+            </div>
+          </div>
+          <div class="of-skeleton-line"></div>
+          <div class="of-skeleton-line medium"></div>
+          <div class="of-skeleton-bottom">
+            <div class="of-skeleton-pill"></div>
+            <div class="of-skeleton-line short"></div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <div class="of-loading-caption">
+      <span class="of-loading-dot"></span>
+      Fetching your ${label}...
+    </div>
+  `;
+}
+
+  
+
+  
+
 
 let databaseOrdersForCards = [];
 let databaseCustomersForCards = [];
@@ -2926,6 +3121,10 @@ function renderOrderCards() {
 }
 
 async function renderOrders() {
+
+    showRecordSkeleton($("orders-card-list"), "orders");
+
+  
   const container = $("orders-card-list");
   if (!container) return;
 
@@ -3051,6 +3250,10 @@ function renderCustomerCards() {
 }
 
 async function renderCustomers() {
+
+    showRecordSkeleton($("customers-card-list"), "customers");
+
+  
   const container = $("customers-card-list");
   if (!container) return;
 
