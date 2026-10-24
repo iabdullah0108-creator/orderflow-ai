@@ -1395,7 +1395,51 @@ td{font-size:13px}
 
 
 
+/* Create Order modal — readable in light theme */
+:root:not([data-theme="dark"]) #create-order-modal .modal-card {
+  background: #ffffff !important;
+  color: #182230 !important;
+  border: 1px solid #e3e8f0;
+  box-shadow: 0 24px 70px rgba(20, 30, 50, 0.18);
+}
 
+:root:not([data-theme="dark"]) #create-order-modal .modal-card h2,
+:root:not([data-theme="dark"]) #create-order-modal .modal-card h3,
+:root:not([data-theme="dark"]) #create-order-modal .modal-card label {
+  color: #182230;
+}
+
+:root:not([data-theme="dark"]) #create-order-modal .modal-card p,
+:root:not([data-theme="dark"]) #create-order-modal .modal-card .subtitle {
+  color: #64748b;
+}
+
+:root:not([data-theme="dark"]) #create-order-modal input,
+:root:not([data-theme="dark"]) #create-order-modal select,
+:root:not([data-theme="dark"]) #create-order-modal textarea {
+  background: #f8fafc !important;
+  color: #182230 !important;
+  border-color: #cbd5e1 !important;
+}
+
+:root:not([data-theme="dark"]) #create-order-modal input::placeholder,
+:root:not([data-theme="dark"]) #create-order-modal textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+:root:not([data-theme="dark"]) #create-order-modal select option {
+  background: #ffffff;
+  color: #182230;
+}
+
+:root:not([data-theme="dark"]) #create-order-modal .modal-card input:focus,
+:root:not([data-theme="dark"]) #create-order-modal .modal-card select:focus,
+:root:not([data-theme="dark"]) #create-order-modal .modal-card textarea:focus {
+  outline: 2px solid #93b4ff;
+  outline-offset: 1px;
+  border-color: #4776e6 !important;
+}
 
 
 
@@ -1435,11 +1479,14 @@ td{font-size:13px}
     font: inherit;
   }
 
-  .of-record-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 16px;
-  }
+  
+.of-record-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 340px));
+  gap: 16px;
+  align-items: start;
+}
+
 
   .of-record-card {
     min-width: 0;
