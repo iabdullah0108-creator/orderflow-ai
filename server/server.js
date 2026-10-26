@@ -444,6 +444,156 @@ app.get("/api/customers", authenticateUser, async (req, res) => {
 
 
 
+app.put("/api/customers/:id", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const customerId = req.params.id;
+    const { name, email, phone, address } = req.body || {};
+
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({
+        error: "Customer name is required."
+      });
+    }
+
+    const fields = { name: name.trim() };
+
+    for (const key of ["email", "phone", "address"]) {
+      const value = req.body[key];
+
+      if (value !== undefined && value !== null && typeof value !== "string") {
+        return res.status(400).json({
+          error: `Invalid ${key} value.`
+        });
+      }
+
+      if (value !== undefined) {
+        const trimmed = (value || "").trim();
+
+        const maxLengths = {
+          email: 254,
+          phone: 50,
+          address: 1000
+        };
+
+        if (trimmed.length > maxLengths[key]) {
+          return res.status(400).json({
+            error: `${key} is too long.`
+          });
+        }
+
+        fields[key] = trimmed || null;
+      }
+    }
+
+    if (fields.name.length > 200) {
+      return res.status(400).json({
+        error: "Customer name is too long."
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("customers")
+      .update(fields)
+      .eq("id", customerId)
+      .eq("workspace_id", workspace.id)
+      .select("id, name, email, phone, address, created_at")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Customer update failed:", error.message);
+      return res.status(500).json({
+        error: "Could not update customer."
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Customer not found."
+      });
+    }
+
+    return res.json({ customer: data });
+  } catch (error) {
+    console.error("Customer update endpoint failed:", error.message);
+    return res.status(500).json({
+      error: "Could not update customer."
+    });
+  }
+});
+
+
+app.delete("/api/customers/:id", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const customerId = req.params.id;
+
+    const { data, error } = await supabase
+      .from("customers")
+      .delete()
+      .eq("id", customerId)
+      .eq("workspace_id", workspace.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Customer deletion failed:", error.message);
+      return res.status(409).json({
+        error: "Could not delete customer. Check whether existing orders reference this customer."
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Customer not found."
+      });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Customer deletion endpoint failed:", error.message);
+    return res.status(500).json({
+      error: "Could not delete customer."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
 app.post("/api/customers/lookup",authenticateUser, async (req, res) => {
 
     if (!supabase) {
