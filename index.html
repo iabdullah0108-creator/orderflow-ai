@@ -3072,6 +3072,96 @@ td{font-size:13px}
 
   
 
+
+
+
+
+
+
+  
+/* Edit Order popup — Add Item */
+.of-order-edit-form .of-edit-add-item {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 13px !important;
+  background: #e4f6e9 !important;
+  color: #187442 !important;
+  border: 1px solid #b8e5c6 !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s ease,
+              border-color 0.18s ease,
+              transform 0.18s ease;
+}
+
+.of-order-edit-form .of-edit-add-item:hover {
+  background: #d0efda !important;
+  border-color: #91d6a8 !important;
+  transform: translateY(-1px);
+}
+
+/* Edit Order popup — Remove Item */
+.of-order-edit-form .of-edit-remove-item {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 11px !important;
+  background: #fff0f0 !important;
+  color: #c62828 !important;
+  border: 1px solid #f2c2c2 !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s ease,
+              border-color 0.18s ease,
+              transform 0.18s ease;
+}
+
+.of-order-edit-form .of-edit-remove-item:hover {
+  background: #ffdddd !important;
+  border-color: #e9a0a0 !important;
+  transform: translateY(-1px);
+}
+
+/* Dark theme — Add Item */
+:root[data-theme="dark"] .of-order-edit-form .of-edit-add-item {
+  background: #203d2d !important;
+  color: #9be4b3 !important;
+  border-color: #356849 !important;
+}
+
+:root[data-theme="dark"] .of-order-edit-form .of-edit-add-item:hover {
+  background: #2a503a !important;
+  border-color: #47875e !important;
+}
+
+/* Dark theme — Remove Item */
+:root[data-theme="dark"] .of-order-edit-form .of-edit-remove-item {
+  background: #482929 !important;
+  color: #ffaaaa !important;
+  border-color: #754040 !important;
+}
+
+:root[data-theme="dark"] .of-order-edit-form .of-edit-remove-item:hover {
+  background: #5a3030 !important;
+  border-color: #985050 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
   
 </style>
 
@@ -4689,7 +4779,11 @@ async function showOrderEdit(order) {
     options.placeholder = "Options / variant (optional)";
     options.value = item.options || "";
 
-    const remove = make("button", "btn btn-secondary", "Remove item");
+    const remove = make(
+  "button",
+  "btn btn-secondary of-edit-remove-item",
+  "Remove item"
+);
     remove.type = "button";
     remove.addEventListener("click", () => {
       if (itemRows.children.length <= 1) {
