@@ -3719,8 +3719,14 @@ async function showOrderEdit(order) {
   const cancelButton = make("button", "btn btn-secondary", "Close");
   cancelButton.type = "button";
 
-  const saveButton = make("button", "btn btn-primary", "Save changes");
-  saveButton.type = "submit";
+const saveButton = make("button", "btn btn-primary", "Save changes");
+saveButton.type = "button";
+
+saveButton.addEventListener("click", () => {
+  if (content.reportValidity()) {
+    content.requestSubmit();
+  }
+});
 
   const overlay = showOrderDialog(
     `Edit order ${order.order_number || String(order.id).slice(0, 8)}`,
