@@ -900,9 +900,7 @@ app.get("/api/orders", authenticateUser, async (req, res) => {
 
       .from("orders")
 
-      .select(
-
-        "id, order_number, status, total, currency, customer_id, created_at"
+      .select("id, order_number, status, total, currency, customer_id, shipping_address, created_at")
 
       )
 
