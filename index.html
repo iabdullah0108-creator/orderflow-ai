@@ -4109,9 +4109,7 @@ async function renderOrders() {
   const container = $("orders-card-list");
   if (!container) return;
 
-  container.replaceChildren(
-    make("div", "of-record-empty", "Loading orders...")
-  );
+  showRecordSkeleton(container, "orders");
 
   try {
     const { data: sessionData, error: sessionError } =
