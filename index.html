@@ -2012,6 +2012,87 @@ td{font-size:13px}
   color: var(--accent, #6485f5);
 }
 
+  
+/* Responsive Orders list */
+.of-order-row > * {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .of-order-row {
+    grid-template-columns:
+      minmax(0, 1.4fr)
+      minmax(0, 1fr)
+      minmax(0, 0.8fr);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .of-order-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .of-orders-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .of-order-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .of-order-customer {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .of-order-status {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    max-width: 100%;
+  }
+
+  .of-order-row > .of-order-cell {
+    grid-column: 1 / -1;
+  }
+
+  .of-order-total {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .of-order-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    padding-top: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .of-order-row {
+    padding: 11px;
+    gap: 10px;
+  }
+
+  .of-order-status {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .of-order-action {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+
 /* ========================================
    OrderFlow AI — Order Details Popup
    Minimal premium SaaS design
