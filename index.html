@@ -6935,13 +6935,16 @@ $("create-order-form").addEventListener("submit", async event => {
   let customerId = $("order-customer").value;
   let shippingAddress = "";
 
-  const items = Array.from(
-    document.querySelectorAll(".order-item-row")
-  ).map(row => ({
-    product_name: row.querySelector('[name="product_name"]').value.trim(),
-    quantity: Number(row.querySelector('[name="quantity"]').value),
-    unit_price: Number(row.querySelector('[name="unit_price"]').value)
-  }));
+  
+const items = Array.from(
+  document.querySelectorAll(".order-item-row")
+).map(row => ({
+  product_name: row.querySelector('[name="product_name"]').value.trim(),
+  quantity: Number(row.querySelector('[name="quantity"]').value),
+  unit_price: Number(row.querySelector('[name="unit_price"]').value),
+  options: row.querySelector('[name="options"]')?.value.trim() || ""
+}));
+
 
   if (isNewCustomer) {
     const name = $("new-customer-name").value.trim();
