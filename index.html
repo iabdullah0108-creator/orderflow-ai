@@ -3019,6 +3019,88 @@ td{font-size:13px}
 
 
 
+
+
+
+  
+/* =========================================
+   Add New Customer — Neutral Button
+   ========================================= */
+
+#create-order-modal #add-new-customer,
+#create-order-modal .add-new-customer,
+#create-order-modal [data-action="add-new-customer"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto !important;
+  min-height: 38px;
+  padding: 8px 13px !important;
+  border: 1px solid #d5dce7 !important;
+  border-radius: 9px !important;
+  background: #ffffff !important;
+  color: #344054 !important;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  transition: background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
+}
+
+/* Avoid adding a duplicate plus icon */
+#create-order-modal #add-new-customer::before,
+#create-order-modal .add-new-customer::before,
+#create-order-modal [data-action="add-new-customer"]::before {
+  content: none !important;
+}
+
+#create-order-modal #add-new-customer:hover,
+#create-order-modal .add-new-customer:hover,
+#create-order-modal [data-action="add-new-customer"]:hover {
+  background: #f3f6fa !important;
+  border-color: #aeb9ca !important;
+  box-shadow: 0 3px 7px rgba(16, 24, 40, 0.09);
+  transform: translateY(-1px);
+}
+
+#create-order-modal #add-new-customer:active,
+#create-order-modal .add-new-customer:active,
+#create-order-modal [data-action="add-new-customer"]:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] #create-order-modal #add-new-customer,
+:root[data-theme="dark"] #create-order-modal .add-new-customer,
+:root[data-theme="dark"] #create-order-modal [data-action="add-new-customer"] {
+  background: #283243 !important;
+  color: #e7edf6 !important;
+  border-color: #465267 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="dark"] #create-order-modal #add-new-customer:hover,
+:root[data-theme="dark"] #create-order-modal .add-new-customer:hover,
+:root[data-theme="dark"] #create-order-modal [data-action="add-new-customer"]:hover {
+  background: #344155 !important;
+  border-color: #64748b !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+#create-order-modal #add-new-customer:focus-visible,
+#create-order-modal .add-new-customer:focus-visible,
+#create-order-modal [data-action="add-new-customer"]:focus-visible {
+  outline: 2px solid #6485f5;
+  outline-offset: 3px;
+}
+
+
+
   
   
 
