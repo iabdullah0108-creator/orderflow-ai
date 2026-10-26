@@ -6745,6 +6745,26 @@ function addOrderItemRow() {
   productInput.required = true;
   productField.append(productLabel, productInput);
 
+
+
+  
+  // Options / Variant (optional), matching Edit Order
+  const optionsField = document.createElement("div");
+  const optionsLabel = document.createElement("label");
+  optionsLabel.textContent = "Options / Variant (optional)";
+
+  const optionsInput = document.createElement("input");
+  optionsInput.type = "text";
+  optionsInput.name = "options";
+  optionsInput.maxLength = 300;
+  optionsInput.placeholder = "e.g. Large / Black";
+
+  optionsField.append(optionsLabel, optionsInput);
+
+
+
+  
+
   const quantityField = document.createElement("div");
   const quantityLabel = document.createElement("label");
   quantityLabel.textContent = "Quantity";
@@ -6781,7 +6801,13 @@ function addOrderItemRow() {
     updateNewOrderTotal();
   });
 
-  row.append(productField, quantityField, priceField, removeButton);
+    row.append(
+    productField,
+    optionsField,
+    quantityField,
+    priceField,
+    removeButton
+  );
   list.appendChild(row);
 
   quantityInput.addEventListener("input", updateNewOrderTotal);
