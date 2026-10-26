@@ -1395,36 +1395,45 @@ td{font-size:13px}
 
 
 
-/* Create Order modal — readable in light theme */
+/* =========================================
+   Create Order Modal — Light Theme
+   ========================================= */
+
 :root:not([data-theme="dark"]) #create-order-modal .modal-card {
   background: #ffffff !important;
   color: #182230 !important;
-  border: 1px solid #e3e8f0;
-  box-shadow: 0 24px 70px rgba(20, 30, 50, 0.18);
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px;
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.16),
+    0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 :root:not([data-theme="dark"]) #create-order-modal .modal-card h2,
 :root:not([data-theme="dark"]) #create-order-modal .modal-card h3,
 :root:not([data-theme="dark"]) #create-order-modal .modal-card label {
-  color: #182230;
+  color: #182230 !important;
 }
 
 :root:not([data-theme="dark"]) #create-order-modal .modal-card p,
 :root:not([data-theme="dark"]) #create-order-modal .modal-card .subtitle {
-  color: #64748b;
+  color: #64748b !important;
 }
 
 :root:not([data-theme="dark"]) #create-order-modal input,
 :root:not([data-theme="dark"]) #create-order-modal select,
 :root:not([data-theme="dark"]) #create-order-modal textarea {
+  box-sizing: border-box;
   background: #f8fafc !important;
   color: #182230 !important;
-  border-color: #cbd5e1 !important;
+  border: 1px solid #d7e0eb !important;
+  border-radius: 10px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 :root:not([data-theme="dark"]) #create-order-modal input::placeholder,
 :root:not([data-theme="dark"]) #create-order-modal textarea::placeholder {
-  color: #64748b !important;
+  color: #8491a5 !important;
   opacity: 1;
 }
 
@@ -1436,11 +1445,91 @@ td{font-size:13px}
 :root:not([data-theme="dark"]) #create-order-modal .modal-card input:focus,
 :root:not([data-theme="dark"]) #create-order-modal .modal-card select:focus,
 :root:not([data-theme="dark"]) #create-order-modal .modal-card textarea:focus {
-  outline: 2px solid #93b4ff;
-  outline-offset: 1px;
-  border-color: #4776e6 !important;
+  outline: none;
+  border-color: #527cf5 !important;
+  box-shadow: 0 0 0 3px rgba(82, 124, 245, 0.16);
 }
 
+
+/* =========================================
+   Create Order Modal — Dark Theme
+   ========================================= */
+
+:root[data-theme="dark"] #create-order-modal .modal-card {
+  background: #202938 !important;
+  color: #edf2fa !important;
+  border: 1px solid #354155 !important;
+  border-radius: 18px;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.42),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] #create-order-modal .modal-card h2,
+:root[data-theme="dark"] #create-order-modal .modal-card h3,
+:root[data-theme="dark"] #create-order-modal .modal-card label {
+  color: #edf2fa !important;
+}
+
+:root[data-theme="dark"] #create-order-modal .modal-card p,
+:root[data-theme="dark"] #create-order-modal .modal-card .subtitle {
+  color: #aab7ca !important;
+}
+
+:root[data-theme="dark"] #create-order-modal input,
+:root[data-theme="dark"] #create-order-modal select,
+:root[data-theme="dark"] #create-order-modal textarea {
+  box-sizing: border-box;
+  background: #171f2c !important;
+  color: #edf2fa !important;
+  border: 1px solid #3b485c !important;
+  border-radius: 10px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+:root[data-theme="dark"] #create-order-modal input::placeholder,
+:root[data-theme="dark"] #create-order-modal textarea::placeholder {
+  color: #8998ad !important;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] #create-order-modal select option {
+  background: #171f2c;
+  color: #edf2fa;
+}
+
+:root[data-theme="dark"] #create-order-modal .modal-card input:focus,
+:root[data-theme="dark"] #create-order-modal .modal-card select:focus,
+:root[data-theme="dark"] #create-order-modal .modal-card textarea:focus {
+  outline: none;
+  border-color: #7898ff !important;
+  box-shadow: 0 0 0 3px rgba(120, 152, 255, 0.2);
+}
+
+
+/* =========================================
+   Shared Modal Improvements
+   ========================================= */
+
+#create-order-modal .modal-card {
+  opacity: 1;
+  overflow-wrap: anywhere;
+}
+
+#create-order-modal input:disabled,
+#create-order-modal select:disabled,
+#create-order-modal textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #create-order-modal input,
+  #create-order-modal select,
+  #create-order-modal textarea {
+    transition: none;
+  }
+}
 
 
 
