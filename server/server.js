@@ -902,7 +902,6 @@ app.get("/api/orders", authenticateUser, async (req, res) => {
 
       .select("id, order_number, status, total, currency, customer_id, shipping_address, created_at")
 
-      )
 
       .eq("workspace_id", workspaceId)
 
@@ -1501,7 +1500,6 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
 
 
 
-
 app.put("/api/orders/:id", authenticateUser, async (req, res) => {
   if (!supabase) {
     return res.status(503).json({ error: "Database is not configured." });
@@ -1827,6 +1825,7 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
     });
   }
 });
+
 
 
 
