@@ -3169,7 +3169,342 @@ td{font-size:13px}
 
 
 
+  
+/* =====================================================
+   ORDERFLOW AI — CUSTOMERS PAGE
+   Compact cards, initials avatars, contact details,
+   Edit/Delete actions, responsive layout, dark mode
+   ===================================================== */
 
+/* Customer cards grid */
+#customers-card-list {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, 290px), 330px)
+  );
+  align-items: start;
+  justify-content: start;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Individual customer card */
+#customers-card-list > .of-customer-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  width: 100%;
+  min-width: 0;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+/* =====================================================
+   CUSTOMER HEADER AND IDENTITY
+   ===================================================== */
+
+.of-customer-card .of-record-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: 10px;
+}
+
+/* Avatar and customer name */
+.of-customer-identity {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+}
+
+/* Initials circle */
+.of-customer-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #e3ecff;
+  color: #315da8;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Customer name and added date */
+.of-customer-card-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.of-customer-card-heading h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.of-customer-card .of-record-muted {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =====================================================
+   EDIT AND DELETE BUTTONS
+   ===================================================== */
+
+.of-customer-card-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+/* Shared button appearance */
+.of-customer-edit-btn,
+.of-customer-delete-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 1px solid var(--border-color, #e2e5eb);
+  border-radius: 10px;
+  background: var(--card-bg, #ffffff);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+/* Neutral Edit button */
+.of-customer-edit-btn {
+  color: var(--text-secondary, #667085);
+}
+
+/* Delete button uses a restrained red icon */
+.of-customer-delete-btn {
+  color: #d14343;
+}
+
+/* Consistent SVG sizing */
+.of-customer-edit-btn svg,
+.of-customer-delete-btn svg {
+  display: block;
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+}
+
+/* Edit hover: subtle blue */
+.of-customer-edit-btn:hover:not(:disabled) {
+  background: #edf3ff;
+  border-color: #c9dcfb;
+  color: #315da8;
+}
+
+/* Delete hover: subtle red */
+.of-customer-delete-btn:hover:not(:disabled) {
+  background: #fff0f0;
+  border-color: #f2c2c2;
+  color: #c62828;
+}
+
+/* Press feedback */
+.of-customer-edit-btn:active:not(:disabled),
+.of-customer-delete-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Saving/deleting state */
+.of-customer-edit-btn:disabled,
+.of-customer-delete-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* Keyboard focus accessibility */
+.of-customer-edit-btn:focus-visible,
+.of-customer-delete-btn:focus-visible {
+  outline: 2px solid #6495ed;
+  outline-offset: 2px;
+}
+
+/* =====================================================
+   EMAIL, PHONE AND ADDRESS ROWS
+   ===================================================== */
+
+.of-customer-contact-row {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+/* Contact icon */
+.of-customer-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  min-height: 21px;
+  color: var(--text-secondary, #667085);
+}
+
+.of-customer-contact-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+/* Contact value */
+.of-customer-contact-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary, #344054);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =====================================================
+   DARK MODE
+   Uses the existing OrderFlow theme attribute
+   ===================================================== */
+
+:root[data-theme="dark"] #customers-card-list > .of-customer-card {
+  color: var(--text-primary, #e5e7eb);
+}
+
+/* Avatar in dark mode */
+:root[data-theme="dark"] .of-customer-avatar {
+  background: #263750;
+  color: #c4dcff;
+}
+
+/* Action buttons in dark mode */
+:root[data-theme="dark"] .of-customer-edit-btn,
+:root[data-theme="dark"] .of-customer-delete-btn {
+  background: var(--card-bg, transparent);
+  border-color: var(--border-color, #3b414b);
+}
+
+:root[data-theme="dark"] .of-customer-edit-btn {
+  color: #c0c7d2;
+}
+
+:root[data-theme="dark"] .of-customer-delete-btn {
+  color: #ffaaaa;
+}
+
+/* Dark-mode Edit hover */
+:root[data-theme="dark"] .of-customer-edit-btn:hover:not(:disabled) {
+  background: #263750;
+  border-color: #405a7c;
+  color: #c4dcff;
+}
+
+/* Dark-mode Delete hover */
+:root[data-theme="dark"] .of-customer-delete-btn:hover:not(:disabled) {
+  background: #482929;
+  border-color: #754040;
+  color: #ffaaaa;
+}
+
+/* Contact icons and values in dark mode */
+:root[data-theme="dark"] .of-customer-contact-icon {
+  color: var(--text-secondary, #a5adba);
+}
+
+:root[data-theme="dark"] .of-customer-contact-value {
+  color: var(--text-primary, #e5e7eb);
+}
+
+/* =====================================================
+   RESPONSIVE LAYOUT
+   ===================================================== */
+
+@media (max-width: 600px) {
+  #customers-card-list {
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, 260px), 1fr)
+    );
+    gap: 12px;
+  }
+
+  #customers-card-list > .of-customer-card {
+    padding: 14px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  #customers-card-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .of-customer-identity {
+    gap: 9px;
+  }
+
+  .of-customer-avatar {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+    font-size: 13px;
+  }
+
+  .of-customer-card-actions {
+    gap: 5px;
+  }
+
+  .of-customer-edit-btn,
+  .of-customer-delete-btn {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .of-customer-edit-btn,
+  .of-customer-delete-btn {
+    transition: none;
+  }
+}
+
+
+
+  
 
 
 
@@ -5299,6 +5634,7 @@ async function renderOrders() {
    CUSTOMERS: render individual cards
 ---------------------------- */
 
+
 function renderCustomerCards() {
   const container = $("customers-card-list");
   const searchInput = $("customers-search");
@@ -5336,11 +5672,46 @@ function renderCustomerCards() {
     return;
   }
 
+  function getInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+    return (
+      parts[0].charAt(0) +
+      parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+  }
+
+  function addContactRow(card, icon, value, label) {
+    if (!value) return;
+
+    const row = make("div", "of-customer-contact-row");
+    const iconElement = make("span", "of-customer-contact-icon");
+    iconElement.setAttribute("aria-hidden", "true");
+    iconElement.innerHTML = icon;
+
+    const valueElement = make("div", "of-customer-contact-value");
+    valueElement.textContent = value;
+    valueElement.title = `${label}: ${value}`;
+    valueElement.setAttribute("aria-label", `${label}: ${value}`);
+
+    row.append(iconElement, valueElement);
+    card.append(row);
+  }
+
   visibleCustomers.forEach(customer => {
-    const card = make("article", "of-record-card");
+    const card = make("article", "of-record-card of-customer-card");
 
     const header = make("div", "of-record-card-header");
-    const heading = make("div");
+    const identity = make("div", "of-customer-identity");
+
+    const avatar = make("div", "of-customer-avatar");
+    avatar.textContent = getInitials(customer.name);
+    avatar.setAttribute("aria-hidden", "true");
+
+    const heading = make("div", "of-customer-card-heading");
 
     heading.append(
       make("h3", "", customer.name || "Unnamed customer"),
@@ -5351,19 +5722,215 @@ function renderCustomerCards() {
       )
     );
 
-    header.append(heading);
+    identity.append(avatar, heading);
+
+    const actions = make("div", "of-customer-card-actions");
+
+    const editButton = make("button", "of-customer-edit-btn");
+    editButton.type = "button";
+    editButton.title = "Edit customer";
+    editButton.setAttribute("aria-label", "Edit customer");
+    editButton.innerHTML = `
+      <svg viewBox="0 0 24 24" width="19" height="19"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"
+        aria-hidden="true">
+        <path d="M12 20h9"/>
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/>
+      </svg>
+    `;
+
+    const deleteButton = make("button", "of-customer-delete-btn");
+    deleteButton.type = "button";
+    deleteButton.title = "Delete customer";
+    deleteButton.setAttribute("aria-label", "Delete customer");
+    deleteButton.innerHTML = `
+      <svg viewBox="0 0 24 24" width="19" height="19"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"
+        aria-hidden="true">
+        <path d="M3 6h18"/>
+        <path d="M8 6V4h8v2"/>
+        <path d="m19 6-1 14H6L5 6"/>
+        <path d="M10 11v5M14 11v5"/>
+      </svg>
+    `;
+
+    actions.append(editButton, deleteButton);
+    header.append(identity, actions);
     card.append(header);
 
-    addRecordField(card, "Email", customer.email || "Not provided");
-    addRecordField(card, "Phone", customer.phone || "Not provided");
+    addContactRow(
+      card,
+      `<svg viewBox="0 0 24 24" width="18" height="18"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2"/>
+        <path d="m3 7 9 6 9-6"/>
+      </svg>`,
+      customer.email,
+      "Email"
+    );
 
-    if (customer.address) {
-      addRecordField(card, "Address", customer.address);
-    }
+    addContactRow(
+      card,
+      `<svg viewBox="0 0 24 24" width="18" height="18"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.9v3a2 2 0 0 1-2.2 2
+          19.8 19.8 0 0 1-8.6-3.1
+          19.4 19.4 0 0 1-6-6
+          A19.8 19.8 0 0 1 2.1 4.2
+          2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7
+          c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 9.9
+          a16 16 0 0 0 6 6l1.2-1.3
+          a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7
+          a2 2 0 0 1 1.8 2.1Z"/>
+      </svg>`,
+      customer.phone,
+      "Phone"
+    );
+
+    addContactRow(
+      card,
+      `<svg viewBox="0 0 24 24" width="18" height="18"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </svg>`,
+      customer.address,
+      "Address"
+    );
+
+    // Edit customer
+    editButton.addEventListener("click", async () => {
+      const name = window.prompt("Customer name:", customer.name || "");
+      if (name === null) return;
+
+      if (!name.trim()) {
+        window.alert("Customer name is required.");
+        return;
+      }
+
+      const email = window.prompt("Customer email:", customer.email || "");
+      if (email === null) return;
+
+      const phone = window.prompt("Customer phone:", customer.phone || "");
+      if (phone === null) return;
+
+      const address = window.prompt(
+        "Customer address:",
+        customer.address || ""
+      );
+      if (address === null) return;
+
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
+
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
+        }
+
+        editButton.disabled = true;
+
+        const response = await fetch(
+          `/api/customers/${encodeURIComponent(customer.id)}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionData.session.access_token}`
+            },
+            body: JSON.stringify({
+              name: name.trim(),
+              email: email.trim(),
+              phone: phone.trim(),
+              address: address.trim()
+            })
+          }
+        );
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(result.error || "Could not update customer.");
+        }
+
+        const index = databaseCustomersForCards.findIndex(
+          item => String(item.id) === String(customer.id)
+        );
+
+        if (index !== -1) {
+          databaseCustomersForCards[index] = result.customer;
+        }
+
+        renderCustomerCards();
+        window.alert("Customer updated successfully.");
+      } catch (error) {
+        console.error("Customer update failed:", error);
+        window.alert(error.message || "Could not update customer.");
+      } finally {
+        editButton.disabled = false;
+      }
+    });
+
+    // Delete customer
+    deleteButton.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        `Delete ${customer.name || "this customer"}? This action cannot be undone.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
+
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
+        }
+
+        deleteButton.disabled = true;
+
+        const response = await fetch(
+          `/api/customers/${encodeURIComponent(customer.id)}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${sessionData.session.access_token}`
+            }
+          }
+        );
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(result.error || "Could not delete customer.");
+        }
+
+        databaseCustomersForCards = databaseCustomersForCards.filter(
+          item => String(item.id) !== String(customer.id)
+        );
+
+        renderCustomerCards();
+        window.alert("Customer deleted successfully.");
+      } catch (error) {
+        console.error("Customer deletion failed:", error);
+        window.alert(error.message || "Could not delete customer.");
+      } finally {
+        deleteButton.disabled = false;
+      }
+    });
 
     container.append(card);
   });
 }
+
+
+  
+
 
 async function renderCustomers() {
 
