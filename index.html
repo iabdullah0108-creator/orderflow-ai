@@ -1837,6 +1837,347 @@ td{font-size:13px}
 
 
 
+
+
+
+
+  
+/* Orders: compact horizontal list */
+.of-orders-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 210px) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.of-orders-toolbar .of-record-search {
+  max-width: none;
+  width: 100%;
+}
+
+#orders-status-filter {
+  min-height: 42px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 10px;
+  background: var(--surface, var(--card, #fff));
+  color: inherit;
+  font: inherit;
+}
+
+.of-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.of-order-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.35fr) minmax(100px, 0.8fr)
+    minmax(80px, 0.6fr) minmax(100px, 0.8fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 18px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 12px;
+  background: var(--surface, var(--card, #fff));
+  cursor: pointer;
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.of-order-row:hover {
+  border-color: var(--accent, #6485f5);
+  transform: translateY(-1px);
+}
+
+.of-order-row:focus-visible {
+  outline: 2px solid var(--accent, #6485f5);
+  outline-offset: 2px;
+}
+
+.of-order-customer {
+  min-width: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.of-order-number,
+.of-order-date,
+.of-order-items-count {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: .72;
+}
+
+.of-order-cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.of-order-total {
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.of-order-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.of-order-status.pending {
+  color: #8a5a00;
+  background: #fff0c2;
+}
+
+.of-order-status.completed {
+  color: #176b3a;
+  background: #d9f7e5;
+}
+
+.of-order-status.cancelled {
+  color: #a52332;
+  background: #ffe0e3;
+}
+
+.of-order-status.review {
+  color: #6941a5;
+  background: #eee3ff;
+}
+
+:root[data-theme="dark"] .of-order-status.pending {
+  color: #ffdc82;
+  background: #493817;
+}
+
+:root[data-theme="dark"] .of-order-status.completed {
+  color: #91eab3;
+  background: #173d2a;
+}
+
+:root[data-theme="dark"] .of-order-status.cancelled {
+  color: #ffabb3;
+  background: #4a2027;
+}
+
+:root[data-theme="dark"] .of-order-status.review {
+  color: #d5baff;
+  background: #382750;
+}
+
+.of-order-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.of-order-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.of-order-action:hover {
+  background: var(--accent-soft, rgba(100, 133, 245, .12));
+}
+
+.of-order-action.complete {
+  color: #21834a;
+}
+
+.of-order-action.cancel {
+  color: #d43c4c;
+}
+
+.of-order-action.edit {
+  color: var(--accent, #6485f5);
+}
+
+.of-order-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, .48);
+}
+
+.of-order-dialog[hidden] {
+  display: none;
+}
+
+.of-order-dialog-card {
+  width: min(100%, 620px);
+  max-height: min(85vh, 800px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 16px;
+  background: var(--surface, var(--card, #fff));
+  color: var(--text, inherit);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .22);
+}
+
+.of-order-dialog-card h2 {
+  margin: 0;
+}
+
+.of-order-dialog-header,
+.of-order-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.of-order-dialog-footer {
+  justify-content: flex-end;
+  margin: 20px 0 0;
+  flex-wrap: wrap;
+}
+
+.of-order-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.of-order-detail {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+.of-order-detail small {
+  display: block;
+  margin-bottom: 6px;
+  opacity: .7;
+}
+
+.of-order-dialog-card label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.of-order-dialog-card input,
+.of-order-dialog-card select,
+.of-order-dialog-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 9px;
+  background: var(--surface, var(--card, #fff));
+  color: inherit;
+  font: inherit;
+}
+
+.of-order-dialog-card textarea {
+  resize: vertical;
+}
+
+.of-order-edit-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 75px 100px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.of-order-edit-item .of-order-option-input {
+  grid-column: 1 / -1;
+}
+
+.of-order-dialog-error {
+  margin-top: 12px;
+  color: #d43c4c;
+  font-size: 13px;
+}
+
+@media (max-width: 850px) {
+  .of-order-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .of-order-row .of-order-customer {
+    grid-column: 1;
+  }
+
+  .of-order-row .of-order-status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .of-order-row .of-order-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .of-order-cell {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .of-orders-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .of-orders-toolbar #orders-result-count {
+    justify-self: start;
+  }
+
+  .of-order-dialog-card {
+    padding: 16px;
+  }
+
+  .of-order-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-order-row {
+    transition: none;
+  }
+}
+
+
+
+
+
+
+
+
+  
+
+
   
 
   
@@ -2357,21 +2698,32 @@ td{font-size:13px}
     </button>
   </div>
 
-  <div class="of-record-toolbar">
-    <input
-      class="of-record-search"
-      id="orders-search"
-      type="search"
-      placeholder="Search order ID, customer, item or status..."
-      aria-label="Search orders"
-      autocomplete="off"
-    />
-    <span class="of-record-muted" id="orders-result-count"></span>
-  </div>
+  
+<div class="of-orders-toolbar">
+  <input
+    class="of-record-search"
+    id="orders-search"
+    type="search"
+    placeholder="Search customer, order, or item..."
+    aria-label="Search orders"
+    autocomplete="off"
+  />
 
-  <div class="of-record-grid" id="orders-card-list">
-    <div class="of-record-empty">Orders will appear here.</div>
-  </div>
+  <select id="orders-status-filter" aria-label="Filter orders by status">
+    <option value="all">All statuses</option>
+    <option value="pending">Pending</option>
+    <option value="completed">Completed</option>
+    <option value="cancelled">Cancelled</option>
+    <option value="review">Review</option>
+  </select>
+
+  <span class="of-record-muted" id="orders-result-count"></span>
+</div>
+
+<div class="of-orders-list" id="orders-card-list">
+  <div class="of-record-empty">Orders will appear here.</div>
+</div>
+
 </section>
 
 
@@ -3104,14 +3456,483 @@ function formatRecordDate(value) {
    ORDERS: render individual cards
 ---------------------------- */
 
+
+function normalizeOrderStatus(value) {
+  const status = String(value || "pending").toLowerCase().trim();
+
+  if (["completed", "complete", "delivered"].includes(status)) {
+    return "completed";
+  }
+
+  if (["cancelled", "canceled"].includes(status)) {
+    return "cancelled";
+  }
+
+  if (["review", "needs_review", "needs review"].includes(status)) {
+    return "review";
+  }
+
+  return "pending";
+}
+
+function orderStatusLabel(status) {
+  return ({
+    pending: "Pending",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    review: "Review"
+  })[normalizeOrderStatus(status)];
+}
+
+function orderMoney(order) {
+  return `${order.currency || "PKR"} ${Number(order.total || 0).toLocaleString()}`;
+}
+
+function orderItemsCount(order) {
+  return (Array.isArray(order.items) ? order.items : [])
+    .reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+}
+
+function createOrderAction(label, symbol, className, callback) {
+  const button = make("button", `of-order-action ${className}`, symbol);
+  button.type = "button";
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.addEventListener("click", event => {
+    event.stopPropagation();
+    callback();
+  });
+  return button;
+}
+
+function showOrderDialog(title, content, footerButtons = []) {
+  let overlay = $("of-order-dialog");
+
+  if (!overlay) {
+    overlay = make("div", "of-order-dialog");
+    overlay.id = "of-order-dialog";
+    overlay.hidden = true;
+
+    const panel = make("div", "of-order-dialog-card");
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+
+    overlay.append(panel);
+    document.body.append(overlay);
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) overlay.hidden = true;
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !overlay.hidden) {
+        overlay.hidden = true;
+      }
+    });
+  }
+
+  const panel = overlay.firstElementChild;
+  panel.replaceChildren();
+
+  const header = make("div", "of-order-dialog-header");
+  header.append(make("h2", "", title));
+
+  const close = make("button", "btn btn-secondary", "✕");
+  close.type = "button";
+  close.setAttribute("aria-label", "Close dialog");
+  close.addEventListener("click", () => { overlay.hidden = true; });
+  header.append(close);
+
+  panel.append(header, content);
+
+  if (footerButtons.length) {
+    const footer = make("div", "of-order-dialog-footer");
+    footerButtons.forEach(button => footer.append(button));
+    panel.append(footer);
+  }
+
+  overlay.hidden = false;
+  return overlay;
+}
+
+function orderDetail(label, value) {
+  const detail = make("div", "of-order-detail");
+  detail.append(
+    make("small", "", label),
+    make("div", "", value == null || value === "" ? "—" : String(value))
+  );
+  return detail;
+}
+
+function showOrderDetails(order) {
+  const content = make("div");
+  const details = make("div", "of-order-detail-grid");
+
+  const items = Array.isArray(order.items) ? order.items : [];
+  const status = normalizeOrderStatus(order.status);
+  const orderNumber = order.order_number || String(order.id || "").slice(0, 8);
+
+  details.append(
+    orderDetail("Order", orderNumber),
+    orderDetail("Customer", order.customers?.name || "Not linked"),
+    orderDetail("Date created", formatRecordDate(order.created_at)),
+    orderDetail("Status", orderStatusLabel(status)),
+    orderDetail("Total", orderMoney(order)),
+    orderDetail("Total item quantity", String(orderItemsCount(order)))
+  );
+
+  content.append(details, make("h3", "", "Order items"));
+
+  if (!items.length) {
+    content.append(make("p", "of-record-muted", "No item details available."));
+  } else {
+    const list = make("ul", "of-record-items");
+
+    items.forEach(item => {
+      const options = item.options ? ` (${item.options})` : "";
+      const lineTotal =
+        (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
+
+      list.append(make(
+        "li",
+        "",
+        `${item.product_name || "Product"}${options} × ${Number(item.quantity) || 0} — ${(order.currency || "PKR")} ${lineTotal.toLocaleString()}`
+      ));
+    });
+
+    content.append(list);
+  }
+
+  showOrderDialog(`Order ${orderNumber}`, content);
+}
+
+
+
+
+
+
+
+  
+async function showOrderEdit(order) {
+  const status = normalizeOrderStatus(order.status);
+
+  if (["completed", "cancelled"].includes(status)) {
+    window.alert("Completed and cancelled orders cannot be edited.");
+    return;
+  }
+
+  const content = make("form");
+  const error = make("p", "of-order-dialog-error");
+  error.hidden = true;
+
+  const customerLabel = make("label", "", "Customer");
+  const customerSelect = make("select");
+  customerSelect.required = true;
+
+  const currencyLabel = make("label", "", "Currency");
+  const currencySelect = make("select");
+
+  ["PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"].forEach(currency => {
+    const option = make("option", "", currency);
+    option.value = currency;
+    currencySelect.append(option);
+  });
+  currencySelect.value = order.currency || "PKR";
+
+  const addressLabel = make("label", "", "Delivery address");
+  const addressInput = make("textarea");
+  addressInput.rows = 3;
+  addressInput.maxLength = 500;
+  addressInput.value = order.shipping_address || "";
+
+  const itemsHeading = make("h3", "", "Order items");
+  const itemRows = make("div");
+  const addItemButton = make("button", "btn btn-secondary", "+ Add item");
+  addItemButton.type = "button";
+
+  function addEditItem(item = {}) {
+    const row = make("div", "of-order-edit-item");
+
+    const name = make("input");
+    name.type = "text";
+    name.maxLength = 200;
+    name.placeholder = "Product name";
+    name.required = true;
+    name.value = item.product_name || "";
+
+    const quantity = make("input");
+    quantity.type = "number";
+    quantity.min = "1";
+    quantity.max = "100000";
+    quantity.step = "1";
+    quantity.placeholder = "Qty";
+    quantity.required = true;
+    quantity.value = String(Math.max(1, Number(item.quantity) || 1));
+
+    const price = make("input");
+    price.type = "number";
+    price.min = "0";
+    price.max = "100000000";
+    price.step = "0.01";
+    price.placeholder = "Unit price";
+    price.required = true;
+    price.value = String(Math.max(0, Number(item.unit_price) || 0));
+
+    const options = make("input", "of-order-option-input");
+    options.type = "text";
+    options.maxLength = 300;
+    options.placeholder = "Options / variant (optional)";
+    options.value = item.options || "";
+
+    const remove = make("button", "btn btn-secondary", "Remove item");
+    remove.type = "button";
+    remove.addEventListener("click", () => {
+      if (itemRows.children.length <= 1) {
+        window.alert("An order must contain at least one item.");
+        return;
+      }
+      row.remove();
+    });
+
+    row.append(name, quantity, price, options, remove);
+    itemRows.append(row);
+  }
+
+  addItemButton.addEventListener("click", () => addEditItem());
+
+  const items = Array.isArray(order.items) ? order.items : [];
+  (items.length ? items : [{}]).forEach(addEditItem);
+
+  content.append(
+    customerLabel,
+    customerSelect,
+    currencyLabel,
+    currencySelect,
+    addressLabel,
+    addressInput,
+    itemsHeading,
+    itemRows,
+    addItemButton,
+    error
+  );
+
+  const cancelButton = make("button", "btn btn-secondary", "Close");
+  cancelButton.type = "button";
+
+  const saveButton = make("button", "btn btn-primary", "Save changes");
+  saveButton.type = "submit";
+
+  const overlay = showOrderDialog(
+    `Edit order ${order.order_number || String(order.id).slice(0, 8)}`,
+    content,
+    [cancelButton, saveButton]
+  );
+
+  cancelButton.addEventListener("click", () => {
+    overlay.hidden = true;
+  });
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in again.");
+    }
+
+    const response = await fetch("/api/customers", {
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`
+      }
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(result.error || "Could not load customers.");
+    }
+
+    const customers = Array.isArray(result.customers)
+      ? result.customers
+      : [];
+
+    customerSelect.replaceChildren();
+
+    customers.forEach(customer => {
+      const option = make("option", "", customer.name || "Unnamed customer");
+      option.value = customer.id;
+      customerSelect.append(option);
+    });
+
+    customerSelect.value = order.customer_id || "";
+
+    if (!customers.length) {
+      throw new Error("Create a customer before editing this order.");
+    }
+
+    if (!customerSelect.value) {
+      throw new Error("The order's linked customer could not be found.");
+    }
+  } catch (loadError) {
+    error.textContent = loadError.message || "Could not load customers.";
+    error.hidden = false;
+    saveButton.disabled = true;
+    return;
+  }
+
+  content.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!customerSelect.value) {
+      error.textContent = "Please select a customer.";
+      error.hidden = false;
+      return;
+    }
+
+    const editedItems = [...itemRows.children].map(row => {
+      const fields = row.querySelectorAll("input");
+      return {
+        product_name: fields[0].value.trim(),
+        quantity: Number(fields[1].value),
+        unit_price: Number(fields[2].value),
+        options: fields[3].value.trim()
+      };
+    });
+
+    const invalidItems = editedItems.some(item =>
+      !item.product_name ||
+      !Number.isInteger(item.quantity) ||
+      item.quantity < 1 ||
+      !Number.isFinite(item.unit_price) ||
+      item.unit_price < 0
+    );
+
+    if (invalidItems || !editedItems.length) {
+      error.textContent =
+        "Check each product name, quantity, and unit price.";
+      error.hidden = false;
+      return;
+    }
+
+    error.hidden = true;
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        throw new Error("Please sign in again.");
+      }
+
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(order.id)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          },
+          body: JSON.stringify({
+            customer_id: customerSelect.value,
+            currency: currencySelect.value,
+            shipping_address: addressInput.value.trim(),
+            items: editedItems
+          })
+        }
+      );
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Could not save order changes.");
+      }
+
+      overlay.hidden = true;
+      await renderOrders();
+    } catch (saveError) {
+      error.textContent = saveError.message || "Could not save order changes.";
+      error.hidden = false;
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save changes";
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+async function changeOrderStatus(order, nextStatus) {
+  const currentStatus = normalizeOrderStatus(order.status);
+
+  if (["completed", "cancelled"].includes(currentStatus)) {
+    return;
+  }
+
+  const isComplete = nextStatus === "completed";
+  const confirmed = window.confirm(
+    isComplete
+      ? `Mark order ${order.order_number || order.id} as completed?`
+      : `Cancel order ${order.order_number || order.id}? This action cannot be undone here.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in again.");
+    }
+
+    const response = await fetch(
+      `/api/orders/${encodeURIComponent(order.id)}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({ status: nextStatus })
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(result.error || "Could not update this order.");
+    }
+
+    await renderOrders();
+  } catch (error) {
+    console.error("Order status update failed:", error);
+    window.alert(error.message || "Could not update this order.");
+  }
+}
+
 function renderOrderCards() {
   const container = $("orders-card-list");
   const searchInput = $("orders-search");
+  const statusFilter = $("orders-status-filter");
   const count = $("orders-result-count");
 
   if (!container || !searchInput || !count) return;
 
   const query = searchInput.value.trim().toLowerCase();
+  const selectedStatus = statusFilter?.value || "all";
 
   const visibleOrders = databaseOrdersForCards.filter(order => {
     const customerName = order.customers?.name || "";
@@ -3133,7 +3954,12 @@ function renderOrderCards() {
       itemText
     ].filter(Boolean).join(" ").toLowerCase();
 
-    return searchableText.includes(query);
+    const matchesSearch = searchableText.includes(query);
+    const matchesStatus =
+      selectedStatus === "all" ||
+      normalizeOrderStatus(order.status) === selectedStatus;
+
+    return matchesSearch && matchesStatus;
   });
 
   count.textContent =
@@ -3141,105 +3967,94 @@ function renderOrderCards() {
 
   container.replaceChildren();
 
-  if (visibleOrders.length === 0) {
+  if (!visibleOrders.length) {
     container.append(make(
       "div",
       "of-record-empty",
       databaseOrdersForCards.length
-        ? "No orders match your search."
+        ? "No orders match these filters."
         : "No orders found. Create an order to get started."
     ));
     return;
   }
 
   visibleOrders.forEach(order => {
-    const card = make("article", "of-record-card");
+    const status = normalizeOrderStatus(order.status);
+    const locked = ["completed", "cancelled"].includes(status);
+    const orderNumber = order.order_number ||
+      String(order.id || "").slice(0, 8);
 
-    const header = make("div", "of-record-card-header");
-    const heading = make("div");
+    const row = make("article", "of-order-row");
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-label", `View order ${orderNumber}`);
 
-    const orderLabel = order.order_number
-      ? `Order ${order.order_number}`
-      : `Order ${String(order.id || "").slice(0, 8)}`;
-
-    heading.append(
-      make("h3", "", orderLabel),
-      make(
-        "div",
-        "of-record-muted",
-        `Created ${formatRecordDate(order.created_at)}`
-      )
+    const customer = make("div", "of-order-customer");
+    customer.append(
+      make("div", "", order.customers?.name || "Not linked"),
+      make("span", "of-order-number", `Order ${orderNumber}`)
     );
 
-    const status = String(order.status || "Pending");
-    const normalizedStatus = status.toLowerCase();
-
-    const statusClass =
-      ["completed", "delivered"].includes(normalizedStatus)
-        ? "green"
-        : ["cancelled", "canceled", "refunded"].includes(normalizedStatus)
-          ? "red"
-          : "purple";
-
-    header.append(
-      heading,
-      make("span", `pill ${statusClass}`, status)
+    const date = make("div", "of-order-cell");
+    date.append(
+      make("span", "", formatRecordDate(order.created_at)),
+      make("span", "of-order-date", "Date created")
     );
 
-    card.append(header);
-
-    addRecordField(
-      card,
-      "Customer",
-      order.customers?.name || "Not linked"
+    const itemCount = make("div", "of-order-cell");
+    itemCount.append(
+      make("span", "", `${orderItemsCount(order)} item(s)`),
+      make("span", "of-order-items-count", "Quantity")
     );
 
-    addRecordField(
-      card,
-      "Total",
-      `${order.currency || "PKR"} ${Number(order.total || 0).toLocaleString()}`
+    const total = make("div", "of-order-cell of-order-total", orderMoney(order));
+
+    const badge = make(
+      "span",
+      `of-order-status ${status}`,
+      orderStatusLabel(status)
     );
 
-    const items = Array.isArray(order.items) ? order.items : [];
+    const actions = make("div", "of-order-actions");
 
-    addRecordField(
-      card,
-      "Items",
-      `${items.reduce(
-        (total, item) => total + (Number(item.quantity) || 0),
-        0
-      )} item(s)`
-    );
-
-    if (items.length > 0) {
-      const itemList = make("ul", "of-record-items");
-
-      items.forEach(item => {
-        const options = item.options ? ` (${item.options})` : "";
-        const quantity = Number(item.quantity) || 0;
-
-        itemList.append(make(
-          "li",
-          "",
-          `${item.product_name || "Product"}${options} × ${quantity}`
-        ));
-      });
-
-      card.append(itemList);
-    } else {
-      card.append(make("p", "of-record-muted", "No item details available."));
+    if (!locked) {
+      actions.append(
+        createOrderAction("Edit order", "✎", "edit", () => {
+          showOrderEdit(order);
+        }),
+        createOrderAction("Complete order", "✓", "complete", () => {
+          changeOrderStatus(order, "completed");
+        }),
+        createOrderAction("Cancel order", "✕", "cancel", () => {
+          changeOrderStatus(order, "cancelled");
+        })
+      );
     }
 
-    container.append(card);
+    row.append(customer, date, itemCount, total, badge, actions);
+
+    row.addEventListener("click", () => showOrderDetails(order));
+    row.addEventListener("keydown", event => {
+      if (event.target !== row) return;
+
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showOrderDetails(order);
+      }
+    });
+
+    container.append(row);
   });
 }
 
+
 async function renderOrders() {
+  const container = $("orders-card-list");
+  if (!container) return;
 
-const container = $("orders-card-list");
-if (!container) return;
-
-showRecordSkeleton(container, "orders");
+  container.replaceChildren(
+    make("div", "of-record-empty", "Loading orders...")
+  );
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -3267,12 +4082,13 @@ showRecordSkeleton(container, "orders");
       ? result.orders
       : [];
 
-    renderOrderCards();
-
     const searchInput = $("orders-search");
-    if (searchInput) {
-      searchInput.oninput = renderOrderCards;
-    }
+    const statusFilter = $("orders-status-filter");
+
+    if (searchInput) searchInput.oninput = renderOrderCards;
+    if (statusFilter) statusFilter.onchange = renderOrderCards;
+
+    renderOrderCards();
   } catch (error) {
     console.error("Could not load orders:", error);
 
@@ -3288,6 +4104,7 @@ showRecordSkeleton(container, "orders");
     if (count) count.textContent = "";
   }
 }
+
 
 /* ---------------------------
    CUSTOMERS: render individual cards
