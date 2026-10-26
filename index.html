@@ -3154,6 +3154,18 @@ td{font-size:13px}
 
 
 
+/* Red trash icon for Edit Order Remove Item */
+.of-order-edit-form .of-edit-remove-item::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='m19 6-1 14H6L5 6'/%3E%3Cpath d='M10 11v5M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='m19 6-1 14H6L5 6'/%3E%3Cpath d='M10 11v5M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
 
 
 
@@ -4779,11 +4791,9 @@ async function showOrderEdit(order) {
     options.placeholder = "Options / variant (optional)";
     options.value = item.options || "";
 
-    const remove = make(
-  "button",
-  "btn btn-secondary of-edit-remove-item",
-  "Remove item"
-);
+    
+const remove = make("button", "btn btn-secondary of-edit-remove-item", "Remove item");
+
     remove.type = "button";
     remove.addEventListener("click", () => {
       if (itemRows.children.length <= 1) {
