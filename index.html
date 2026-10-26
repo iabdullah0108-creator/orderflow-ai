@@ -1876,8 +1876,13 @@ td{font-size:13px}
 
 .of-order-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1.35fr) minmax(100px, 0.8fr)
-    minmax(80px, 0.6fr) minmax(100px, 0.8fr) auto auto;
+ grid-template-columns:
+  minmax(150px, 1.35fr)
+  minmax(100px, 0.8fr)
+  minmax(80px, 0.6fr)
+  minmax(100px, 0.8fr)
+  110px
+  142px;
   align-items: center;
   gap: 16px;
   padding: 15px 18px;
@@ -2010,6 +2015,13 @@ td{font-size:13px}
 
 .of-order-action.edit {
   color: var(--accent, #6485f5);
+}
+
+  .of-order-status {
+  box-sizing: border-box;
+  min-width: 90px;
+  text-align: center;
+  white-space: nowrap;
 }
 
   
