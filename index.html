@@ -3865,7 +3865,13 @@ async function showOrderEdit(order) {
 
 
 
+function closeOrderDialog() {
+  const overlay = $("of-order-dialog");
 
+  if (overlay) {
+    overlay.hidden = true;
+  }
+}
 
 
 
