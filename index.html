@@ -2896,97 +2896,125 @@ td{font-size:13px}
 
 
 
-
-  
 /* =========================================
-   CREATE ORDER — Add / Remove Item Buttons
+   Order Item Buttons — Add & Remove
    ========================================= */
 
+/* ADD ITEM — green button with one plus icon */
 #create-order-modal #add-order-item {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 40px;
-  padding: 9px 15px;
-  border: 1px solid #4169e1 !important;
+  padding: 9px 14px;
+  border: 1px solid #a7e5bd !important;
   border-radius: 10px;
-  background: #527cf5 !important;
-  color: #ffffff !important;
-  font-weight: 600;
+  background: #e9f9ef !important;
+  color: #16803d !important;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
-  box-shadow: 0 3px 7px rgba(65, 105, 225, 0.18);
-  transition: background .18s ease, transform .18s ease,
-              box-shadow .18s ease;
+  box-shadow: 0 2px 5px rgba(22, 128, 61, 0.08);
+  transition: background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
 }
 
-#create-order-modal #add-order-item::before {
-  content: "+";
-  font-size: 20px;
-  line-height: 1;
+/* Remove any old CSS-generated plus signs */
+#create-order-modal #add-order-item::before,
+#create-order-modal #add-order-item::after {
+  content: none !important;
+  display: none !important;
 }
 
 #create-order-modal #add-order-item:hover {
-  background: #4169e1 !important;
+  background: #d5f5e0 !important;
+  border-color: #65c987 !important;
+  box-shadow: 0 4px 10px rgba(22, 128, 61, 0.15);
   transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(65, 105, 225, 0.25);
 }
 
+/* REMOVE ITEM — red trash-bin button */
 #create-order-modal .remove-order-item {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 38px;
   width: 38px;
+  min-width: 38px;
   height: 38px;
   padding: 0;
   border: 1px solid #fecaca !important;
   border-radius: 10px;
   background: #fff1f2 !important;
   color: #dc2626 !important;
-  font-size: 0;
+  font-size: 0 !important;
   cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.06);
+  transition: background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
 }
 
+/* Actual trash-can SVG icon */
 #create-order-modal .remove-order-item::before {
-  content: "▤";
-  font-size: 19px;
-  line-height: 1;
+  content: "" !important;
+  display: block !important;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+#create-order-modal .remove-order-item::after {
+  content: none !important;
+  display: none !important;
 }
 
 #create-order-modal .remove-order-item:hover {
   background: #fee2e2 !important;
   border-color: #f87171 !important;
+  box-shadow: 0 4px 9px rgba(220, 38, 38, 0.14);
   transform: translateY(-1px);
 }
 
-/* Dark theme */
+/* Dark theme — green Add Item */
 :root[data-theme="dark"] #create-order-modal #add-order-item {
-  background: #304fae !important;
-  border-color: #5478e8 !important;
-  color: #ffffff !important;
+  background: #173b2a !important;
+  border-color: #286a45 !important;
+  color: #8ce5aa !important;
 }
 
 :root[data-theme="dark"] #create-order-modal #add-order-item:hover {
-  background: #3d60c9 !important;
+  background: #205137 !important;
+  border-color: #3d9b62 !important;
 }
 
+/* Dark theme — red Remove Item */
 :root[data-theme="dark"] #create-order-modal .remove-order-item {
-  background: #3b2029 !important;
-  border-color: #703441 !important;
+  background: #40232b !important;
+  border-color: #713541 !important;
   color: #ff929d !important;
 }
 
 :root[data-theme="dark"] #create-order-modal .remove-order-item:hover {
-  background: #512630 !important;
+  background: #532832 !important;
   border-color: #d45568 !important;
 }
 
-/* Keyboard accessibility */
+/* Keyboard focus and disabled states */
 #create-order-modal #add-order-item:focus-visible,
 #create-order-modal .remove-order-item:focus-visible {
   outline: 2px solid #6485f5;
   outline-offset: 3px;
+}
+
+#create-order-modal #add-order-item:disabled,
+#create-order-modal .remove-order-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 
