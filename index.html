@@ -3873,55 +3873,100 @@ async function showOrderEdit(order) {
 
 
   
+async function changeOrderStatus(order, newStatus) {
+  const isCompleting = newStatus === "completed";
+  const actionLabel = isCompleting ? "Complete order" : "Cancel order";
+  const confirmationMessage = isCompleting
+    ? "Are you sure you want to mark this order as completed?"
+    : "Are you sure you want to cancel this order?";
 
-async function changeOrderStatus(order, nextStatus) {
-  const currentStatus = normalizeOrderStatus(order.status);
-
-  if (["completed", "cancelled"].includes(currentStatus)) {
-    return;
-  }
-
-  const isComplete = nextStatus === "completed";
-  const confirmed = window.confirm(
-    isComplete
-      ? `Mark order ${order.order_number || order.id} as completed?`
-      : `Cancel order ${order.order_number || order.id}? This action cannot be undone here.`
+  const content = make("div", "of-order-confirmation");
+  content.append(
+    make("p", "", confirmationMessage),
+    make(
+      "p",
+      "of-record-muted",
+      `Order ${order.order_number || String(order.id || "").slice(0, 8)}`
+    )
   );
 
-  if (!confirmed) return;
+  const footerButtons = [];
 
-  try {
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
+  const keepButton = make("button", "btn btn-secondary", "Keep order");
+  keepButton.type = "button";
+  keepButton.addEventListener("click", () => {
+    closeOrderDialog();
+  });
 
-    if (sessionError || !sessionData.session) {
-      throw new Error("Please sign in again.");
-    }
+  const confirmButton = make(
+    "button",
+    isCompleting ? "btn btn-primary" : "btn btn-danger",
+    actionLabel
+  );
+  confirmButton.type = "button";
 
-    const response = await fetch(
-      `/api/orders/${encodeURIComponent(order.id)}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        },
-        body: JSON.stringify({ status: nextStatus })
+  confirmButton.addEventListener("click", async () => {
+    confirmButton.disabled = true;
+    confirmButton.textContent = "Saving...";
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        throw new Error("Please sign in again to continue.");
       }
-    );
 
-    const result = await response.json().catch(() => ({}));
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(order.id)}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          },
+          body: JSON.stringify({ status: newStatus })
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error(result.error || "Could not update this order.");
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Could not update the order. Please try again."
+        );
+      }
+
+      closeOrderDialog();
+      await renderOrders();
+    } catch (error) {
+      console.error("Could not update order status:", error);
+      confirmButton.disabled = false;
+      confirmButton.textContent = actionLabel;
+
+      const errorMessage = make(
+        "p",
+        "of-order-error",
+        error.message || "Could not update the order."
+      );
+
+      content.append(errorMessage);
     }
+  });
 
-    await renderOrders();
-  } catch (error) {
-    console.error("Order status update failed:", error);
-    window.alert(error.message || "Could not update this order.");
-  }
+  footerButtons.push(keepButton, confirmButton);
+
+  showOrderDialog(
+    isCompleting ? "Complete order?" : "Cancel order?",
+    content,
+    footerButtons
+  );
 }
+
+
+
+
+  
 
 function renderOrderCards() {
   const container = $("orders-card-list");
