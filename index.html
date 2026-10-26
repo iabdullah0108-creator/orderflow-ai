@@ -325,136 +325,6 @@ td{font-size:13px}
 
 
   
-/* =========================================
-   Order Forms — Clickable Button Styling
-   ========================================= */
-
-/* Base style for buttons inside Create/Edit Order modals */
-#create-order-modal .modal-card button,
-#edit-order-modal .modal-card button {
-  cursor: pointer;
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
-}
-
-#create-order-modal .modal-card button:focus-visible,
-#edit-order-modal .modal-card button:focus-visible {
-  outline: 2px solid #6485f5;
-  outline-offset: 3px;
-}
-
-/* Add Item — prominent blue action */
-#create-order-modal .modal-card button.add-item-btn,
-#edit-order-modal .modal-card button.add-item-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 15px;
-  border: 1px solid #4169e1;
-  border-radius: 10px;
-  background: #527cf5;
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 3px 8px rgba(65, 105, 225, 0.2);
-}
-
-#create-order-modal .modal-card button.add-item-btn::before,
-#edit-order-modal .modal-card button.add-item-btn::before {
-  content: "+";
-  font-size: 19px;
-  line-height: 1;
-  font-weight: 500;
-}
-
-#create-order-modal .modal-card button.add-item-btn:hover,
-#edit-order-modal .modal-card button.add-item-btn:hover {
-  background: #4169e1;
-  box-shadow: 0 5px 12px rgba(65, 105, 225, 0.28);
-  transform: translateY(-1px);
-}
-
-/* Remove Item — compact red trash button */
-#create-order-modal .modal-card button.remove-item-btn,
-#edit-order-modal .modal-card button.remove-item-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  background: #fff1f2;
-  color: #dc2626;
-  font-size: 0;
-  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.06);
-}
-
-#create-order-modal .modal-card button.remove-item-btn::before,
-#edit-order-modal .modal-card button.remove-item-btn::before {
-  content: "🗑";
-  font-size: 17px;
-  line-height: 1;
-}
-
-#create-order-modal .modal-card button.remove-item-btn:hover,
-#edit-order-modal .modal-card button.remove-item-btn:hover {
-  background: #fee2e2;
-  border-color: #f87171;
-  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.15);
-  transform: translateY(-1px);
-}
-
-/* Dark theme — Add Item */
-:root[data-theme="dark"] #create-order-modal .modal-card button.add-item-btn,
-:root[data-theme="dark"] #edit-order-modal .modal-card button.add-item-btn {
-  background: #304fae;
-  border-color: #5478e8;
-  color: #ffffff;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.2);
-}
-
-:root[data-theme="dark"] #create-order-modal .modal-card button.add-item-btn:hover,
-:root[data-theme="dark"] #edit-order-modal .modal-card button.add-item-btn:hover {
-  background: #3d60c9;
-  border-color: #7898ff;
-}
-
-/* Dark theme — Remove Item */
-:root[data-theme="dark"] #create-order-modal .modal-card button.remove-item-btn,
-:root[data-theme="dark"] #edit-order-modal .modal-card button.remove-item-btn {
-  background: #3b2029;
-  border-color: #703441;
-  color: #ff929d;
-}
-
-:root[data-theme="dark"] #create-order-modal .modal-card button.remove-item-btn:hover,
-:root[data-theme="dark"] #edit-order-modal .modal-card button.remove-item-btn:hover {
-  background: #512630;
-  border-color: #d45568;
-}
-
-/* Button press feedback */
-#create-order-modal .modal-card button.add-item-btn:active,
-#create-order-modal .modal-card button.remove-item-btn:active,
-#edit-order-modal .modal-card button.add-item-btn:active,
-#edit-order-modal .modal-card button.remove-item-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-/* Disabled buttons should not look interactive */
-#create-order-modal .modal-card button:disabled,
-#edit-order-modal .modal-card button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
 
 
 
@@ -3024,6 +2894,104 @@ td{font-size:13px}
 
 
 
+
+
+
+  
+/* =========================================
+   CREATE ORDER — Add / Remove Item Buttons
+   ========================================= */
+
+#create-order-modal #add-order-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid #4169e1 !important;
+  border-radius: 10px;
+  background: #527cf5 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 7px rgba(65, 105, 225, 0.18);
+  transition: background .18s ease, transform .18s ease,
+              box-shadow .18s ease;
+}
+
+#create-order-modal #add-order-item::before {
+  content: "+";
+  font-size: 20px;
+  line-height: 1;
+}
+
+#create-order-modal #add-order-item:hover {
+  background: #4169e1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(65, 105, 225, 0.25);
+}
+
+#create-order-modal .remove-order-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #fecaca !important;
+  border-radius: 10px;
+  background: #fff1f2 !important;
+  color: #dc2626 !important;
+  font-size: 0;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+}
+
+#create-order-modal .remove-order-item::before {
+  content: "▤";
+  font-size: 19px;
+  line-height: 1;
+}
+
+#create-order-modal .remove-order-item:hover {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  transform: translateY(-1px);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] #create-order-modal #add-order-item {
+  background: #304fae !important;
+  border-color: #5478e8 !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] #create-order-modal #add-order-item:hover {
+  background: #3d60c9 !important;
+}
+
+:root[data-theme="dark"] #create-order-modal .remove-order-item {
+  background: #3b2029 !important;
+  border-color: #703441 !important;
+  color: #ff929d !important;
+}
+
+:root[data-theme="dark"] #create-order-modal .remove-order-item:hover {
+  background: #512630 !important;
+  border-color: #d45568 !important;
+}
+
+/* Keyboard accessibility */
+#create-order-modal #add-order-item:focus-visible,
+#create-order-modal .remove-order-item:focus-visible {
+  outline: 2px solid #6485f5;
+  outline-offset: 3px;
+}
+
+
+
+  
   
 
   
