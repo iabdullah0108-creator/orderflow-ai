@@ -5131,10 +5131,18 @@ const remove = make("button", "btn btn-secondary of-edit-remove-item", "Remove i
 
     remove.type = "button";
     remove.addEventListener("click", () => {
-      if (itemRows.children.length <= 1) {
-        window.alert("An order must contain at least one item.");
-        return;
-      }
+      
+remove.addEventListener("click", () => {
+  if (itemRows.children.length <= 1) {
+    error.textContent = "An order must contain at least one item.";
+    error.hidden = false;
+    return;
+  }
+
+  row.remove();
+  error.hidden = true;
+});
+
       row.remove();
     });
 
@@ -6801,12 +6809,15 @@ function addOrderItemRow() {
     updateNewOrderTotal();
   });
 
-    row.append(
+   
+  row.append(
     productField,
-    optionsField,
     quantityField,
     priceField,
+    optionsField,
     removeButton
+  );
+
   );
   list.appendChild(row);
 
