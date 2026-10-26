@@ -3540,6 +3540,127 @@ td{font-size:13px}
 
 
   
+/* OrderFlow AI — Customer dialogs */
+.of-customer-dialog {
+  width: min(480px, calc(100% - 32px));
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid var(--border-color, #e0e4eb);
+  border-radius: 18px;
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #182230);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+}
+
+.of-customer-dialog::backdrop {
+  background: rgba(10, 15, 25, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+:root[data-theme="dark"] .of-customer-dialog {
+  background: #171b25;
+  color: #e5e7eb;
+  border-color: #343a49;
+}
+
+.of-customer-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.of-customer-dialog .of-dialog-description {
+  margin: 0 0 20px;
+  color: var(--text-secondary, #737d8d);
+  font-size: 13px;
+}
+
+.of-customer-dialog .of-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.of-customer-dialog label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.of-customer-dialog input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, #dfe3eb);
+  border-radius: 9px;
+  background: var(--input-bg, #ffffff);
+  color: var(--text-primary, #182230);
+  font: inherit;
+}
+
+:root[data-theme="dark"] .of-customer-dialog input {
+  background: #171b25;
+  color: #e5e7eb;
+  border-color: #343a49;
+}
+
+.of-customer-dialog input:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 1px;
+}
+
+.of-customer-dialog .of-dialog-error {
+  margin: 10px 0;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.of-customer-dialog .of-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.of-customer-dialog .of-dialog-btn {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--border-color, #dfe3eb);
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.of-customer-dialog .of-dialog-primary {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.of-customer-dialog .of-dialog-danger {
+  border-color: #b91c1c;
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.of-customer-dialog button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
+
+  
+
+
+  
 </style>
 
 
@@ -5666,6 +5787,222 @@ async function renderOrders() {
 }
 
 
+
+
+
+
+
+
+
+
+  
+function showCustomerNotice(message) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "of-customer-dialog";
+
+  const title = document.createElement("h2");
+  title.textContent = "OrderFlow AI";
+
+  const description = document.createElement("p");
+  description.className = "of-dialog-description";
+  description.textContent = message;
+
+  const actions = document.createElement("div");
+  actions.className = "of-dialog-actions";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "of-dialog-btn of-dialog-primary";
+  button.textContent = "OK";
+  button.addEventListener("click", () => dialog.close());
+
+  actions.append(button);
+  dialog.append(title, description, actions);
+  document.body.append(dialog);
+
+  dialog.addEventListener("close", () => dialog.remove());
+  dialog.showModal();
+}
+
+function showCustomerEditDialog(customer, onSave) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "of-customer-dialog";
+
+  const title = document.createElement("h2");
+  title.textContent = "Edit customer";
+
+  const description = document.createElement("p");
+  description.className = "of-dialog-description";
+  description.textContent = "Update this customer's contact information.";
+
+  const form = document.createElement("form");
+
+  const fields = [
+    { key: "name", label: "Customer name", required: true, max: 150 },
+    { key: "phone", label: "Phone number", required: false, max: 30 },
+    { key: "email", label: "Email address", required: false, max: 254 },
+    { key: "address", label: "Delivery address", required: false, max: 500 }
+  ];
+
+  const inputs = {};
+
+  fields.forEach(field => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "of-dialog-field";
+
+    const label = document.createElement("label");
+    label.textContent = field.label;
+
+    const input = document.createElement("input");
+    input.name = field.key;
+    input.type = field.key === "email" ? "email" : "text";
+    input.value = customer[field.key] || "";
+    input.maxLength = field.max;
+    input.required = field.required;
+    input.autocomplete = "off";
+
+    label.htmlFor = `customer-edit-${field.key}`;
+    input.id = label.htmlFor;
+
+    inputs[field.key] = input;
+    wrapper.append(label, input);
+    form.append(wrapper);
+  });
+
+  const error = document.createElement("p");
+  error.className = "of-dialog-error";
+  error.hidden = true;
+  error.setAttribute("role", "alert");
+
+  const actions = document.createElement("div");
+  actions.className = "of-dialog-actions";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "of-dialog-btn";
+  cancelButton.textContent = "Cancel";
+  cancelButton.addEventListener("click", () => dialog.close());
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "of-dialog-btn of-dialog-primary";
+  saveButton.textContent = "Save changes";
+
+  actions.append(cancelButton, saveButton);
+  form.append(error, actions);
+  dialog.append(title, description, form);
+  document.body.append(dialog);
+
+  dialog.addEventListener("close", () => dialog.remove());
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const values = Object.fromEntries(
+      fields.map(field => [
+        field.key,
+        inputs[field.key].value.trim()
+      ])
+    );
+
+    if (!values.name) {
+      error.textContent = "Customer name is required.";
+      error.hidden = false;
+      inputs.name.focus();
+      return;
+    }
+
+    if (values.email && !inputs.email.validity.valid) {
+      error.textContent = "Enter a valid email address.";
+      error.hidden = false;
+      inputs.email.focus();
+      return;
+    }
+
+    saveButton.disabled = true;
+    cancelButton.disabled = true;
+    saveButton.textContent = "Saving...";
+    error.hidden = true;
+
+    try {
+      await onSave(values);
+      dialog.close();
+      showCustomerNotice("Customer updated successfully.");
+    } catch (err) {
+      error.textContent = err.message || "Could not update customer.";
+      error.hidden = false;
+    } finally {
+      if (dialog.open) {
+        saveButton.disabled = false;
+        cancelButton.disabled = false;
+        saveButton.textContent = "Save changes";
+      }
+    }
+  });
+
+  dialog.showModal();
+  inputs.name.focus();
+}
+
+function showCustomerDeleteDialog(customer, onConfirm) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "of-customer-dialog";
+
+  const title = document.createElement("h2");
+  title.textContent = "Delete customer?";
+
+  const description = document.createElement("p");
+  description.className = "of-dialog-description";
+  description.textContent =
+    `Are you sure you want to delete ${customer.name || "this customer"}? This action cannot be undone.`;
+
+  const error = document.createElement("p");
+  error.className = "of-dialog-error";
+  error.hidden = true;
+  error.setAttribute("role", "alert");
+
+  const actions = document.createElement("div");
+  actions.className = "of-dialog-actions";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "of-dialog-btn";
+  cancelButton.textContent = "Cancel";
+  cancelButton.addEventListener("click", () => dialog.close());
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "of-dialog-btn of-dialog-danger";
+  deleteButton.textContent = "Delete";
+
+  deleteButton.addEventListener("click", async () => {
+    deleteButton.disabled = true;
+    cancelButton.disabled = true;
+    deleteButton.textContent = "Deleting...";
+    error.hidden = true;
+
+    try {
+      await onConfirm();
+      dialog.close();
+      showCustomerNotice("Customer deleted successfully.");
+    } catch (err) {
+      error.textContent = err.message || "Could not delete customer.";
+      error.hidden = false;
+      deleteButton.disabled = false;
+      cancelButton.disabled = false;
+      deleteButton.textContent = "Delete";
+    }
+  });
+
+  actions.append(cancelButton, deleteButton);
+  dialog.append(title, description, error, actions);
+  document.body.append(dialog);
+
+  dialog.addEventListener("close", () => dialog.remove());
+  dialog.showModal();
+}
+
+
 /* ---------------------------
    CUSTOMERS: render individual cards
 ---------------------------- */
@@ -5840,125 +6177,98 @@ function renderCustomerCards() {
     );
 
     // Edit customer
-    editButton.addEventListener("click", async () => {
-      const name = window.prompt("Customer name:", customer.name || "");
-      if (name === null) return;
+ 
+editButton.addEventListener("click", () => {
+  showCustomerEditDialog(customer, async values => {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
 
-      if (!name.trim()) {
-        window.alert("Customer name is required.");
-        return;
-      }
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in again.");
+    }
 
-      const email = window.prompt("Customer email:", customer.email || "");
-      if (email === null) return;
+    editButton.disabled = true;
 
-      const phone = window.prompt("Customer phone:", customer.phone || "");
-      if (phone === null) return;
-
-      const address = window.prompt(
-        "Customer address:",
-        customer.address || ""
+    try {
+      const response = await fetch(
+        `/api/customers/${encodeURIComponent(customer.id)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          },
+          body: JSON.stringify(values)
+        }
       );
-      if (address === null) return;
 
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabaseClient.auth.getSession();
+      const result = await response.json().catch(() => ({}));
 
-        if (sessionError || !sessionData.session) {
-          throw new Error("Please sign in again.");
-        }
-
-        editButton.disabled = true;
-
-        const response = await fetch(
-          `/api/customers/${encodeURIComponent(customer.id)}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${sessionData.session.access_token}`
-            },
-            body: JSON.stringify({
-              name: name.trim(),
-              email: email.trim(),
-              phone: phone.trim(),
-              address: address.trim()
-            })
-          }
-        );
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(result.error || "Could not update customer.");
-        }
-
-        const index = databaseCustomersForCards.findIndex(
-          item => String(item.id) === String(customer.id)
-        );
-
-        if (index !== -1) {
-          databaseCustomersForCards[index] = result.customer;
-        }
-
-        renderCustomerCards();
-        window.alert("Customer updated successfully.");
-      } catch (error) {
-        console.error("Customer update failed:", error);
-        window.alert(error.message || "Could not update customer.");
-      } finally {
-        editButton.disabled = false;
+      if (!response.ok) {
+        throw new Error(result.error || "Could not update customer.");
       }
-    });
+
+      if (!result.customer) {
+        throw new Error("The server did not return the updated customer.");
+      }
+
+      const index = databaseCustomersForCards.findIndex(
+        item => String(item.id) === String(customer.id)
+      );
+
+      if (index !== -1) {
+        databaseCustomersForCards[index] = result.customer;
+      }
+
+      renderCustomerCards();
+    } finally {
+      editButton.disabled = false;
+    }
+  });
+});
+
 
     // Delete customer
-    deleteButton.addEventListener("click", async () => {
-      const confirmed = window.confirm(
-        `Delete ${customer.name || "this customer"}? This action cannot be undone.`
+
+deleteButton.addEventListener("click", () => {
+  showCustomerDeleteDialog(customer, async () => {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in again.");
+    }
+
+    deleteButton.disabled = true;
+
+    try {
+      const response = await fetch(
+        `/api/customers/${encodeURIComponent(customer.id)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`
+          }
+        }
       );
 
-      if (!confirmed) return;
+      const result = await response.json().catch(() => ({}));
 
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabaseClient.auth.getSession();
-
-        if (sessionError || !sessionData.session) {
-          throw new Error("Please sign in again.");
-        }
-
-        deleteButton.disabled = true;
-
-        const response = await fetch(
-          `/api/customers/${encodeURIComponent(customer.id)}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${sessionData.session.access_token}`
-            }
-          }
-        );
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(result.error || "Could not delete customer.");
-        }
-
-        databaseCustomersForCards = databaseCustomersForCards.filter(
-          item => String(item.id) !== String(customer.id)
-        );
-
-        renderCustomerCards();
-        window.alert("Customer deleted successfully.");
-      } catch (error) {
-        console.error("Customer deletion failed:", error);
-        window.alert(error.message || "Could not delete customer.");
-      } finally {
-        deleteButton.disabled = false;
+      if (!response.ok) {
+        throw new Error(result.error || "Could not delete customer.");
       }
-    });
+
+      databaseCustomersForCards = databaseCustomersForCards.filter(
+        item => String(item.id) !== String(customer.id)
+      );
+
+      renderCustomerCards();
+    } finally {
+      deleteButton.disabled = false;
+    }
+  });
+});
+
 
     container.append(card);
   });
