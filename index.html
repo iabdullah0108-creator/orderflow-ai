@@ -3689,16 +3689,17 @@ td{font-size:13px}
 }
 
 /* Delete — Red */
+/* Delete Confirmation — Light Red Tint */
 .of-customer-dialog .of-dialog-danger {
-  border-color: #b91c1c;
-  background: #b91c1c;
-  color: #ffffff;
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .of-customer-dialog .of-dialog-danger:not(:disabled):hover {
-  border-color: #991b1b;
-  background: #991b1b;
-  color: #ffffff;
+  border-color: #fca5a5;
+  background: #fecaca;
+  color: #7f1d1d;
 }
 
 .of-customer-dialog .of-dialog-btn:focus-visible {
@@ -3711,7 +3712,36 @@ td{font-size:13px}
   cursor: not-allowed;
 }
 
+
   
+/* DARK THEME — Customer Popup Buttons */
+
+/* Indigo Save Changes */
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-primary {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-primary:not(:disabled):hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+
+/* Tinted Red Delete Confirmation */
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-danger {
+  background: #451a1a;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-danger:not(:disabled):hover {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fee2e2;
+}
+
 
 
   
