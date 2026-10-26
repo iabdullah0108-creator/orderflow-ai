@@ -5129,25 +5129,24 @@ async function showOrderEdit(order) {
     
 const remove = make("button", "btn btn-secondary of-edit-remove-item", "Remove item");
 
+   
     remove.type = "button";
+
     remove.addEventListener("click", () => {
-      
-remove.addEventListener("click", () => {
-  if (itemRows.children.length <= 1) {
-    error.textContent = "An order must contain at least one item.";
-    error.hidden = false;
-    return;
-  }
+      if (itemRows.children.length <= 1) {
+        error.textContent = "An order must contain at least one item.";
+        error.hidden = false;
+        return;
+      }
 
-  row.remove();
-  error.hidden = true;
-});
-
-  
+      row.remove();
+      error.hidden = true;
+    });
 
     row.append(name, quantity, price, options, remove);
     itemRows.append(row);
   }
+
 
   addItemButton.addEventListener("click", () => addEditItem());
 
