@@ -5143,8 +5143,7 @@ remove.addEventListener("click", () => {
   error.hidden = true;
 });
 
-      row.remove();
-    });
+  
 
     row.append(name, quantity, price, options, remove);
     itemRows.append(row);
@@ -6818,7 +6817,6 @@ function addOrderItemRow() {
     removeButton
   );
 
-  );
   list.appendChild(row);
 
   quantityInput.addEventListener("input", updateNewOrderTotal);
