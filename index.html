@@ -2012,16 +2012,22 @@ td{font-size:13px}
   color: var(--accent, #6485f5);
 }
 
+/* ========================================
+   OrderFlow AI — Order Details Popup
+   Minimal premium SaaS design
+======================================== */
 
-  .of-order-dialog {
+.of-order-dialog {
   position: fixed;
   inset: 0;
   z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
-  background: rgba(0, 0, 0, .48);
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .of-order-dialog[hidden] {
@@ -2029,169 +2035,144 @@ td{font-size:13px}
 }
 
 .of-order-dialog-card {
-  width: min(100%, 700px);
-  max-height: min(85vh, 800px);
+  width: min(100%, 640px);
+  max-height: min(86vh, 780px);
   overflow-y: auto;
-  padding: 22px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 16px;
-  background: var(--surface, var(--card, #fff));
-  color: var(--text, inherit);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .22);
+  padding: 26px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 18px;
+  background: var(--surface, var(--card, #ffffff));
+  color: var(--text, #111827);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
 }
 
 .of-order-dialog-card h2 {
   margin: 0;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 750;
+  letter-spacing: -0.5px;
 }
 
-.of-order-dialog-header,
-.of-order-dialog-footer {
+.of-order-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .of-order-dialog-footer {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin: 20px 0 0;
+  gap: 10px;
   flex-wrap: wrap;
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
 }
 
-/* Order details grid */
-
-.of-order-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.of-order-detail {
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 12px;
-  background: var(--surface, var(--card, #fff));
-  overflow-wrap: anywhere;
-}
-
-.of-order-detail small {
-  display: block;
-  margin-bottom: 7px;
-  opacity: .7;
-  font-size: 12px;
-}
-
-.of-order-detail strong {
-  display: block;
-  font-size: 14px;
-  line-height: 1.5;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-/* Order details content */
+/* Main content */
 
 .of-order-details-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   min-width: 0;
 }
+
+/* Compact metadata */
 
 .of-order-details-content .of-order-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  column-gap: 24px;
+  row-gap: 19px;
+  padding: 0 0 21px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
 }
 
 .of-order-details-content .of-order-detail {
   min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 12px;
-  background: var(--surface, var(--card, #fff));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   overflow-wrap: anywhere;
-  transition: border-color 160ms ease, background 160ms ease;
 }
 
 .of-order-details-content .of-order-detail:hover {
-  border-color: var(--accent);
+  border-color: transparent;
 }
 
 .of-order-details-content .of-order-detail small {
   display: block;
-  margin-bottom: 7px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
+  margin: 0 0 6px;
+  color: var(--muted, #6b7280);
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  opacity: 1;
 }
 
 .of-order-details-content .of-order-detail strong {
   display: block;
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.5;
-  font-weight: 700;
+  color: var(--text, #111827);
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 650;
   overflow-wrap: anywhere;
 }
 
-/* Order status badges */
+/* Status badges */
 
 .of-order-status-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   width: fit-content;
   max-width: 100%;
-  padding: 5px 10px;
+  padding: 4px 9px;
   border: 1px solid transparent;
-  border-radius: 999px;
-  font-size: 12px;
+  border-radius: 6px;
+  font-size: 11px;
   line-height: 1.4;
-  font-weight: 700;
+  font-weight: 650;
   white-space: nowrap;
 }
 
-/* Pending: amber */
-
 .of-order-status-badge.status-pending {
-  background: #fef3c7;
-  border-color: #fde68a;
   color: #92400e;
+  background: #fffbeb;
+  border-color: #fef3c7;
 }
-
-/* Review: purple */
 
 .of-order-status-badge.status-review {
-  background: #ede9fe;
-  border-color: #ddd6fe;
-  color: #5b21b6;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: #ede9fe;
 }
-
-/* Completed: green */
 
 .of-order-status-badge.status-completed {
-  background: #dcfce7;
-  border-color: #bbf7d0;
   color: #166534;
+  background: #f0fdf4;
+  border-color: #dcfce7;
 }
-
-/* Cancelled: red */
 
 .of-order-status-badge.status-cancelled {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #991b1b;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fee2e2;
 }
 
-/* Order items section */
+/* Items heading */
 
 .of-order-items-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 13px;
   min-width: 0;
 }
 
@@ -2204,86 +2185,85 @@ td{font-size:13px}
 
 .of-order-items-heading h3 {
   margin: 0;
-  font-size: 15px;
+  color: var(--text, #111827);
+  font-size: 14px;
+  line-height: 1.5;
   font-weight: 700;
 }
 
 .of-order-items-count {
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: var(--surface, #f8fafc);
-  border: 1px solid var(--border, #d8dee8);
-  color: var(--muted, #64748b);
+  color: var(--muted, #6b7280);
   font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
 }
+
+/* Product rows */
 
 .of-order-item-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0;
+  gap: 0;
   margin: 0;
+  padding: 0;
   list-style: none;
 }
 
 .of-order-item-card {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 14px;
-  background: var(--card, #fff);
+  gap: 14px;
   min-width: 0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, .025);
-  transition: border-color 160ms ease, background 160ms ease,
-    box-shadow 160ms ease;
+  padding: 15px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+
+.of-order-item-card:first-child {
+  padding-top: 4px;
+}
+
+.of-order-item-card:last-child {
+  border-bottom: 0;
+  padding-bottom: 3px;
 }
 
 .of-order-item-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .045);
-}
-
-.of-order-item-icon {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 11px;
-  background: var(--surface, #f8fafc);
-  color: var(--accent);
-  font-size: 23px;
+  border-color: var(--border, #e5e7eb);
+  box-shadow: none;
 }
 
 .of-order-item-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
 }
 
 .of-order-item-name {
+  color: var(--text, #111827);
   font-size: 13px;
-  line-height: 1.45;
-  font-weight: 700;
-  color: var(--text);
+  line-height: 1.5;
+  font-weight: 650;
   overflow-wrap: anywhere;
 }
 
 .of-order-item-options {
-  color: var(--muted);
+  color: var(--muted, #6b7280);
   font-size: 12px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
 .of-order-item-unit-price {
-  color: var(--muted);
+  color: var(--muted, #6b7280);
   font-size: 12px;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2291,107 +2271,92 @@ td{font-size:13px}
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center;
-  gap: 8px;
+  gap: 5px;
   min-width: 0;
 }
 
 .of-order-quantity-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 9px;
-  border-radius: 7px;
-  background: var(--surface, #f8fafc);
-  border: 1px solid var(--border, #d8dee8);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--muted, #6b7280);
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .of-order-item-line-total {
+  color: var(--text, #111827);
   font-size: 13px;
+  line-height: 1.5;
   font-weight: 700;
-  color: var(--text);
   text-align: right;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
-/* Empty order items state */
+/* Empty items state */
 
 .of-order-items-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 25px 16px;
-  border: 1px dashed var(--border, #d8dee8);
-  border-radius: 12px;
-  background: var(--surface, #f8fafc);
-  text-align: center;
+  padding: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--border, #e5e7eb);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
 }
 
 .of-order-empty-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: var(--card, #fff);
-  border: 1px solid var(--border, #d8dee8);
-  color: var(--muted);
-  font-size: 22px;
+  display: none;
 }
 
 .of-order-items-empty p {
   margin: 0;
-  color: var(--muted);
+  color: var(--muted, #6b7280);
   font-size: 13px;
+  line-height: 1.6;
 }
 
-/* Order total panel */
+/* Total */
 
 .of-order-total-panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 14px;
-  background: var(--surface, #f8fafc);
+  padding: 17px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border, #e5e7eb);
+  border-radius: 0;
+  background: transparent;
 }
 
 .of-order-total-label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
+  gap: 4px;
+  color: var(--text, #111827);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .of-order-total-quantity {
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--muted, #6b7280);
+  font-size: 11px;
+  line-height: 1.5;
   font-weight: 400;
 }
 
 .of-order-total-amount {
-  font-size: 22px;
+  color: var(--text, #111827);
+  font-size: 23px;
   line-height: 1.3;
-  font-weight: 800;
-  color: var(--text);
+  font-weight: 750;
+  letter-spacing: -0.6px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
-/* Green Complete confirmation button */
+/* Complete confirmation button — preserve existing behaviour */
 
 #of-order-dialog .btn.of-confirm-complete {
   background-color: #bbf7d0 !important;
@@ -2405,28 +2370,42 @@ td{font-size:13px}
   color: #14532d !important;
 }
 
-/* Dark mode */
+/* Dark theme */
+
+:root[data-theme="dark"] .of-order-dialog {
+  background: rgba(0, 0, 0, 0.62);
+}
 
 :root[data-theme="dark"] .of-order-dialog-card {
+  border-color: var(--border, #374151);
   background: var(--surface, var(--card, #18181b));
-  border-color: var(--border, #3f3f46);
 }
 
-:root[data-theme="dark"] .of-order-details-content .of-order-detail,
-:root[data-theme="dark"] .of-order-item-card,
-:root[data-theme="dark"] .of-order-total-panel {
-  background: var(--surface, #27272a);
-  border-color: var(--border, #3f3f46);
+:root[data-theme="dark"] .of-order-status-badge.status-pending {
+  color: #fcd34d;
+  background: #422006;
+  border-color: #78350f;
 }
 
-:root[data-theme="dark"] .of-order-item-icon,
-:root[data-theme="dark"] .of-order-quantity-badge,
-:root[data-theme="dark"] .of-order-items-count {
-  background: var(--card, #18181b);
-  border-color: var(--border, #3f3f46);
+:root[data-theme="dark"] .of-order-status-badge.status-review {
+  color: #c4b5fd;
+  background: #2e1065;
+  border-color: #4c1d95;
 }
 
-/* Responsive layout */
+:root[data-theme="dark"] .of-order-status-badge.status-completed {
+  color: #86efac;
+  background: #052e16;
+  border-color: #166534;
+}
+
+:root[data-theme="dark"] .of-order-status-badge.status-cancelled {
+  color: #fca5a5;
+  background: #450a0a;
+  border-color: #991b1b;
+}
+
+/* Mobile */
 
 @media (max-width: 600px) {
   .of-order-dialog {
@@ -2434,51 +2413,38 @@ td{font-size:13px}
   }
 
   .of-order-dialog-card {
-    padding: 17px;
-    max-height: 90vh;
+    width: 100%;
+    max-height: 92vh;
+    padding: 20px;
+    border-radius: 15px;
   }
 
-  .of-order-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .of-order-dialog-card h2 {
+    font-size: 19px;
+  }
+
+  .of-order-details-content {
+    gap: 19px;
+  }
+
+  .of-order-details-content .of-order-detail-grid {
+    column-gap: 14px;
+    row-gap: 17px;
   }
 }
 
-@media (max-width: 480px) {
-  .of-order-details-content {
-    gap: 15px;
+@media (max-width: 380px) {
+  .of-order-dialog-card {
+    padding: 16px;
   }
 
   .of-order-details-content .of-order-detail-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .of-order-item-card {
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: 10px;
-    padding: 11px;
-  }
-
-  .of-order-item-icon {
-    width: 34px;
-    height: 34px;
-    font-size: 19px;
-  }
-
-  .of-order-item-price-info {
-    grid-column: 2;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .of-order-total-panel {
-    padding: 14px;
+    row-gap: 14px;
   }
 
   .of-order-total-amount {
-    font-size: 17px;
+    font-size: 20px;
   }
 }
 
@@ -3867,8 +3833,7 @@ function orderDetail(label, value) {
 }
 
 
-
-  function showOrderDetails(order) {
+function showOrderDetails(order) {
   const content = make("div", "of-order-details-content");
   const details = make("div", "of-order-detail-grid");
 
@@ -3876,92 +3841,121 @@ function orderDetail(label, value) {
   const status = normalizeOrderStatus(order.status);
   const orderNumber =
     order.order_number || String(order.id || "").slice(0, 8);
+
   const currency = order.currency || "PKR";
+  const itemCount = orderItemsCount(order);
 
-  const quantity = orderItemsCount(order);
-
-  // Order information
+  // Compact order metadata
   details.append(
     orderDetail("Order number", orderNumber),
     orderDetail("Customer", order.customers?.name || "Not linked"),
-    orderDetail("Date created", formatRecordDate(order.created_at)),
-    orderDetail("Status", orderStatusLabel(status)),
-    orderDetail("Total quantity", `${quantity} item${quantity === 1 ? "" : "s"}`)
+    orderDetail("Date created", formatRecordDate(order.created_at))
   );
+
+  // Status badge
+  const statusDetail = make("div", "of-order-detail");
+  statusDetail.append(make("small", "", "Status"));
+
+  const validStatuses = [
+    "pending",
+    "review",
+    "completed",
+    "cancelled"
+  ];
+
+  const statusClass = validStatuses.includes(status)
+    ? status
+    : "pending";
+
+  const statusBadge = make(
+    "span",
+    `of-order-status-badge status-${statusClass}`,
+    orderStatusLabel(status)
+  );
+
+  statusDetail.append(statusBadge);
+  details.append(statusDetail);
 
   content.append(details);
 
-  // Items section heading
+  // Order items heading
   const itemsSection = make("section", "of-order-items-section");
-  const itemsHeader = make("div", "of-order-items-heading");
-  const itemsTitle = make("h3", "", "Order items");
+  const itemsHeading = make("div", "of-order-items-heading");
 
-  const itemCount = make(
-    "span",
-    "of-order-items-count",
-    `${items.length} product${items.length === 1 ? "" : "s"}`
+  itemsHeading.append(make("h3", "", "Order items"));
+
+  itemsHeading.append(
+    make(
+      "span",
+      "of-order-items-count",
+      `${items.length} ${items.length === 1 ? "product" : "products"} · ${itemCount} ${itemCount === 1 ? "unit" : "units"}`
+    )
   );
 
-  itemsHeader.append(itemsTitle, itemCount);
-  itemsSection.append(itemsHeader);
+  itemsSection.append(itemsHeading);
 
-  if (!items.length) {
-    const empty = make("div", "of-order-items-empty");
-    empty.append(
-      make("span", "of-order-empty-icon", "—"),
-      make("p", "", "No item details available.")
+  // Product rows
+  if (items.length === 0) {
+    const emptyState = make("div", "of-order-items-empty");
+
+    emptyState.append(
+      make("p", "", "No item details available for this order.")
     );
-    itemsSection.append(empty);
+
+    itemsSection.append(emptyState);
   } else {
-    const list = make("div", "of-order-item-list");
+    const list = make("ul", "of-order-item-list");
 
     items.forEach(item => {
-      const productName = item.product_name || "Product";
-      const options = String(item.options || "").trim();
-      const itemQuantity = Math.max(0, Number(item.quantity) || 0);
-      const unitPrice = Math.max(0, Number(item.unit_price) || 0);
-      const lineTotal = itemQuantity * unitPrice;
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unit_price) || 0;
+      const lineTotal = quantity * unitPrice;
 
-      const card = make("article", "of-order-item-card");
+      const itemCard = make("li", "of-order-item-card");
+      const itemInfo = make("div", "of-order-item-info");
 
-      // Product icon
-      const iconBox = make("div", "of-order-item-icon");
-      iconBox.append(make("span", "", "▦"));
+      itemInfo.append(
+        make(
+          "div",
+          "of-order-item-name",
+          item.product_name || "Product"
+        )
+      );
 
-      // Product information
-      const info = make("div", "of-order-item-info");
-      info.append(make("div", "of-order-item-name", productName));
-
-      if (options) {
-        info.append(make("div", "of-order-item-options", options));
+      if (item.options) {
+        itemInfo.append(
+          make("div", "of-order-item-options", item.options)
+        );
       }
 
-      info.append(
+      itemInfo.append(
         make(
           "div",
           "of-order-item-unit-price",
-          `${currency} ${unitPrice.toLocaleString(undefined, {
-            maximumFractionDigits: 2
-          })} each`
+          `${currency} ${unitPrice.toLocaleString()} each`
         )
       );
 
-      // Quantity and line total
       const priceInfo = make("div", "of-order-item-price-info");
 
       priceInfo.append(
-        make("span", "of-order-quantity-badge", `× ${itemQuantity}`),
         make(
-          "div",
-          "of-order-item-line-total",
-          `${currency} ${lineTotal.toLocaleString(undefined, {
-            maximumFractionDigits: 2
-          })}`
+          "span",
+          "of-order-quantity-badge",
+          `Qty ${quantity}`
         )
       );
 
-      card.append(iconBox, info, priceInfo);
-      list.append(card);
+      priceInfo.append(
+        make(
+          "div",
+          "of-order-item-line-total",
+          `${currency} ${lineTotal.toLocaleString()}`
+        )
+      );
+
+      itemCard.append(itemInfo, priceInfo);
+      list.append(itemCard);
     });
 
     itemsSection.append(list);
@@ -3969,24 +3963,30 @@ function orderDetail(label, value) {
 
   content.append(itemsSection);
 
-  // Order total summary
-  const summary = make("div", "of-order-total-panel");
-  const summaryLabel = make("div", "of-order-total-label");
-  summaryLabel.append(
-    make("span", "", "Order total"),
-    make("span", "of-order-total-quantity", `${quantity} item${quantity === 1 ? "" : "s"}`)
+  // Prominent total
+  const totalPanel = make("div", "of-order-total-panel");
+  const totalLabel = make("div", "of-order-total-label");
+
+  totalLabel.append(make("span", "", "Order total"));
+
+  totalLabel.append(
+    make(
+      "span",
+      "of-order-total-quantity",
+      `${itemCount} ${itemCount === 1 ? "unit" : "units"} in this order`
+    )
   );
 
-  summary.append(
-    summaryLabel,
+  totalPanel.append(
+    totalLabel,
     make("div", "of-order-total-amount", orderMoney(order))
   );
 
-  content.append(summary);
+  content.append(totalPanel);
 
+  // Keep the existing dialog mechanism
   showOrderDialog(`Order ${orderNumber}`, content);
 }
-
 
 
 
