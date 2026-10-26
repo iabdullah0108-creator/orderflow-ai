@@ -3541,6 +3541,7 @@ td{font-size:13px}
 
   
 /* OrderFlow AI — Customer dialogs */
+
 .of-customer-dialog {
   width: min(480px, calc(100% - 32px));
   max-height: 85vh;
@@ -3551,6 +3552,7 @@ td{font-size:13px}
   background: var(--surface, #ffffff);
   color: var(--text-primary, #182230);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  color-scheme: light;
 }
 
 .of-customer-dialog::backdrop {
@@ -3559,13 +3561,15 @@ td{font-size:13px}
 }
 
 :root[data-theme="dark"] .of-customer-dialog {
-  background: #171b25;
-  color: #e5e7eb;
-  border-color: #343a49;
+  background: var(--surface, #171b25);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--border-color, #343a49);
+  color-scheme: dark;
 }
 
 .of-customer-dialog h2 {
   margin: 0 0 8px;
+  color: inherit;
   font-size: 20px;
 }
 
@@ -3573,6 +3577,7 @@ td{font-size:13px}
   margin: 0 0 20px;
   color: var(--text-secondary, #737d8d);
   font-size: 13px;
+  line-height: 1.6;
 }
 
 .of-customer-dialog .of-dialog-field {
@@ -3583,6 +3588,7 @@ td{font-size:13px}
 }
 
 .of-customer-dialog label {
+  color: inherit;
   font-size: 13px;
   font-weight: 600;
 }
@@ -3597,23 +3603,35 @@ td{font-size:13px}
   background: var(--input-bg, #ffffff);
   color: var(--text-primary, #182230);
   font: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 :root[data-theme="dark"] .of-customer-dialog input {
-  background: #171b25;
-  color: #e5e7eb;
-  border-color: #343a49;
+  background: var(--input-bg, #202634);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--border-color, #343a49);
+}
+
+.of-customer-dialog input::placeholder {
+  color: var(--text-secondary, #737d8d);
 }
 
 .of-customer-dialog input:focus {
-  outline: 2px solid #6366f1;
-  outline-offset: 1px;
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
 }
 
 .of-customer-dialog .of-dialog-error {
   margin: 10px 0;
   color: #dc2626;
   font-size: 13px;
+  line-height: 1.5;
+}
+
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-error {
+  color: #f87171;
 }
 
 .of-customer-dialog .of-dialog-actions {
@@ -3629,17 +3647,40 @@ td{font-size:13px}
   padding: 9px 16px;
   border: 1px solid var(--border-color, #dfe3eb);
   border-radius: 9px;
-  background: transparent;
-  color: inherit;
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #182230);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-btn {
+  background: var(--surface, #171b25);
+  color: var(--text-primary, #e5e7eb);
+  border-color: var(--border-color, #343a49);
+}
+
+.of-customer-dialog .of-dialog-btn:not(:disabled):hover {
+  background: #f1f3f9;
+  border-color: #c5cad5;
+}
+
+:root[data-theme="dark"] .of-customer-dialog .of-dialog-btn:not(:disabled):hover {
+  background: #292f3e;
+  border-color: #4b5568;
 }
 
 .of-customer-dialog .of-dialog-primary {
   border-color: #4f46e5;
   background: #4f46e5;
+  color: #ffffff;
+}
+
+.of-customer-dialog .of-dialog-primary:not(:disabled):hover {
+  border-color: #4338ca;
+  background: #4338ca;
   color: #ffffff;
 }
 
@@ -3649,11 +3690,21 @@ td{font-size:13px}
   color: #ffffff;
 }
 
-.of-customer-dialog button:disabled {
+.of-customer-dialog .of-dialog-danger:not(:disabled):hover {
+  border-color: #991b1b;
+  background: #991b1b;
+  color: #ffffff;
+}
+
+.of-customer-dialog .of-dialog-btn:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 3px;
+}
+
+.of-customer-dialog .of-dialog-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 
 
 
@@ -5824,6 +5875,18 @@ function showCustomerNotice(message) {
   dialog.showModal();
 }
 
+
+  function enableCustomerDialogBackdropClose(dialog) {
+  dialog.addEventListener("click", event => {
+    if (event.target === dialog && dialog.open) {
+      dialog.close();
+    }
+  });
+}
+
+
+
+  
 function showCustomerEditDialog(customer, onSave) {
   const dialog = document.createElement("dialog");
   dialog.className = "of-customer-dialog";
@@ -5940,6 +6003,7 @@ function showCustomerEditDialog(customer, onSave) {
     }
   });
 
+  enableCustomerDialogBackdropClose(dialog);
   dialog.showModal();
   inputs.name.focus();
 }
@@ -5999,7 +6063,8 @@ function showCustomerDeleteDialog(customer, onConfirm) {
   document.body.append(dialog);
 
   dialog.addEventListener("close", () => dialog.remove());
-  dialog.showModal();
+enableCustomerDialogBackdropClose(dialog);
+dialog.showModal();
 }
 
 
