@@ -2012,6 +2012,7 @@ td{font-size:13px}
   color: var(--accent, #6485f5);
 }
 
+
 .of-order-dialog {
   position: fixed;
   inset: 0;
@@ -2028,7 +2029,7 @@ td{font-size:13px}
 }
 
 .of-order-dialog-card {
-  width: min(100%, 620px);
+  width: min(100%, 700px);
   max-height: min(85vh, 800px);
   overflow-y: auto;
   padding: 22px;
@@ -2066,130 +2067,30 @@ td{font-size:13px}
 
 .of-order-detail {
   min-width: 0;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--border, #d8dee8);
-  border-radius: 10px;
+  border-radius: 12px;
+  background: var(--surface, var(--card, #fff));
   overflow-wrap: anywhere;
 }
 
 .of-order-detail small {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
   opacity: .7;
+  font-size: 12px;
 }
 
-.of-order-dialog-card label {
+.of-order-detail strong {
   display: block;
-  margin: 12px 0 6px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
-.of-order-dialog-card input,
-.of-order-dialog-card select,
-.of-order-dialog-card textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: 1px solid var(--border, #d8dee8);
-  border-radius: 9px;
-  background: var(--surface, var(--card, #fff));
-  color: inherit;
-  font: inherit;
-}
+/* Order details content */
 
-.of-order-dialog-card textarea {
-  resize: vertical;
-}
-
-.of-order-edit-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) 75px 100px;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.of-order-edit-item .of-order-option-input {
-  grid-column: 1 / -1;
-}
-
-.of-order-dialog-error {
-  margin-top: 12px;
-  color: #d43c4c;
-  font-size: 13px;
-}
-
-@media (max-width: 850px) {
-  .of-order-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
-  }
-
-  .of-order-row .of-order-customer {
-    grid-column: 1;
-  }
-
-  .of-order-row .of-order-status {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .of-order-row .of-order-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-
-  .of-order-cell {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 600px) {
-  .of-orders-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .of-orders-toolbar #orders-result-count {
-    justify-self: start;
-  }
-
-  .of-order-dialog-card {
-    padding: 16px;
-  }
-
-  .of-order-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .of-order-row {
-    transition: none;
-  }
-}
-
-
-
-
-
-/* Order confirmation button colors */
-#of-order-dialog .btn.of-confirm-complete {
-  background-color: #bbf7d0 !important;
-  border-color: #86efac !important;
-  color: #166534 !important;
-}
-
-#of-order-dialog .btn.of-confirm-complete:hover {
-  background-color: #a7f3c0 !important;
-  border-color: #4ade80 !important;
-  color: #14532d !important;
-}
-
-
-  
-
-
-  /* Order details popup */
 .of-order-details-content {
   display: flex;
   flex-direction: column;
@@ -2203,16 +2104,39 @@ td{font-size:13px}
   gap: 10px;
 }
 
-.of-order-details-content .of-order-detail-grid > * {
+.of-order-details-content .of-order-detail {
   min-width: 0;
-  padding: 13px 14px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
   overflow-wrap: anywhere;
+  transition: border-color 160ms ease, background 160ms ease;
 }
 
-/* Item section */
+.of-order-details-content .of-order-detail:hover {
+  border-color: var(--accent);
+}
+
+.of-order-details-content .of-order-detail small {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.of-order-details-content .of-order-detail strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Order items section */
+
 .of-order-items-section {
   display: flex;
   flex-direction: column;
@@ -2243,7 +2167,6 @@ td{font-size:13px}
   white-space: nowrap;
 }
 
-/* Individual product cards */
 .of-order-item-list {
   display: flex;
   flex-direction: column;
@@ -2255,16 +2178,19 @@ td{font-size:13px}
   grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 13px;
+  border-radius: 14px;
   background: var(--card);
   min-width: 0;
-  transition: border-color 160ms ease, background 160ms ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .025);
+  transition: border-color 160ms ease, background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .of-order-item-card:hover {
   border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .045);
 }
 
 .of-order-item-icon {
@@ -2339,7 +2265,8 @@ td{font-size:13px}
   overflow-wrap: anywhere;
 }
 
-/* Empty items state */
+/* Empty order items state */
+
 .of-order-items-empty {
   display: flex;
   flex-direction: column;
@@ -2372,13 +2299,14 @@ td{font-size:13px}
   font-size: 13px;
 }
 
-/* Highlighted total panel */
+/* Order total panel */
+
 .of-order-total-panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 17px 18px;
+  padding: 18px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
@@ -2400,7 +2328,7 @@ td{font-size:13px}
 }
 
 .of-order-total-amount {
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1.3;
   font-weight: 800;
   color: var(--text);
@@ -2409,13 +2337,35 @@ td{font-size:13px}
   overflow-wrap: anywhere;
 }
 
-/* Small screens */
+/* Complete button */
+
+#of-order-dialog .btn.of-confirm-complete {
+  background-color: #bbf7d0 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+#of-order-dialog .btn.of-confirm-complete:hover {
+  background-color: #a7f3c0 !important;
+  border-color: #4ade80 !important;
+  color: #14532d !important;
+}
+
+/* Responsive layout */
+
+@media (max-width: 600px) {
+  .of-order-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 480px) {
   .of-order-details-content {
     gap: 15px;
   }
 
   .of-order-details-content .of-order-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
@@ -2447,10 +2397,6 @@ td{font-size:13px}
     font-size: 17px;
   }
 }
-
-  
-
-  
 
   
 
