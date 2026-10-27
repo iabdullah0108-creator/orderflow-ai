@@ -1519,7 +1519,7 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
 
         order_number: orderNumber,
 
-        status: "processing",
+        status: "pending",
 
         total,
 
