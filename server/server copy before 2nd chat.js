@@ -444,6 +444,156 @@ app.get("/api/customers", authenticateUser, async (req, res) => {
 
 
 
+app.put("/api/customers/:id", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const customerId = req.params.id;
+    const { name, email, phone, address } = req.body || {};
+
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({
+        error: "Customer name is required."
+      });
+    }
+
+    const fields = { name: name.trim() };
+
+    for (const key of ["email", "phone", "address"]) {
+      const value = req.body[key];
+
+      if (value !== undefined && value !== null && typeof value !== "string") {
+        return res.status(400).json({
+          error: `Invalid ${key} value.`
+        });
+      }
+
+      if (value !== undefined) {
+        const trimmed = (value || "").trim();
+
+        const maxLengths = {
+          email: 254,
+          phone: 50,
+          address: 1000
+        };
+
+        if (trimmed.length > maxLengths[key]) {
+          return res.status(400).json({
+            error: `${key} is too long.`
+          });
+        }
+
+        fields[key] = trimmed || null;
+      }
+    }
+
+    if (fields.name.length > 200) {
+      return res.status(400).json({
+        error: "Customer name is too long."
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("customers")
+      .update(fields)
+      .eq("id", customerId)
+      .eq("workspace_id", workspace.id)
+      .select("id, name, email, phone, address, created_at")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Customer update failed:", error.message);
+      return res.status(500).json({
+        error: "Could not update customer."
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Customer not found."
+      });
+    }
+
+    return res.json({ customer: data });
+  } catch (error) {
+    console.error("Customer update endpoint failed:", error.message);
+    return res.status(500).json({
+      error: "Could not update customer."
+    });
+  }
+});
+
+
+app.delete("/api/customers/:id", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const customerId = req.params.id;
+
+    const { data, error } = await supabase
+      .from("customers")
+      .delete()
+      .eq("id", customerId)
+      .eq("workspace_id", workspace.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Customer deletion failed:", error.message);
+      return res.status(409).json({
+        error: "Could not delete customer. Check whether existing orders reference this customer."
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Customer not found."
+      });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Customer deletion endpoint failed:", error.message);
+    return res.status(500).json({
+      error: "Could not delete customer."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
 app.post("/api/customers/lookup",authenticateUser, async (req, res) => {
 
     if (!supabase) {
@@ -900,11 +1050,8 @@ app.get("/api/orders", authenticateUser, async (req, res) => {
 
       .from("orders")
 
-      .select(
+      .select("id, order_number, status, total, currency, customer_id, shipping_address, created_at")
 
-        "id, order_number, status, total, currency, customer_id, created_at"
-
-      )
 
       .eq("workspace_id", workspaceId)
 
@@ -1497,6 +1644,337 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
 });
 
 
+
+
+
+
+
+
+app.put("/api/orders/:id", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: "Database is not configured." });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const workspaceId = workspace.id;
+    const orderId = req.params.id;
+
+    if (
+      typeof orderId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId)
+    ) {
+      return res.status(400).json({ error: "Invalid order ID." });
+    }
+
+    const {
+      customer_id,
+      currency,
+      shipping_address,
+      items
+    } = req.body || {};
+
+    const allowedCurrencies = [
+      "USD", "PKR", "GBP", "EUR", "AED", "CAD", "AUD"
+    ];
+
+    if (!allowedCurrencies.includes(currency)) {
+      return res.status(400).json({
+        error: "Please select a supported currency."
+      });
+    }
+
+    if (
+      typeof customer_id !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customer_id)
+    ) {
+      return res.status(400).json({
+        error: "Please select a valid customer."
+      });
+    }
+
+    if (
+      shipping_address !== undefined &&
+      (typeof shipping_address !== "string" ||
+        shipping_address.trim().length > 500)
+    ) {
+      return res.status(400).json({
+        error: "The shipping address is invalid."
+      });
+    }
+
+    if (!Array.isArray(items) || items.length < 1 || items.length > 50) {
+      return res.status(400).json({
+        error: "An order must contain between 1 and 50 items."
+      });
+    }
+
+    const validatedItems = [];
+
+    for (const item of items) {
+      if (
+        !item ||
+        typeof item.product_name !== "string" ||
+        !item.product_name.trim() ||
+        item.product_name.trim().length > 150 ||
+        !Number.isSafeInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 999 ||
+        typeof item.unit_price !== "number" ||
+        !Number.isFinite(item.unit_price) ||
+        item.unit_price < 0 ||
+        item.unit_price > 100000000 ||
+        (item.options != null &&
+          typeof item.options !== "string")
+      ) {
+        return res.status(400).json({
+          error: "One or more order items are invalid."
+        });
+      }
+
+      validatedItems.push({
+        product_name: item.product_name.trim(),
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        options: (item.options || "").trim().slice(0, 500) || null
+      });
+    }
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("id, status, customer_id, shipping_address")
+      .eq("id", orderId)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+
+    if (orderError) {
+      return res.status(503).json({
+        error: "Could not verify the order."
+      });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const currentStatus = String(order.status || "").toLowerCase();
+
+    if (["completed", "cancelled", "canceled"].includes(currentStatus)) {
+      return res.status(409).json({
+        error: "Completed or cancelled orders cannot be edited."
+      });
+    }
+
+    const { data: customer, error: customerError } = await supabase
+      .from("customers")
+      .select("id, address")
+      .eq("id", customer_id)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+
+    if (customerError) {
+      return res.status(503).json({
+        error: "Could not validate the customer."
+      });
+    }
+
+    if (!customer) {
+      return res.status(400).json({
+        error: "The selected customer is not in your workspace."
+      });
+    }
+
+    const total = Math.round(
+      validatedItems.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price,
+        0
+      ) * 100
+    ) / 100;
+
+    // Preserve the existing items in case replacement fails.
+    const { data: oldItems, error: oldItemsError } = await supabase
+      .from("order_items")
+      .select("product_name, quantity, unit_price, options")
+      .eq("order_id", orderId);
+
+    if (oldItemsError) {
+      return res.status(503).json({
+        error: "Could not load the existing order items."
+      });
+    }
+
+    const address = shipping_address !== undefined
+      ? shipping_address.trim() || null
+      : order.shipping_address || customer.address || null;
+
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({
+        customer_id,
+        currency,
+        shipping_address: address,
+        total
+      })
+      .eq("id", orderId)
+      .eq("workspace_id", workspaceId)
+      .in("status", ["pending", "review", "needs_review"]);
+
+    if (updateError) {
+      console.error("Order update failed:", updateError.message);
+      return res.status(503).json({
+        error: "Could not update the order."
+      });
+    }
+
+    const { error: deleteError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", orderId);
+
+    if (deleteError) {
+      return res.status(503).json({
+        error: "Order details could not be replaced. Please reload and check the order."
+      });
+    }
+
+    const { error: insertError } = await supabase
+      .from("order_items")
+      .insert(validatedItems.map(item => ({
+        order_id: orderId,
+        ...item
+      })));
+
+    if (insertError) {
+      console.error("Replacement order items failed:", insertError.message);
+
+      // Best-effort restoration of the previous items.
+      const { error: restoreError } = await supabase
+        .from("order_items")
+        .insert(oldItems.map(item => ({
+          order_id: orderId,
+          ...item
+        })));
+
+      if (restoreError) {
+        console.error("Order item restoration failed:", restoreError.message);
+      }
+
+      return res.status(503).json({
+        error: "Could not save the edited items. Reload and verify the order before trying again."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Order updated successfully."
+    });
+  } catch (error) {
+    console.error("Order edit failed:", error.message);
+    return res.status(500).json({
+      error: "Could not update the order."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({ error: "Database is not configured." });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        error: "No valid workspace access found."
+      });
+    }
+
+    const { status } = req.body || {};
+
+    if (!["completed", "cancelled"].includes(status)) {
+      return res.status(400).json({
+        error: "Status must be completed or cancelled."
+      });
+    }
+
+    const { data: order, error: readError } = await supabase
+      .from("orders")
+      .select("id, status")
+      .eq("id", req.params.id)
+      .eq("workspace_id", workspace.id)
+      .maybeSingle();
+
+    if (readError) {
+      return res.status(503).json({ error: "Could not verify the order." });
+    }
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const current = String(order.status || "").toLowerCase();
+
+    if (["completed", "cancelled", "canceled"].includes(current)) {
+      return res.status(409).json({
+        error: "This order is already completed or cancelled."
+      });
+    }
+
+    if (!["pending", "review", "needs_review"].includes(current)) {
+      return res.status(409).json({
+        error: "This order's current status does not allow this action."
+      });
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", req.params.id)
+      .eq("workspace_id", workspace.id)
+      .in("status", ["pending", "review", "needs_review"])
+      .select("id, status")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("Order status update failed:", updateError.message);
+      return res.status(503).json({
+        error: "Could not update the order status."
+      });
+    }
+
+    if (!updated) {
+      return res.status(409).json({
+        error: "The order changed or is no longer eligible. Reload the page."
+      });
+    }
+
+    return res.json({ success: true, order: updated });
+  } catch (error) {
+    console.error("Order status update failed:", error.message);
+    return res.status(500).json({
+      error: "Could not update the order status."
+    });
+  }
+});
 
 
 
@@ -2929,8 +3407,16 @@ app.post("/api/integrations/n8n/delivery-status", async (req, res) => {
 });
 
 
+//if (require.main === module) {
+  //app.listen(PORT, "0.0.0.0", () => {
+    //console.log(`OrderFlow AI server running on port ${PORT}`);
+  //});
+//}
+
+//module.exports = app;
+
 app.listen(PORT, "0.0.0.0", () => {
 
-  console.log(`OrderFlow AI server running on port ${PORT}`);
+  console.log(`OrderFlow AI server running on port ${PORT}`);
 
 });
