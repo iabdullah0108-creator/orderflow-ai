@@ -255,7 +255,7 @@ const AI_DEFAULT_MODELS = {
   deepseek: "deepseek-chat"
 };
 
-const AI_ALLOWED_PROVIDERS = new Set(Object.keys(AI_DEFAULT_MODELS));
+const AI_ALLOWED_PROVIDERS = new Set([...Object.keys(AI_DEFAULT_MODELS), "custom"]);
 
 function getAIEncryptionKey() {
   const value = process.env.AI_ENCRYPTION_KEY || "";
@@ -298,23 +298,44 @@ function decryptWorkspaceApiKey(row) {
 
 function validateAIProviderModel(provider, model) {
   if (typeof provider !== "string" || !AI_ALLOWED_PROVIDERS.has(provider)) {
-    return "Choose Google Gemini, OpenAI, Anthropic Claude, or DeepSeek.";
+    return "Choose Google Gemini, OpenAI, Anthropic Claude, DeepSeek, or Other / Custom.";
   }
   if (
     typeof model !== "string" ||
     !model.trim() ||
     model.trim().length > 120 ||
-    !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(model.trim())
+    !/^[A-Za-z0-9][A-Za-z0-9._:/-]*$/.test(model.trim())
   ) {
     return "Enter a valid model ID (maximum 120 characters).";
   }
   return null;
 }
 
+// Custom providers must use an HTTPS OpenAI-compatible chat-completions API.
+// Block obvious local/private destinations to reduce SSRF risk.
+function validateCustomApiBaseUrl(value) {
+  if (typeof value !== "string" || !value.trim() || value.length > 500) {
+    return { error: "Enter an HTTPS API Base URL for the custom provider." };
+  }
+  let parsed;
+  try { parsed = new URL(value.trim()); } catch {
+    return { error: "Enter a valid API Base URL." };
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  const localHost = host === "localhost" || host.endsWith(".localhost") || host === "::1" || host === "0.0.0.0" || host === "127.0.0.1" || host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.") || /^172\.(1[6-9]|2[0-9]|3[01])\./.test(host) || host === "169.254.169.254";
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash || localHost) {
+    return { error: "API Base URL must be a public HTTPS URL without credentials, query parameters, or fragments." };
+  }
+  const basePath = parsed.pathname.replace(/\/+$/, "");
+  if (basePath.endsWith("/chat/completions")) parsed.pathname = basePath;
+  else parsed.pathname = `${basePath}/chat/completions`.replace(/^\/\//, "/");
+  return { url: parsed.toString() };
+}
+
 async function readWorkspaceAISettingsRow(workspaceId) {
   const { data, error } = await supabase
     .from("workspace_ai_settings")
-    .select("ai_provider, ai_model, ai_api_key_encrypted, ai_api_key_iv, ai_api_key_auth_tag, updated_at")
+    .select("ai_provider, ai_model, ai_api_key_encrypted, ai_api_key_iv, ai_api_key_auth_tag, custom_api_base_url, updated_at")
     .eq("workspace_id", workspaceId)
     .maybeSingle();
   if (error) {
@@ -338,6 +359,7 @@ async function getWorkspaceAIConfig(workspaceId) {
       provider: row.ai_provider,
       model: row.ai_model,
       apiKey,
+      customApiBaseUrl: row.custom_api_base_url || null,
       configuredByWorkspace: true
     };
   }
@@ -347,7 +369,7 @@ async function getWorkspaceAIConfig(workspaceId) {
   if (process.env.GEMINI_API_KEY) {
     return {
       provider: "google",
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       apiKey: process.env.GEMINI_API_KEY,
       configuredByWorkspace: false
     };
@@ -392,10 +414,12 @@ async function generateAIText(aiConfig, prompt, options = {}) {
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }]
     };
-  } else if (aiConfig.provider === "openai" || aiConfig.provider === "deepseek") {
+  } else if (aiConfig.provider === "openai" || aiConfig.provider === "deepseek" || aiConfig.provider === "custom") {
     const baseUrl = aiConfig.provider === "deepseek"
       ? "https://api.deepseek.com"
-      : "https://api.openai.com/v1";
+      : aiConfig.provider === "custom"
+        ? validateCustomApiBaseUrl(aiConfig.customApiBaseUrl).url.replace(/\/chat\/completions$/, "")
+        : "https://api.openai.com/v1";
     url = `${baseUrl}/chat/completions`;
     headers = {
       "content-type": "application/json",
@@ -415,7 +439,8 @@ async function generateAIText(aiConfig, prompt, options = {}) {
     method: "POST",
     headers,
     body: JSON.stringify(body),
-    signal: timeoutSignal
+    signal: timeoutSignal,
+    redirect: "error"
   });
 
   let result;
@@ -475,6 +500,7 @@ app.get("/api/ai-settings", authenticateUser, async (req, res) => {
       has_api_key: true,
       provider: row.ai_provider,
       model: row.ai_model,
+      custom_api_base_url: row.custom_api_base_url || null,
       using_platform_default: false,
       updated_at: row.updated_at
     });
@@ -496,6 +522,12 @@ app.put("/api/ai-settings", authenticateUser, async (req, res) => {
     const apiKey = typeof body.api_key === "string" ? body.api_key.trim() : "";
     const validationError = validateAIProviderModel(provider, model);
     if (validationError) return res.status(400).json({ error: validationError });
+    let customApiBaseUrl = null;
+    if (provider === "custom") {
+      const validatedUrl = validateCustomApiBaseUrl(body.custom_api_base_url);
+      if (validatedUrl.error) return res.status(400).json({ error: validatedUrl.error });
+      customApiBaseUrl = validatedUrl.url.replace(/\/chat\/completions$/, "");
+    }
     if (apiKey.length > 500) return res.status(400).json({ error: "API key is too long." });
 
     const existing = await readWorkspaceAISettingsRow(workspace.id);
@@ -526,7 +558,7 @@ app.put("/api/ai-settings", authenticateUser, async (req, res) => {
         ai_provider: provider,
         ai_model: model,
         ...encryptedFields,
-        custom_api_base_url: null,
+        custom_api_base_url: customApiBaseUrl,
         updated_at: new Date().toISOString()
       }, { onConflict: "workspace_id" });
 
@@ -541,6 +573,7 @@ app.put("/api/ai-settings", authenticateUser, async (req, res) => {
       has_api_key: true,
       provider,
       model,
+      custom_api_base_url: customApiBaseUrl,
       message: "AI settings saved. The API key is encrypted and is not returned to the browser."
     });
   } catch (error) {
@@ -563,7 +596,13 @@ app.post("/api/ai-settings/test", authenticateUser, async (req, res) => {
       const validationError = validateAIProviderModel(provider, model);
       if (validationError) return res.status(400).json({ error: validationError });
       if (body.api_key.trim().length > 500) return res.status(400).json({ error: "API key is too long." });
-      config = { provider, model, apiKey: body.api_key.trim() };
+      let customApiBaseUrl = null;
+      if (provider === "custom") {
+        const validatedUrl = validateCustomApiBaseUrl(body.custom_api_base_url);
+        if (validatedUrl.error) return res.status(400).json({ error: validatedUrl.error });
+        customApiBaseUrl = validatedUrl.url.replace(/\/chat\/completions$/, "");
+      }
+      config = { provider, model, apiKey: body.api_key.trim(), customApiBaseUrl };
     } else {
       config = await getWorkspaceAIConfig(workspace.id);
     }
