@@ -2052,10 +2052,9 @@ td{font-size:13px}
   white-space: nowrap;
 }
 
-.of-order-status.processing {
-  background: #dbeafe;
-  color: #1d4ed8;
-
+.of-order-status.pending {
+  color: #8a5a00;
+  background: #fff0c2;
 }
 
 .of-order-status.completed {
@@ -2073,10 +2072,9 @@ td{font-size:13px}
   background: #eee3ff;
 }
 
-:root[data-theme="dark"] .of-order-status.processing {
- background: #1e3a5f;
-  color: #93c5fd;
-
+:root[data-theme="dark"] .of-order-status.pending {
+  color: #ffdc82;
+  background: #493817;
 }
 
 :root[data-theme="dark"] .of-order-status.completed {
@@ -2352,11 +2350,10 @@ td{font-size:13px}
   white-space: nowrap;
 }
 
-.of-order-status-badge.status-processing {
-   background: #dbeafe;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
-
+.of-order-status-badge.status-pending {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
 }
 
 .of-order-status-badge.status-review {
@@ -2378,11 +2375,10 @@ td{font-size:13px}
 }
 
 /* Dark mode */
-:root[data-theme="dark"] .of-order-status-badge.status-processing {
-   background: #1e3a5f;
-  color: #93c5fd;
-  border-color: #1d4ed8;
-
+:root[data-theme="dark"] .of-order-status-badge.status-pending {
+  color: #fcd34d;
+  background: #422f12;
+  border-color: #6b4b1c;
 }
 
 :root[data-theme="dark"] .of-order-status-badge.status-review {
@@ -2618,11 +2614,10 @@ td{font-size:13px}
   background: var(--surface, var(--card, #18181b));
 }
 
-:root[data-theme="dark"] .of-order-status-badge.status-processing {
-  background: #1e3a5f;
-  color: #93c5fd;
-  border-color: #1d4ed8;
-
+:root[data-theme="dark"] .of-order-status-badge.status-pending {
+  color: #fcd34d;
+  background: #422006;
+  border-color: #78350f;
 }
 
 :root[data-theme="dark"] .of-order-status-badge.status-review {
@@ -4280,7 +4275,7 @@ td{font-size:13px}
 
   <select id="orders-status-filter" aria-label="Filter orders by status">
     <option value="all">All statuses</option>
-    <option value="processing">Processing</option>
+    <option value="pending">Pending</option>
     <option value="completed">Completed</option>
     <option value="cancelled">Cancelled</option>
     <option value="review">Review</option>
@@ -5027,7 +5022,7 @@ function formatRecordDate(value) {
 
 
 function normalizeOrderStatus(value) {
-  const status = String(value || "processing").toLowerCase().trim();
+  const status = String(value || "pending").toLowerCase().trim();
 
   if (["completed", "complete", "delivered"].includes(status)) {
     return "completed";
@@ -5041,12 +5036,12 @@ function normalizeOrderStatus(value) {
     return "review";
   }
 
-  return "processing";
+  return "pending";
 }
 
 function orderStatusLabel(status) {
   return ({
-    processing: "Processing",
+    pending: "Pending",
     completed: "Completed",
     cancelled: "Cancelled",
     review: "Review"
@@ -5158,7 +5153,7 @@ function showOrderDetails(order) {
   statusDetail.append(make("small", "", "Status"));
 
   const validStatuses = [
-    "processing",
+    "pending",
     "review",
     "completed",
     "cancelled"
@@ -5166,7 +5161,7 @@ function showOrderDetails(order) {
 
   const statusClass = validStatuses.includes(status)
     ? status
-    : "processing";
+    : "pending";
 
   const statusBadge = make(
     "span",
@@ -6881,7 +6876,7 @@ if (needsTshirtSize && tshirtSizeMissing) {
   }
 
   saveButton.textContent = `Saved: ${orderData.order.order_number}`;
-  notify(`Order ${orderData.order.order_number} saved as Processing.`);
+  notify(`Order ${orderData.order.order_number} saved as Pending.`);
 }   catch (error) {
       console.error("Save order error:", error);
       notify(error.message || "Could not save the order.");
