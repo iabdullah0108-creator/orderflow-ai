@@ -3744,6 +3744,286 @@ td{font-size:13px}
 
 
 
+
+
+
+  /* AI Provider Settings */
+.ai-provider-panel {
+  margin-top: 22px;
+  overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 18px;
+  background: var(--panel, #fff);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+}
+
+.ai-provider-hero {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 22px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: linear-gradient(120deg, rgba(99, 102, 241, .10), rgba(14, 165, 233, .06));
+}
+
+.ai-provider-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  color: #fff;
+  font-size: 23px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, .25);
+}
+
+.ai-provider-hero h2 {
+  margin: 0 0 5px;
+  font-size: 19px;
+  color: var(--text, #111827);
+}
+
+.ai-provider-hero p,
+.ai-provider-help {
+  margin: 0;
+  color: var(--muted, #6b7280);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ai-provider-status {
+  margin-left: auto;
+  padding: 7px 11px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 999px;
+  background: var(--panel, #fff);
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ai-provider-status.is-connected {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.ai-provider-status.is-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.ai-provider-body {
+  padding: 22px;
+}
+
+.ai-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ai-provider-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-provider-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.ai-provider-field label {
+  color: var(--text, #374151);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ai-provider-field input,
+.ai-provider-field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  outline: none;
+  background: var(--input-bg, var(--panel, #fff));
+  color: var(--text, #111827);
+  font: inherit;
+  font-size: 14px;
+}
+
+.ai-provider-field input:focus,
+.ai-provider-field select:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .13);
+}
+
+.ai-provider-key-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-provider-key-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-provider-mini-btn {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: var(--panel, #fff);
+  color: var(--text, #374151);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-provider-help {
+  font-size: 12px;
+}
+
+.ai-provider-notice {
+  display: none;
+  margin-top: 17px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-provider-notice.show {
+  display: block;
+}
+
+.ai-provider-notice.success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.ai-provider-notice.error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.ai-provider-notice.info {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.ai-provider-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.ai-provider-actions button {
+  min-height: 40px;
+  padding: 10px 15px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: var(--panel, #fff);
+  color: var(--text, #374151);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.ai-provider-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.ai-provider-actions button:disabled {
+  opacity: .55;
+  cursor: wait;
+  transform: none;
+}
+
+.ai-provider-actions .ai-provider-primary {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: #fff;
+}
+
+.ai-provider-actions .ai-provider-danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.ai-provider-security {
+  display: flex;
+  gap: 10px;
+  margin-top: 17px;
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--subtle-bg, #f9fafb);
+  color: var(--muted, #6b7280);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ai-provider-security strong {
+  color: var(--text, #374151);
+}
+
+@media (max-width: 640px) {
+  .ai-provider-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-provider-field.full-width {
+    grid-column: auto;
+  }
+
+  .ai-provider-hero {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ai-provider-status {
+    margin-left: 63px;
+  }
+
+  .ai-provider-body {
+    padding: 16px;
+  }
+
+  .ai-provider-key-row {
+    flex-wrap: wrap;
+  }
+
+  .ai-provider-key-row input {
+    flex-basis: 100%;
+  }
+
+  .ai-provider-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+  
+
+
+
+
+  
   
 </style>
 
@@ -4521,7 +4801,115 @@ td{font-size:13px}
 
 
 
-      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div></section>
+      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div>
+
+
+
+
+        <div class="ai-provider-panel" id="ai-provider-settings">
+  <div class="ai-provider-hero">
+    <div class="ai-provider-icon" aria-hidden="true">✧</div>
+    <div>
+      <h2>AI Provider Settings</h2>
+      <p>Choose the AI model that powers your business assistant.</p>
+    </div>
+    <span class="ai-provider-status" id="ai-provider-status">
+      Checking status…
+    </span>
+  </div>
+
+  <div class="ai-provider-body">
+    <p class="ai-provider-help" style="margin-bottom:20px">
+      Configure the provider and model used for AI-powered replies and supported
+      assistant tasks. Your settings apply to your current workspace.
+    </p>
+
+    <div class="ai-provider-grid">
+      <div class="ai-provider-field">
+        <label for="ai-provider-select">AI provider</label>
+        <select id="ai-provider-select">
+          <option value="google">Google Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="deepseek">DeepSeek</option>
+        </select>
+      </div>
+
+      <div class="ai-provider-field">
+        <label for="ai-model-input">Model ID</label>
+        <input
+          id="ai-model-input"
+          type="text"
+          maxlength="120"
+          placeholder="e.g. gemini-2.5-flash"
+          autocomplete="off"
+        >
+        <span class="ai-provider-help">
+          Enter the exact model ID supported by your provider account.
+        </span>
+      </div>
+
+      <div class="ai-provider-field full-width">
+        <label for="ai-api-key-input">API key</label>
+        <div class="ai-provider-key-row">
+          <input
+            id="ai-api-key-input"
+            type="password"
+            maxlength="500"
+            placeholder="Enter your provider API key"
+            autocomplete="new-password"
+            spellcheck="false"
+          >
+          <button
+            class="ai-provider-mini-btn"
+            id="ai-key-visibility-btn"
+            type="button"
+          >Show</button>
+          <button
+            class="ai-provider-mini-btn"
+            id="ai-replace-key-btn"
+            type="button"
+          >Replace key</button>
+        </div>
+        <span class="ai-provider-help" id="ai-key-help">
+          Your saved key is never sent back to the browser.
+        </span>
+      </div>
+    </div>
+
+    <div class="ai-provider-notice" id="ai-provider-notice" role="status"
+         aria-live="polite"></div>
+
+    <div class="ai-provider-actions">
+      <button type="button" id="ai-test-connection-btn">
+        Test connection
+      </button>
+      <button type="button" class="ai-provider-primary"
+              id="ai-save-settings-btn">
+        Save settings
+      </button>
+      <button type="button" class="ai-provider-danger"
+              id="ai-remove-settings-btn">
+        Remove API key
+      </button>
+    </div>
+
+    <div class="ai-provider-security">
+      <span aria-hidden="true">🔒</span>
+      <div>
+        <strong>Workspace-level security</strong><br>
+        The backend encrypts saved API keys. Keys are not stored in browser
+        local storage and are not returned by the settings API.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+        
+      
+      
+      </section>
     </div>
   </main>
 </div>
@@ -9638,6 +10026,348 @@ if (list) {
 
 
 
+
+
+  <script>
+(() => {
+  "use strict";
+
+  const root = document.getElementById("ai-provider-settings");
+  if (!root || root.dataset.initialized === "true") return;
+  root.dataset.initialized = "true";
+
+  const $ = (id) => document.getElementById(id);
+
+  const providerInput = $("ai-provider-select");
+  const modelInput = $("ai-model-input");
+  const keyInput = $("ai-api-key-input");
+  const keyHelp = $("ai-key-help");
+  const status = $("ai-provider-status");
+  const notice = $("ai-provider-notice");
+
+  const defaults = {
+    google: "gemini-2.5-flash",
+    openai: "gpt-4.1-mini",
+    anthropic: "claude-3-5-haiku-latest",
+    deepseek: "deepseek-chat"
+  };
+
+  let configured = false;
+  let savedProvider = "google";
+  let hasSavedKey = false;
+  let replacingKey = false;
+  let busy = false;
+
+  function showNotice(message, type = "info") {
+    notice.textContent = message;
+    notice.className = "ai-provider-notice show " + type;
+  }
+
+  function clearNotice() {
+    notice.textContent = "";
+    notice.className = "ai-provider-notice";
+  }
+
+  function setStatus(message, type = "") {
+    status.textContent = message;
+    status.className = "ai-provider-status";
+    if (type) status.classList.add("is-" + type);
+  }
+
+  async function api(path, options = {}) {
+    if (typeof supabaseClient === "undefined") {
+      throw new Error("Supabase authentication has not initialized.");
+    }
+
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+
+    const token = data.session?.access_token;
+    if (!token) {
+      throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+        ...(options.headers || {})
+      }
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+        result.message ||
+        "Request failed (" + response.status + ")."
+      );
+    }
+
+    return result;
+  }
+
+  function setBusy(value) {
+    busy = value;
+
+    [
+      "ai-test-connection-btn",
+      "ai-save-settings-btn",
+      "ai-remove-settings-btn",
+      "ai-replace-key-btn",
+      "ai-key-visibility-btn"
+    ].forEach((id) => {
+      const button = $(id);
+      if (button) button.disabled = value;
+    });
+  }
+
+  function resetKeyField() {
+    keyInput.value = "";
+    keyInput.type = "password";
+    $("ai-key-visibility-btn").textContent = "Show";
+  }
+
+  function providerChanged() {
+    const provider = providerInput.value;
+
+    // Suggest the provider's default model when the provider changes.
+    if (provider !== savedProvider) {
+      modelInput.value = defaults[provider] || "";
+    } else if (!modelInput.value.trim()) {
+      modelInput.value = defaults[provider] || "";
+    }
+
+    clearNotice();
+  }
+
+  async function loadSettings() {
+    setStatus("Loading…");
+
+    try {
+      const result = await api("/api/ai-settings");
+
+      configured = Boolean(result.configured);
+      hasSavedKey = Boolean(result.has_api_key);
+      savedProvider = result.provider || "google";
+
+      providerInput.value = savedProvider;
+      modelInput.value =
+        result.model || defaults[savedProvider] || "";
+
+      resetKeyField();
+      replacingKey = false;
+
+      if (hasSavedKey) {
+        setStatus("Key saved", "connected");
+        keyHelp.textContent =
+          "A key is saved securely. Leave this field blank to keep it, " +
+          "or choose Replace key to enter another.";
+        $("ai-replace-key-btn").textContent = "Replace key";
+      } else if (result.using_platform_default) {
+        setStatus("Platform key available");
+        keyHelp.textContent =
+          "No workspace key is saved. The server reports that its platform " +
+          "Gemini key is configured.";
+      } else {
+        setStatus("Not configured");
+        keyHelp.textContent =
+          "Enter an API key to configure this workspace.";
+      }
+
+      clearNotice();
+    } catch (error) {
+      setStatus("Could not load", "error");
+      showNotice(error.message, "error");
+    }
+  }
+
+  $("ai-key-visibility-btn").addEventListener("click", () => {
+    const show = keyInput.type === "password";
+    keyInput.type = show ? "text" : "password";
+    $("ai-key-visibility-btn").textContent = show ? "Hide" : "Show";
+  });
+
+  $("ai-replace-key-btn").addEventListener("click", () => {
+    if (busy) return;
+
+    replacingKey = true;
+    resetKeyField();
+
+    keyHelp.textContent =
+      "Enter the replacement key, then select Save settings. " +
+      "The existing key remains saved until you successfully save.";
+    $("ai-replace-key-btn").textContent = "Replacement selected";
+
+    keyInput.focus();
+    clearNotice();
+  });
+
+  providerInput.addEventListener("change", providerChanged);
+
+  $("ai-save-settings-btn").addEventListener("click", async () => {
+    if (busy) return;
+    clearNotice();
+
+    const provider = providerInput.value;
+    const model = modelInput.value.trim();
+    const apiKey = keyInput.value.trim();
+
+    if (!model) {
+      showNotice("Enter a model ID before saving.", "error");
+      modelInput.focus();
+      return;
+    }
+
+    if (!apiKey && (!hasSavedKey || provider !== savedProvider)) {
+      showNotice(
+        "Enter an API key for this provider. A key from another provider " +
+        "cannot be reused automatically.",
+        "error"
+      );
+      keyInput.focus();
+      return;
+    }
+
+    if (apiKey.length > 500) {
+      showNotice("The API key is too long.", "error");
+      return;
+    }
+
+    setBusy(true);
+    showNotice("Saving your AI settings…", "info");
+
+    try {
+      const result = await api("/api/ai-settings", {
+        method: "PUT",
+        body: JSON.stringify({ provider, model, api_key: apiKey })
+      });
+
+      configured = Boolean(result.configured);
+      hasSavedKey = Boolean(result.has_api_key);
+      savedProvider = result.provider || provider;
+      replacingKey = false;
+
+      resetKeyField();
+      $("ai-replace-key-btn").textContent = "Replace key";
+      keyHelp.textContent =
+        "A key is saved securely. Leave this field blank to keep it, " +
+        "or choose Replace key to enter another.";
+
+      setStatus("Key saved", "connected");
+      showNotice(
+        result.message || "AI settings saved successfully.",
+        "success"
+      );
+    } catch (error) {
+      showNotice(error.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  $("ai-test-connection-btn").addEventListener("click", async () => {
+    if (busy) return;
+    clearNotice();
+
+    const provider = providerInput.value;
+    const model = modelInput.value.trim();
+    const apiKey = keyInput.value.trim();
+
+    if (!model) {
+      showNotice("Enter a model ID before testing.", "error");
+      modelInput.focus();
+      return;
+    }
+
+    if (!apiKey && (!hasSavedKey || provider !== savedProvider)) {
+      showNotice(
+        "Enter an API key, or save the provider's key first.",
+        "error"
+      );
+      keyInput.focus();
+      return;
+    }
+
+    setBusy(true);
+    showNotice("Testing the provider connection…", "info");
+
+    try {
+      const body = { provider, model };
+      if (apiKey) body.api_key = apiKey;
+
+      const result = await api("/api/ai-settings/test", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+
+      setStatus("Connection successful", "connected");
+      showNotice(
+        result.message || "Connection successful.",
+        "success"
+      );
+    } catch (error) {
+      setStatus("Connection failed", "error");
+      showNotice(error.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  $("ai-remove-settings-btn").addEventListener("click", async () => {
+    if (busy || !hasSavedKey) {
+      if (!hasSavedKey) {
+        showNotice("There is no saved workspace API key to remove.", "info");
+      }
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Remove the saved AI provider settings and API key for this workspace? " +
+      "This cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    setBusy(true);
+    showNotice("Removing saved settings…", "info");
+
+    try {
+      const result = await api("/api/ai-settings", {
+        method: "DELETE"
+      });
+
+      configured = false;
+      hasSavedKey = false;
+      replacingKey = false;
+      savedProvider = "google";
+
+      providerInput.value = "google";
+      modelInput.value = defaults.google;
+      resetKeyField();
+
+      $("ai-replace-key-btn").textContent = "Replace key";
+      keyHelp.textContent =
+        "No workspace key is saved. Enter an API key to configure this workspace.";
+
+      setStatus("Not configured");
+      showNotice(
+        result.message || "Saved AI settings removed.",
+        "success"
+      );
+    } catch (error) {
+      showNotice(error.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  // Load current settings once the dashboard script has reached this block.
+  loadSettings();
+})();
+</script>
 
 
 
