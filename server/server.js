@@ -426,10 +426,11 @@ async function generateAIText(aiConfig, prompt, options = {}) {
       authorization: `Bearer ${aiConfig.apiKey}`
     };
     body = {
-      model: aiConfig.model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens
-    };
+  model: aiConfig.model,
+  messages: [{ role: "user", content: prompt }],
+  max_tokens: Math.max(maxTokens, 2048),
+  reasoning: { effort: "low", exclude: true }
+};
     if (options.json) body.response_format = { type: "json_object" };
   } else {
     throw new Error("AI_PROVIDER_NOT_SUPPORTED");
