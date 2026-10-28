@@ -3744,6 +3744,532 @@ td{font-size:13px}
 
 
 
+
+
+
+
+/* ==========================================
+   OrderFlow AI — AI Provider Settings
+   Light + Dark mode
+========================================== */
+
+.ai-provider-panel {
+  --ai-accent: #6366f1;
+  --ai-accent-hover: #4f46e5;
+  --ai-card: #ffffff;
+  --ai-surface: #f8fafc;
+  --ai-text: #172033;
+  --ai-muted: #64748b;
+  --ai-border: #e2e8f0;
+  --ai-input: #ffffff;
+  --ai-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+
+  color: var(--ai-text);
+  background: var(--ai-card);
+  border: 1px solid var(--ai-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--ai-shadow);
+  margin: 22px 0;
+}
+
+.ai-provider-panel[data-theme="dark"],
+:root[data-theme="dark"] .ai-provider-panel,
+body.dark .ai-provider-panel {
+  --ai-card: #171c2a;
+  --ai-surface: #202738;
+  --ai-text: #edf2ff;
+  --ai-muted: #a3aec2;
+  --ai-border: #303a4e;
+  --ai-input: #111827;
+  --ai-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.ai-provider-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 23px;
+  background: linear-gradient(
+    115deg,
+    rgba(99, 102, 241, 0.13),
+    rgba(14, 165, 233, 0.06)
+  );
+  border-bottom: 1px solid var(--ai-border);
+}
+
+.ai-provider-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  color: white;
+  font-size: 25px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+}
+
+.ai-provider-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-provider-heading h2 {
+  margin: 0 0 5px;
+  color: var(--ai-text);
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.35px;
+}
+
+.ai-provider-heading p {
+  margin: 0;
+  color: var(--ai-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ai-provider-status {
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--ai-border);
+  border-radius: 999px;
+  color: var(--ai-muted);
+  background: var(--ai-card);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.ai-provider-status.is-connected {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.ai-provider-status.is-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+:root[data-theme="dark"] .ai-provider-status.is-connected,
+body.dark .ai-provider-status.is-connected {
+  color: #86efac;
+  background: #123024;
+  border-color: #285b43;
+}
+
+:root[data-theme="dark"] .ai-provider-status.is-error,
+body.dark .ai-provider-status.is-error {
+  color: #fca5a5;
+  background: #391f27;
+  border-color: #71333d;
+}
+
+.ai-provider-body {
+  padding: 23px;
+}
+
+.ai-provider-intro {
+  margin: 0 0 22px;
+  color: var(--ai-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ai-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px;
+}
+
+.ai-provider-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+}
+
+.ai-provider-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.ai-provider-field label {
+  color: var(--ai-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ai-provider-field input,
+.ai-provider-field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 45px;
+  padding: 11px 13px;
+  border: 1px solid var(--ai-border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--ai-input);
+  color: var(--ai-text);
+  font: inherit;
+  font-size: 13px;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.ai-provider-field input::placeholder {
+  color: var(--ai-muted);
+  opacity: .8;
+}
+
+.ai-provider-field input:focus,
+.ai-provider-field select:focus {
+  border-color: var(--ai-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .15);
+}
+
+.ai-provider-field [hidden] {
+  display: none !important;
+}
+
+.ai-provider-help {
+  color: var(--ai-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.ai-provider-key-row {
+  display: flex;
+  gap: 9px;
+  align-items: stretch;
+}
+
+.ai-provider-key-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-provider-mini-btn {
+  padding: 0 13px;
+  border: 1px solid var(--ai-border);
+  border-radius: 10px;
+  color: var(--ai-text);
+  background: var(--ai-surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-provider-mini-btn:hover {
+  border-color: var(--ai-accent);
+}
+
+.ai-provider-notice {
+  display: none;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ai-provider-notice.show {
+  display: block;
+}
+
+.ai-provider-notice.success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.ai-provider-notice.error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.ai-provider-notice.info {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+:root[data-theme="dark"] .ai-provider-notice.success,
+body.dark .ai-provider-notice.success {
+  color: #bbf7d0;
+  background: #123024;
+  border-color: #285b43;
+}
+
+:root[data-theme="dark"] .ai-provider-notice.error,
+body.dark .ai-provider-notice.error {
+  color: #fecaca;
+  background: #391f27;
+  border-color: #71333d;
+}
+
+:root[data-theme="dark"] .ai-provider-notice.info,
+body.dark .ai-provider-notice.info {
+  color: #bfdbfe;
+  background: #192b46;
+  border-color: #304c72;
+}
+
+.ai-provider-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 23px;
+  padding-top: 19px;
+  border-top: 1px solid var(--ai-border);
+}
+
+.ai-provider-actions button {
+  min-height: 41px;
+  padding: 10px 15px;
+  border: 1px solid var(--ai-border);
+  border-radius: 10px;
+  color: var(--ai-text);
+  background: var(--ai-card);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform .15s, opacity .15s, background .15s;
+}
+
+.ai-provider-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ai-provider-actions button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.ai-provider-actions .ai-provider-primary {
+  color: white;
+  background: var(--ai-accent);
+  border-color: var(--ai-accent);
+}
+
+.ai-provider-actions .ai-provider-primary:hover:not(:disabled) {
+  background: var(--ai-accent-hover);
+}
+
+.ai-provider-actions .ai-provider-danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+:root[data-theme="dark"] .ai-provider-actions .ai-provider-danger,
+body.dark .ai-provider-actions .ai-provider-danger {
+  color: #fca5a5;
+  border-color: #71333d;
+  background: #291c27;
+}
+
+.ai-provider-security {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--ai-border);
+  border-radius: 12px;
+  background: var(--ai-surface);
+  color: var(--ai-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.ai-provider-security strong {
+  color: var(--ai-text);
+}
+
+@media (max-width: 650px) {
+  .ai-provider-hero {
+    flex-wrap: wrap;
+    padding: 17px;
+  }
+
+  .ai-provider-status {
+    margin-left: 62px;
+  }
+
+  .ai-provider-body {
+    padding: 17px;
+  }
+
+  .ai-provider-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-provider-field.full-width {
+    grid-column: auto;
+  }
+
+  .ai-provider-key-row {
+    flex-wrap: wrap;
+  }
+
+  .ai-provider-key-row input {
+    flex-basis: 100%;
+  }
+
+  .ai-provider-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+
+
+
+
+
+
+/* Custom confirmation popup — light and dark themes */
+
+.of-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(4px);
+}
+
+.of-confirm-overlay[hidden] {
+  display: none !important;
+}
+
+.of-confirm-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 25px;
+  border: 1px solid var(--ai-border, #e2e8f0);
+  border-radius: 16px;
+  background: var(--ai-card, #ffffff);
+  color: var(--ai-text, #172033);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.of-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.of-confirm-modal h3 {
+  margin: 0 0 10px;
+  font-size: 19px;
+  line-height: 1.4;
+}
+
+.of-confirm-modal p {
+  margin: 0;
+  color: var(--ai-muted, #64748b);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.of-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.of-confirm-btn {
+  min-height: 41px;
+  padding: 10px 15px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.of-confirm-cancel {
+  border-color: var(--ai-border, #e2e8f0);
+  background: var(--ai-surface, #f8fafc);
+  color: var(--ai-text, #172033);
+}
+
+.of-confirm-danger {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.of-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:root[data-theme="dark"] .of-confirm-modal,
+body.dark .of-confirm-modal {
+  background: var(--ai-card, #171c2a);
+  color: var(--ai-text, #edf2ff);
+  border-color: var(--ai-border, #303a4e);
+}
+
+:root[data-theme="dark"] .of-confirm-icon,
+body.dark .of-confirm-icon {
+  background: #451a1a;
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .of-confirm-cancel,
+body.dark .of-confirm-cancel {
+  background: var(--ai-surface, #202738);
+  color: var(--ai-text, #edf2ff);
+  border-color: var(--ai-border, #303a4e);
+}
+
+.of-confirm-btn:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .of-confirm-modal {
+    padding: 20px;
+  }
+
+  .of-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .of-confirm-btn {
+    width: 100%;
+  }
+}
+
+
+
+
+
+  
+
+
+  
   
 </style>
 
@@ -4521,7 +5047,115 @@ td{font-size:13px}
 
 
 
-      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div></section>
+      <section class="view" id="view-settings"><div class="page-heading"><div><div class="eyebrow">Workspace preferences</div><h1>Settings</h1><p class="subtitle">Prototype configuration and future automation controls.</p></div></div><div class="panel"><h2>Automation mode</h2><p class="subtitle" style="margin:8px 0 16px">Live sending is not enabled in this prototype.</p><div class="detail-row"><span>Reply mode</span><span>Draft only</span></div><div class="detail-row"><span>Human review for refunds</span><span class="pill green">Required by design</span></div><div class="detail-row"><span>Live integrations</span><span class="pill orange">Not connected</span></div><div class="detail-row"><span>Authentication / database</span><span class="pill orange">Not implemented</span></div></div>
+
+
+
+
+<div class="ai-provider-panel" id="ai-provider-settings">
+  <div class="ai-provider-hero">
+    <div class="ai-provider-icon" aria-hidden="true">✧</div>
+
+    <div class="ai-provider-heading">
+      <h2>AI Provider Settings</h2>
+      <p>Choose the AI model that powers your business assistant.</p>
+    </div>
+
+    <span class="ai-provider-status" id="ai-provider-status">
+      Checking status…
+    </span>
+  </div>
+
+  <div class="ai-provider-body">
+    <p class="ai-provider-intro">
+      Configure your AI provider for this workspace. Save your settings
+      and test the connection before using the provider in your workflow.
+    </p>
+
+    <div class="ai-provider-grid">
+      <div class="ai-provider-field">
+        <label for="ai-provider-select">AI provider</label>
+        <select id="ai-provider-select">
+          <option value="google">Google Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="custom">Other / Custom</option>
+        </select>
+      </div>
+
+      <div class="ai-provider-field">
+        <label for="ai-model-input">Model ID</label>
+        <input id="ai-model-input" type="text" maxlength="120"
+               placeholder="Enter the provider model ID"
+               autocomplete="off">
+        <span class="ai-provider-help">
+          Use a model ID supported by your provider.
+        </span>
+      </div>
+
+      <div class="ai-provider-field full-width"
+           id="ai-custom-url-field" hidden>
+        <label for="ai-custom-base-url">Custom API Base URL</label>
+        <input id="ai-custom-base-url" type="url" maxlength="500"
+               placeholder="https://api.example.com/v1"
+               autocomplete="url">
+        <span class="ai-provider-help">
+          Use the HTTPS base URL for an OpenAI-compatible API.
+        </span>
+      </div>
+
+      <div class="ai-provider-field full-width">
+        <label for="ai-api-key-input">API key</label>
+        <div class="ai-provider-key-row">
+          <input id="ai-api-key-input" type="password" maxlength="500"
+                 placeholder="Enter API key, or leave blank to keep saved key"
+                 autocomplete="new-password" spellcheck="false">
+          <button class="ai-provider-mini-btn" id="ai-key-visibility-btn"
+                  type="button">Show</button>
+          <button class="ai-provider-mini-btn" id="ai-replace-key-btn"
+                  type="button">Replace key</button>
+        </div>
+        <span class="ai-provider-help" id="ai-key-help">
+          Saved API keys are not displayed again.
+        </span>
+      </div>
+    </div>
+
+    <div class="ai-provider-notice" id="ai-provider-notice"
+         role="status" aria-live="polite"></div>
+
+    <div class="ai-provider-actions">
+      <button type="button" id="ai-test-connection-btn">
+        Test connection
+      </button>
+      <button type="button" class="ai-provider-primary"
+              id="ai-save-settings-btn">
+        Save settings
+      </button>
+      <button type="button" class="ai-provider-danger"
+              id="ai-remove-settings-btn">
+        Remove API key
+      </button>
+    </div>
+
+    <div class="ai-provider-security">
+      <span aria-hidden="true">🔒</span>
+      <div>
+        <strong>Workspace-level security</strong><br>
+        API keys should be encrypted by the backend and never stored
+        in browser local storage or returned in plaintext.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+        
+      
+      
+      </section>
     </div>
   </main>
 </div>
@@ -9640,8 +10274,649 @@ if (list) {
 
 
 
+<script>
 
 
+
+  // ============================================================
+// OrderFlow AI — AI Provider Settings
+// Works with the existing /api/ai-settings backend endpoints
+// ============================================================
+
+(() => {
+  "use strict";
+
+  const initAIProviderSettings = () => {
+    const panel = document.getElementById("ai-provider-settings");
+
+    // Do nothing if the settings panel is not on the current page.
+    if (!panel || panel.dataset.aiSettingsInitialized === "true") {
+      return;
+    }
+
+    panel.dataset.aiSettingsInitialized = "true";
+
+    const $ = (id) => document.getElementById(id);
+
+    const providerSelect = $("ai-provider-select");
+    const modelInput = $("ai-model-input");
+    const customUrlField = $("ai-custom-url-field");
+    const customUrlInput = $("ai-custom-base-url");
+    const apiKeyInput = $("ai-api-key-input");
+
+    const visibilityButton = $("ai-key-visibility-btn");
+    const replaceKeyButton = $("ai-replace-key-btn");
+    const keyHelp = $("ai-key-help");
+
+    const statusElement = $("ai-provider-status");
+    const noticeElement = $("ai-provider-notice");
+
+    const testButton = $("ai-test-connection-btn");
+    const saveButton = $("ai-save-settings-btn");
+    const removeButton = $("ai-remove-settings-btn");
+
+    if (
+      !providerSelect ||
+      !modelInput ||
+      !apiKeyInput ||
+      !testButton ||
+      !saveButton
+    ) {
+      console.error(
+        "OrderFlow AI: AI Provider Settings HTML is missing required element IDs."
+      );
+      return;
+    }
+
+    const defaultModels = {
+      google: "gemini-2.5-flash",
+      openai: "gpt-4.1-mini",
+      anthropic: "claude-sonnet-4-20250514",
+      deepseek: "deepseek-chat",
+      custom: ""
+    };
+
+    let savedSettings = null;
+    let hasSavedKey = false;
+    let replacingKey = false;
+    let busy = false;
+
+    // ----------------------------------------------------------
+    // Status and notices
+    // ----------------------------------------------------------
+
+    function showNotice(message, type = "info") {
+      if (!noticeElement) return;
+
+      noticeElement.textContent = message;
+      noticeElement.hidden = false;
+      noticeElement.dataset.type = type;
+      noticeElement.setAttribute("role", type === "error" ? "alert" : "status");
+    }
+
+    function clearNotice() {
+      if (!noticeElement) return;
+
+      noticeElement.textContent = "";
+      noticeElement.hidden = true;
+      delete noticeElement.dataset.type;
+    }
+
+    function setStatus(message, type = "neutral") {
+      if (!statusElement) return;
+
+      statusElement.textContent = message;
+      statusElement.dataset.status = type;
+    }
+
+    function setBusy(value) {
+      busy = value;
+
+      testButton.disabled = value;
+      saveButton.disabled = value;
+
+      if (removeButton) {
+        removeButton.disabled = value;
+      }
+
+      testButton.textContent = value
+        ? "Please wait…"
+        : "Test connection";
+
+      saveButton.textContent = value
+        ? "Please wait…"
+        : "Save settings";
+    }
+
+    // ----------------------------------------------------------
+    // Authentication and API requests
+    // ----------------------------------------------------------
+
+    async function getAccessToken() {
+      // Uses the existing Supabase client from your dashboard.
+      if (
+        typeof supabaseClient === "undefined" ||
+        !supabaseClient ||
+        !supabaseClient.auth
+      ) {
+        throw new Error(
+          "The existing Supabase client was not found. Check its variable name in index.html."
+        );
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        throw new Error("Could not verify your sign-in session.");
+      }
+
+      const token = data?.session?.access_token;
+
+      if (!token) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+
+      return token;
+    }
+
+    async function apiRequest(url, options = {}) {
+      const token = await getAccessToken();
+
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...(options.headers || {})
+        }
+      });
+
+      let result = {};
+
+      try {
+        result = await response.json();
+      } catch {
+        result = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+          `Request failed with status ${response.status}.`
+        );
+      }
+
+      return result;
+    }
+
+    // ----------------------------------------------------------
+    // Provider selection and fields
+    // ----------------------------------------------------------
+
+    function getProvider() {
+      return providerSelect.value;
+    }
+
+    function updateProviderFields() {
+      const provider = getProvider();
+      const isCustom = provider === "custom";
+
+      if (customUrlField) {
+        customUrlField.hidden = !isCustom;
+      }
+
+      if (customUrlInput) {
+        customUrlInput.required = isCustom;
+      }
+
+      if (keyHelp) {
+        if (hasSavedKey && !replacingKey) {
+          keyHelp.textContent =
+            "A key is already saved securely. Leave this field empty to keep it.";
+        } else {
+          keyHelp.textContent =
+            "Your API key is sent to your server and stored encrypted. It is never displayed after saving.";
+        }
+      }
+
+      if (
+        savedSettings &&
+        provider === savedSettings.provider &&
+        !modelInput.value.trim()
+      ) {
+        modelInput.value = savedSettings.model || defaultModels[provider] || "";
+      } else if (
+        !savedSettings ||
+        provider !== savedSettings.provider
+      ) {
+        modelInput.value = defaultModels[provider] || "";
+      }
+
+      clearNotice();
+    }
+
+    providerSelect.addEventListener("change", () => {
+      updateProviderFields();
+
+      const provider = getProvider();
+
+      if (provider !== savedSettings?.provider) {
+        setStatus("Provider changed — save to apply", "neutral");
+      } else {
+        setStatus(
+          hasSavedKey ? "API key saved" : "Not configured",
+          hasSavedKey ? "success" : "neutral"
+        );
+      }
+    });
+
+    if (visibilityButton) {
+      visibilityButton.addEventListener("click", () => {
+        const isPassword = apiKeyInput.type === "password";
+
+        apiKeyInput.type = isPassword ? "text" : "password";
+        visibilityButton.textContent = isPassword ? "Hide" : "Show";
+        visibilityButton.setAttribute(
+          "aria-label",
+          isPassword ? "Hide API key" : "Show API key"
+        );
+      });
+    }
+
+    if (replaceKeyButton) {
+      replaceKeyButton.addEventListener("click", () => {
+        replacingKey = true;
+        apiKeyInput.value = "";
+        apiKeyInput.placeholder = "Enter the new API key";
+        apiKeyInput.focus();
+
+        if (keyHelp) {
+          keyHelp.textContent =
+            "Enter a replacement key. It will replace the saved key after saving.";
+        }
+
+        showNotice(
+          "Enter the new API key, test it, and then save your settings.",
+          "info"
+        );
+      });
+    }
+
+    // ----------------------------------------------------------
+    // Load saved settings
+    // ----------------------------------------------------------
+
+    async function loadSettings() {
+      setStatus("Loading settings…", "neutral");
+
+      try {
+        const result = await apiRequest("/api/ai-settings", {
+          method: "GET"
+        });
+
+        savedSettings = result;
+        hasSavedKey = Boolean(result.has_api_key);
+
+        providerSelect.value = result.provider || "google";
+        modelInput.value =
+          result.model || defaultModels[providerSelect.value] || "";
+
+        // The current GET endpoint may not return the custom URL.
+        // Only populate it when the server actually returns it.
+        if (customUrlInput && result.custom_api_base_url) {
+          customUrlInput.value = result.custom_api_base_url;
+        }
+
+        apiKeyInput.value = "";
+        apiKeyInput.placeholder = hasSavedKey
+          ? "Saved securely — enter a new key only to replace it"
+          : "Enter your provider API key";
+
+        if (removeButton) {
+          removeButton.hidden = !hasSavedKey;
+        }
+
+        if (replaceKeyButton) {
+          replaceKeyButton.hidden = !hasSavedKey;
+        }
+
+        replacingKey = false;
+        updateProviderFields();
+
+        if (hasSavedKey) {
+          setStatus(
+            `Connected settings saved · ${result.provider}`,
+            "success"
+          );
+        } else if (result.using_platform_default) {
+          setStatus("Using platform default AI", "neutral");
+
+          showNotice(
+            "No custom provider key is saved. The server may use its configured default AI provider.",
+            "info"
+          );
+        } else {
+          setStatus("No provider configured", "neutral");
+        }
+      } catch (error) {
+        setStatus("Could not load settings", "error");
+        showNotice(error.message, "error");
+      }
+    }
+
+    // ----------------------------------------------------------
+    // Validate fields and build the API payload
+    // ----------------------------------------------------------
+
+    function buildPayload(requireKey = false) {
+      const provider = getProvider();
+      const model = modelInput.value.trim();
+      const apiKey = apiKeyInput.value.trim();
+
+      if (!provider) {
+        throw new Error("Select an AI provider.");
+      }
+
+      if (!model) {
+        throw new Error("Enter the model ID.");
+      }
+
+      if (provider === "custom" && !customUrlInput?.value.trim()) {
+        throw new Error("Enter the custom provider's API base URL.");
+      }
+
+      if (requireKey && !apiKey && (!hasSavedKey || replacingKey)) {
+        throw new Error("Enter an API key before continuing.");
+      }
+
+      const payload = {
+        provider,
+        model
+      };
+
+      // Never send an empty key. This lets the backend retain the
+      // existing saved key when the provider is unchanged.
+      if (apiKey) {
+        payload.api_key = apiKey;
+      }
+
+      if (provider === "custom") {
+        payload.custom_api_base_url = customUrlInput.value.trim();
+      }
+
+      return payload;
+    }
+
+    // ----------------------------------------------------------
+    // Test provider connection
+    // ----------------------------------------------------------
+
+    testButton.addEventListener("click", async () => {
+      if (busy) return;
+
+      clearNotice();
+
+      try {
+        const payload = buildPayload(false);
+
+        if (!payload.api_key && !hasSavedKey) {
+          throw new Error(
+            "Enter an API key before testing the connection."
+          );
+        }
+
+        setBusy(true);
+        setStatus("Testing connection…", "neutral");
+
+        const result = await apiRequest("/api/ai-settings/test", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        setStatus("Connection successful", "success");
+        showNotice(
+          result.message || "The AI provider connection was successful.",
+          "success"
+        );
+      } catch (error) {
+        setStatus("Connection test failed", "error");
+        showNotice(error.message, "error");
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    // ----------------------------------------------------------
+    // Save provider settings
+    // ----------------------------------------------------------
+
+    saveButton.addEventListener("click", async () => {
+      if (busy) return;
+
+      clearNotice();
+
+      try {
+        const payload = buildPayload(true);
+
+        setBusy(true);
+        setStatus("Saving settings…", "neutral");
+
+        const result = await apiRequest("/api/ai-settings", {
+          method: "PUT",
+          body: JSON.stringify(payload)
+        });
+
+        // Clear the key immediately; never display or retain it
+        // unnecessarily in the input after saving.
+        apiKeyInput.value = "";
+        replacingKey = false;
+
+        hasSavedKey = Boolean(result.has_api_key || result.configured);
+        savedSettings = {
+          ...savedSettings,
+          ...result,
+          provider: result.provider || payload.provider,
+          model: result.model || payload.model
+        };
+
+        if (customUrlInput && payload.custom_api_base_url) {
+          customUrlInput.value = payload.custom_api_base_url;
+        }
+
+        if (removeButton) {
+          removeButton.hidden = !hasSavedKey;
+        }
+
+        if (replaceKeyButton) {
+          replaceKeyButton.hidden = !hasSavedKey;
+        }
+
+        apiKeyInput.placeholder = hasSavedKey
+          ? "Saved securely — enter a new key only to replace it"
+          : "Enter your provider API key";
+
+        updateProviderFields();
+
+        setStatus("Settings saved", "success");
+        showNotice(
+          result.message ||
+            "AI provider settings saved successfully.",
+          "success"
+        );
+      } catch (error) {
+        setStatus("Could not save settings", "error");
+        showNotice(error.message, "error");
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    // ----------------------------------------------------------
+    // Remove saved provider settings
+    // ----------------------------------------------------------
+
+   
+    // ----------------------------------------------------------
+    // Remove saved provider settings — custom confirmation modal
+    // ----------------------------------------------------------
+
+    const confirmModal = $("ai-remove-confirm-modal");
+    const cancelRemoveButton = $("ai-remove-cancel-btn");
+    const confirmRemoveButton = $("ai-remove-confirm-btn");
+
+    function openRemoveModal() {
+      if (!confirmModal) {
+        showNotice("The removal confirmation popup was not found.", "error");
+        return;
+      }
+
+      confirmModal.hidden = false;
+      confirmModal.querySelector(".of-confirm-modal").focus();
+      cancelRemoveButton.focus();
+    }
+
+    function closeRemoveModal() {
+      if (busy) return;
+
+      confirmModal.hidden = true;
+      removeButton.focus();
+    }
+
+    if (removeButton && confirmModal && cancelRemoveButton && confirmRemoveButton) {
+      removeButton.addEventListener("click", () => {
+        if (!busy) openRemoveModal();
+      });
+
+      cancelRemoveButton.addEventListener("click", closeRemoveModal);
+
+      confirmModal.addEventListener("click", (event) => {
+        if (event.target === confirmModal) closeRemoveModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (confirmModal.hidden) return;
+
+        if (event.key === "Escape" && !busy) {
+          closeRemoveModal();
+        }
+      });
+
+      confirmRemoveButton.addEventListener("click", async () => {
+        if (busy) return;
+
+        clearNotice();
+        setBusy(true);
+
+        cancelRemoveButton.disabled = true;
+        confirmRemoveButton.disabled = true;
+        confirmRemoveButton.textContent = "Removing…";
+
+        try {
+          const result = await apiRequest("/api/ai-settings", {
+            method: "DELETE"
+          });
+
+          savedSettings = null;
+          hasSavedKey = false;
+          replacingKey = false;
+
+          apiKeyInput.value = "";
+          apiKeyInput.placeholder = "Enter your provider API key";
+
+          providerSelect.value = "google";
+          modelInput.value = defaultModels.google;
+
+          if (customUrlInput) customUrlInput.value = "";
+
+          if (replaceKeyButton) replaceKeyButton.hidden = true;
+          removeButton.hidden = true;
+
+          updateProviderFields();
+
+          confirmModal.hidden = true;
+          setStatus("Settings removed", "neutral");
+
+          showNotice(
+            result.message || "Saved AI settings have been removed.",
+            "success"
+          );
+        } catch (error) {
+          confirmModal.hidden = true;
+          setStatus("Could not remove settings", "error");
+          showNotice(error.message, "error");
+        } finally {
+          setBusy(false);
+          cancelRemoveButton.disabled = false;
+          confirmRemoveButton.disabled = false;
+          confirmRemoveButton.textContent = "Remove API key";
+        }
+      });
+    }
+
+
+    // Start loading the workspace's saved settings.
+    loadSettings();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initAIProviderSettings,
+      { once: true }
+    );
+  } else {
+    initAIProviderSettings();
+  }
+})();
+
+  
+
+
+
+
+  
+</script>
+
+
+
+
+
+<!-- AI Settings: Custom removal confirmation -->
+<div id="ai-remove-confirm-modal" class="of-confirm-overlay" hidden>
+  <section class="of-confirm-modal"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="ai-remove-confirm-title"
+           aria-describedby="ai-remove-confirm-description"
+           tabindex="-1">
+
+    <div class="of-confirm-icon" aria-hidden="true">!</div>
+
+    <h3 id="ai-remove-confirm-title">Remove AI API key?</h3>
+
+    <p id="ai-remove-confirm-description">
+      Are you sure you want to remove your saved AI provider settings
+      and API key from this workspace? You will need to configure
+      them again to use your own provider credentials.
+    </p>
+
+    <div class="of-confirm-actions">
+      <button type="button"
+              id="ai-remove-cancel-btn"
+              class="of-confirm-btn of-confirm-cancel">
+        Cancel
+      </button>
+
+      <button type="button"
+              id="ai-remove-confirm-btn"
+              class="of-confirm-btn of-confirm-danger">
+        Remove API key
+      </button>
+    </div>
+  </section>
+</div>
+
+  
 
 
 
