@@ -462,7 +462,22 @@ async function generateAIText(aiConfig, prompt, options = {}) {
       : "";
   }
 
-  return result.choices?.[0]?.message?.content || "";
+  const content = result.choices?.[0]?.message?.content;
+
+if (typeof content !== "string" || !content.trim()) {
+  console.error("AI provider returned no text.", {
+    provider: aiConfig.provider,
+    model: aiConfig.model,
+    responseKeys: Object.keys(result || {}),
+    choicesCount: Array.isArray(result?.choices) ? result.choices.length : null,
+    finishReason: result?.choices?.[0]?.finish_reason || null,
+    responseError: result?.error?.message || null
+  });
+
+  throw new Error("AI_PROVIDER_RETURNED_NO_TEXT");
+}
+
+return content;
 }
 
 async function getOwnerWorkspaceForAI(req, res) {
