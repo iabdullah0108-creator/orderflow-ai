@@ -4132,7 +4132,8 @@ body.dark .ai-provider-actions .ai-provider-danger {
 
 
 
-  
+/* Custom confirmation popup — light and dark themes */
+
 .of-confirm-overlay {
   position: fixed;
   inset: 0;
@@ -4141,8 +4142,8 @@ body.dark .ai-provider-actions .ai-provider-danger {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 23, 42, 0.48);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(4px);
 }
 
 .of-confirm-overlay[hidden] {
@@ -4150,38 +4151,40 @@ body.dark .ai-provider-actions .ai-provider-danger {
 }
 
 .of-confirm-modal {
-  width: min(100%, 420px);
-  padding: 24px;
-  border: 1px solid var(--border-color, #e5e7eb);
+  width: 100%;
+  max-width: 420px;
+  padding: 25px;
+  border: 1px solid var(--ai-border, #e2e8f0);
   border-radius: 16px;
-  background: var(--card-bg, #ffffff);
-  color: var(--text-color, #111827);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: var(--ai-card, #ffffff);
+  color: var(--ai-text, #172033);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
 }
 
 .of-confirm-icon {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   margin-bottom: 16px;
   border-radius: 12px;
   background: #fee2e2;
   color: #b91c1c;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 700;
 }
 
 .of-confirm-modal h3 {
   margin: 0 0 10px;
   font-size: 19px;
+  line-height: 1.4;
 }
 
 .of-confirm-modal p {
   margin: 0;
-  color: var(--muted-color, #6b7280);
-  line-height: 1.6;
+  color: var(--ai-muted, #64748b);
   font-size: 14px;
+  line-height: 1.7;
 }
 
 .of-confirm-actions {
@@ -4192,45 +4195,57 @@ body.dark .ai-provider-actions .ai-provider-danger {
   margin-top: 24px;
 }
 
-.of-confirm-actions button {
-  min-height: 40px;
-  padding: 9px 15px;
+.of-confirm-btn {
+  min-height: 41px;
+  padding: 10px 15px;
+  border: 1px solid transparent;
   border-radius: 9px;
   font: inherit;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .of-confirm-cancel {
-  border: 1px solid var(--border-color, #d1d5db);
-  background: transparent;
-  color: inherit;
+  border-color: var(--ai-border, #e2e8f0);
+  background: var(--ai-surface, #f8fafc);
+  color: var(--ai-text, #172033);
 }
 
 .of-confirm-danger {
-  border: 1px solid #b91c1c;
-  background: #b91c1c;
+  border-color: #dc2626;
+  background: #dc2626;
   color: #ffffff;
 }
 
-.of-confirm-actions button:disabled {
+.of-confirm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-:root[data-theme="dark"] .of-confirm-modal {
-  background: var(--card-bg, #1f2937);
-  color: var(--text-color, #f9fafb);
-  border-color: var(--border-color, #374151);
+:root[data-theme="dark"] .of-confirm-modal,
+body.dark .of-confirm-modal {
+  background: var(--ai-card, #171c2a);
+  color: var(--ai-text, #edf2ff);
+  border-color: var(--ai-border, #303a4e);
 }
 
-:root[data-theme="dark"] .of-confirm-icon {
+:root[data-theme="dark"] .of-confirm-icon,
+body.dark .of-confirm-icon {
   background: #451a1a;
   color: #fca5a5;
 }
 
-:root[data-theme="dark"] .of-confirm-cancel {
-  border-color: var(--border-color, #4b5563);
+:root[data-theme="dark"] .of-confirm-cancel,
+body.dark .of-confirm-cancel {
+  background: var(--ai-surface, #202738);
+  color: var(--ai-text, #edf2ff);
+  border-color: var(--ai-border, #303a4e);
+}
+
+.of-confirm-btn:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
 }
 
 @media (max-width: 480px) {
@@ -4242,10 +4257,11 @@ body.dark .ai-provider-actions .ai-provider-danger {
     flex-direction: column-reverse;
   }
 
-  .of-confirm-actions button {
+  .of-confirm-btn {
     width: 100%;
   }
 }
+
 
 
 
@@ -10739,22 +10755,63 @@ if (list) {
     // Remove saved provider settings
     // ----------------------------------------------------------
 
-    if (removeButton) {
-      removeButton.addEventListener("click", async () => {
+   
+    // ----------------------------------------------------------
+    // Remove saved provider settings — custom confirmation modal
+    // ----------------------------------------------------------
+
+    const confirmModal = $("ai-remove-confirm-modal");
+    const cancelRemoveButton = $("ai-remove-cancel-btn");
+    const confirmRemoveButton = $("ai-remove-confirm-btn");
+
+    function openRemoveModal() {
+      if (!confirmModal) {
+        showNotice("The removal confirmation popup was not found.", "error");
+        return;
+      }
+
+      confirmModal.hidden = false;
+      confirmModal.querySelector(".of-confirm-modal").focus();
+      cancelRemoveButton.focus();
+    }
+
+    function closeRemoveModal() {
+      if (busy) return;
+
+      confirmModal.hidden = true;
+      removeButton.focus();
+    }
+
+    if (removeButton && confirmModal && cancelRemoveButton && confirmRemoveButton) {
+      removeButton.addEventListener("click", () => {
+        if (!busy) openRemoveModal();
+      });
+
+      cancelRemoveButton.addEventListener("click", closeRemoveModal);
+
+      confirmModal.addEventListener("click", (event) => {
+        if (event.target === confirmModal) closeRemoveModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (confirmModal.hidden) return;
+
+        if (event.key === "Escape" && !busy) {
+          closeRemoveModal();
+        }
+      });
+
+      confirmRemoveButton.addEventListener("click", async () => {
         if (busy) return;
 
-        const confirmed = window.confirm(
-          "Remove the saved AI provider settings and API key for this workspace?"
-        );
-
-        if (!confirmed) return;
-
         clearNotice();
+        setBusy(true);
+
+        cancelRemoveButton.disabled = true;
+        confirmRemoveButton.disabled = true;
+        confirmRemoveButton.textContent = "Removing…";
 
         try {
-          setBusy(true);
-          setStatus("Removing settings…", "neutral");
-
           const result = await apiRequest("/api/ai-settings", {
             method: "DELETE"
           });
@@ -10769,31 +10826,33 @@ if (list) {
           providerSelect.value = "google";
           modelInput.value = defaultModels.google;
 
-          if (customUrlInput) {
-            customUrlInput.value = "";
-          }
+          if (customUrlInput) customUrlInput.value = "";
 
+          if (replaceKeyButton) replaceKeyButton.hidden = true;
           removeButton.hidden = true;
-
-          if (replaceKeyButton) {
-            replaceKeyButton.hidden = true;
-          }
 
           updateProviderFields();
 
+          confirmModal.hidden = true;
           setStatus("Settings removed", "neutral");
+
           showNotice(
             result.message || "Saved AI settings have been removed.",
             "success"
           );
         } catch (error) {
+          confirmModal.hidden = true;
           setStatus("Could not remove settings", "error");
           showNotice(error.message, "error");
         } finally {
           setBusy(false);
+          cancelRemoveButton.disabled = false;
+          confirmRemoveButton.disabled = false;
+          confirmRemoveButton.textContent = "Remove API key";
         }
       });
     }
+
 
     // Start loading the workspace's saved settings.
     loadSettings();
@@ -10820,36 +10879,42 @@ if (list) {
 
 
 
-  
+
+
+<!-- AI Settings: Custom removal confirmation -->
 <div id="ai-remove-confirm-modal" class="of-confirm-overlay" hidden>
-  <div
-    class="of-confirm-modal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="ai-remove-confirm-title"
-    aria-describedby="ai-remove-confirm-description"
-  >
+  <section class="of-confirm-modal"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="ai-remove-confirm-title"
+           aria-describedby="ai-remove-confirm-description"
+           tabindex="-1">
+
     <div class="of-confirm-icon" aria-hidden="true">!</div>
 
-    <h3 id="ai-remove-confirm-title">Remove AI API settings?</h3>
+    <h3 id="ai-remove-confirm-title">Remove AI API key?</h3>
 
     <p id="ai-remove-confirm-description">
-      This will remove your saved AI provider configuration and encrypted API
-      key from this workspace. This action cannot be undone.
+      Are you sure you want to remove your saved AI provider settings
+      and API key from this workspace? You will need to configure
+      them again to use your own provider credentials.
     </p>
 
     <div class="of-confirm-actions">
-      <button type="button" id="ai-remove-cancel-btn" class="of-confirm-cancel">
+      <button type="button"
+              id="ai-remove-cancel-btn"
+              class="of-confirm-btn of-confirm-cancel">
         Cancel
       </button>
-      <button type="button" id="ai-remove-confirm-btn" class="of-confirm-danger">
-        Remove settings
+
+      <button type="button"
+              id="ai-remove-confirm-btn"
+              class="of-confirm-btn of-confirm-danger">
+        Remove API key
       </button>
     </div>
-  </div>
+  </section>
 </div>
-
-
 
   
 
