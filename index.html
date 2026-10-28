@@ -4129,6 +4129,130 @@ body.dark .ai-provider-actions .ai-provider-danger {
 
 
 
+
+
+
+  
+.of-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.of-confirm-overlay[hidden] {
+  display: none !important;
+}
+
+.of-confirm-modal {
+  width: min(100%, 420px);
+  padding: 24px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  background: var(--card-bg, #ffffff);
+  color: var(--text-color, #111827);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.of-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.of-confirm-modal h3 {
+  margin: 0 0 10px;
+  font-size: 19px;
+}
+
+.of-confirm-modal p {
+  margin: 0;
+  color: var(--muted-color, #6b7280);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.of-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.of-confirm-actions button {
+  min-height: 40px;
+  padding: 9px 15px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.of-confirm-cancel {
+  border: 1px solid var(--border-color, #d1d5db);
+  background: transparent;
+  color: inherit;
+}
+
+.of-confirm-danger {
+  border: 1px solid #b91c1c;
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.of-confirm-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:root[data-theme="dark"] .of-confirm-modal {
+  background: var(--card-bg, #1f2937);
+  color: var(--text-color, #f9fafb);
+  border-color: var(--border-color, #374151);
+}
+
+:root[data-theme="dark"] .of-confirm-icon {
+  background: #451a1a;
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .of-confirm-cancel {
+  border-color: var(--border-color, #4b5563);
+}
+
+@media (max-width: 480px) {
+  .of-confirm-modal {
+    padding: 20px;
+  }
+
+  .of-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .of-confirm-actions button {
+    width: 100%;
+  }
+}
+
+
+
+
+  
+
+
   
   
 </style>
@@ -10695,6 +10819,39 @@ if (list) {
 </script>
 
 
+
+  
+<div id="ai-remove-confirm-modal" class="of-confirm-overlay" hidden>
+  <div
+    class="of-confirm-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ai-remove-confirm-title"
+    aria-describedby="ai-remove-confirm-description"
+  >
+    <div class="of-confirm-icon" aria-hidden="true">!</div>
+
+    <h3 id="ai-remove-confirm-title">Remove AI API settings?</h3>
+
+    <p id="ai-remove-confirm-description">
+      This will remove your saved AI provider configuration and encrypted API
+      key from this workspace. This action cannot be undone.
+    </p>
+
+    <div class="of-confirm-actions">
+      <button type="button" id="ai-remove-cancel-btn" class="of-confirm-cancel">
+        Cancel
+      </button>
+      <button type="button" id="ai-remove-confirm-btn" class="of-confirm-danger">
+        Remove settings
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+  
 
 
 
