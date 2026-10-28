@@ -2472,7 +2472,25 @@ app.post("/api/draft-reply", authenticateUser, async (req, res) => {
       message.trim()
     ].join("\n");
 
-    const reply = await generateAIText(aiConfig, prompt, { maxTokens: 1200 });
+
+    let reply;
+
+try {
+  reply = await generateAIText(aiConfig, prompt, { maxTokens: 1200 });
+} catch (error) {
+  console.error("AI provider diagnostic:", {
+    provider: aiConfig.provider,
+    model: aiConfig.model,
+    errorName: error?.name,
+    errorMessage: error?.message,
+    status: error?.status || error?.statusCode || null
+  });
+
+  throw error;
+}
+
+
+    
     if (typeof reply !== "string" || !reply.trim()) {
       return res.status(502).json({ error: "The AI did not return a reply." });
     }
