@@ -426,10 +426,11 @@ async function generateAIText(aiConfig, prompt, options = {}) {
       authorization: `Bearer ${aiConfig.apiKey}`
     };
     body = {
-      model: aiConfig.model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: maxTokens
-    };
+  model: aiConfig.model,
+  messages: [{ role: "user", content: prompt }],
+  max_tokens: Math.max(maxTokens, 2048),
+  reasoning: { effort: "low", exclude: true }
+};
     if (options.json) body.response_format = { type: "json_object" };
   } else {
     throw new Error("AI_PROVIDER_NOT_SUPPORTED");
@@ -462,7 +463,22 @@ async function generateAIText(aiConfig, prompt, options = {}) {
       : "";
   }
 
-  return result.choices?.[0]?.message?.content || "";
+  const content = result.choices?.[0]?.message?.content;
+
+if (typeof content !== "string" || !content.trim()) {
+  console.error("AI provider returned no text.", {
+    provider: aiConfig.provider,
+    model: aiConfig.model,
+    responseKeys: Object.keys(result || {}),
+    choicesCount: Array.isArray(result?.choices) ? result.choices.length : null,
+    finishReason: result?.choices?.[0]?.finish_reason || null,
+    responseError: result?.error?.message || null
+  });
+
+  throw new Error("AI_PROVIDER_RETURNED_NO_TEXT");
+}
+
+return content;
 }
 
 async function getOwnerWorkspaceForAI(req, res) {
@@ -1201,194 +1217,157 @@ app.post("/api/customers/lookup",authenticateUser, async (req, res) => {
 
 
 
-
 app.post("/api/customers", authenticateUser, async (req, res) => {
-
   if (!supabase) {
-
     return res.status(503).json({
-
       error: "Database is not configured."
-
     });
-
   }
 
-
-
   try {
-
     const { workspace, error: workspaceError } =
-
       await getUserWorkspace(req.user.id);
 
-
-
     if (workspaceError || !workspace) {
-
       return res.status(403).json({
-
         error: "No valid workspace access found."
-
       });
-
     }
-
-
 
     const { name, phone, email, address } = req.body || {};
 
-
-
     if (
-
       typeof name !== "string" ||
-
       !name.trim() ||
-
       name.trim().length > 150
-
     ) {
-
       return res.status(400).json({
-
         error: "Enter a customer name (maximum 150 characters)."
-
       });
-
     }
 
-
-
     if (
-
       typeof phone !== "string" ||
-
       !phone.trim() ||
-
       phone.trim().length > 30
-
     ) {
-
       return res.status(400).json({
-
         error: "Enter a valid phone number (maximum 30 characters)."
-
       });
-
     }
-
-
 
     if (
-
       typeof address !== "string" ||
-
       !address.trim() ||
-
       address.trim().length > 500
-
     ) {
-
       return res.status(400).json({
-
         error: "Enter a delivery address (maximum 500 characters)."
-
       });
-
     }
 
-
-
+    const cleanName = name.trim();
+    const cleanPhone = phone.trim();
+    const cleanAddress = address.trim();
     const cleanEmail =
-
       typeof email === "string" ? email.trim().toLowerCase() : "";
 
-
-
     if (
+      cleanEmail.length > 254 ||
+      (cleanEmail &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail))
+    ) {
+      return res.status(400).json({
+        error: "Enter a valid email address."
+      });
+    }
 
-  cleanEmail.length > 254 ||
+    // Normalize values for comparison without changing stored customer details.
+    const normalizeText = value =>
+      typeof value === "string"
+        ? value.trim().replace(/\s+/g, " ").toLowerCase()
+        : "";
 
-  (cleanEmail &&
+    const normalizePhone = value =>
+      typeof value === "string"
+        ? value.replace(/\D/g, "")
+        : "";
 
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail))
+    const target = {
+      name: normalizeText(cleanName),
+      phone: normalizePhone(cleanPhone),
+      email: normalizeText(cleanEmail),
+      address: normalizeText(cleanAddress)
+    };
 
-) {
-
-  return res.status(400).json({
-
-    error: "Enter a valid email address."
-
-  });
-
-}
-
-
-
-console.log("Creating customer for workspace:", workspace.id);
-
-
-
-    const { data, error } = await supabase
-
+    // Search only within this authenticated user's workspace.
+    const { data: customers, error: searchError } = await supabase
       .from("customers")
-
-      .insert({
-
-        workspace_id: workspace.id,
-
-        name: name.trim(),
-
-        phone: phone.trim(),
-
-        address: address.trim(),
-
-        email: cleanEmail || null
-
-      })
-
       .select("id, name, phone, email, address, workspace_id")
+      .eq("workspace_id", workspace.id);
 
+    if (searchError) {
+      console.error(
+        "Existing customer search failed:",
+        searchError.message
+      );
+
+      return res.status(503).json({
+        error: "Could not check for an existing customer."
+      });
+    }
+
+    // Reuse a customer only when all four details match.
+    const existingCustomer = (customers || []).find(customer =>
+      normalizeText(customer.name) === target.name &&
+      normalizePhone(customer.phone) === target.phone &&
+      normalizeText(customer.email) === target.email &&
+      normalizeText(customer.address) === target.address
+    );
+
+    if (existingCustomer) {
+      return res.status(200).json({
+        message: "Existing customer matched. No duplicate was created.",
+        reused: true,
+        customer: existingCustomer
+      });
+    }
+
+    // No complete match: create a new customer record.
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({
+        workspace_id: workspace.id,
+        name: cleanName,
+        phone: cleanPhone,
+        address: cleanAddress,
+        email: cleanEmail || null
+      })
+      .select("id, name, phone, email, address, workspace_id")
       .single();
 
-
-
     if (error) {
-
       console.error("Customer creation failed:", error.message);
 
       return res.status(500).json({
-
         error: "Could not create the customer."
-
       });
-
     }
 
-
-
     return res.status(201).json({
-
       message: "Customer created successfully.",
-
+      reused: false,
       customer: data
-
     });
-
   } catch (error) {
-
     console.error("Customer creation error:", error.message);
 
     return res.status(500).json({
-
       error: "An unexpected error occurred."
-
     });
-
   }
-
 });
+
 
 
 
