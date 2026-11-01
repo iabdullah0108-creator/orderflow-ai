@@ -2849,6 +2849,11 @@ app.post(
       const matchingOrderCount = Number(
         orderSearchRow?.total_count || 0
       );
+      console.log("SMART ASSISTANT ORDER SEARCH:", {
+  searchTerm,
+  matchingOrderCount,
+  returnedOrders: orders.length
+});
 
       // Search customers across the workspace when relevant.
       let customers = [];
@@ -2888,6 +2893,13 @@ app.post(
         matchingCustomerCount = Number(
           customerSearchRow?.total_count || 0
         );
+
+        console.log("SMART ASSISTANT CUSTOMER SEARCH:", {
+  searchTerm,
+  matchingCustomerCount,
+  returnedCustomers: customers.length
+});
+        
       }
 
       // Retrieve customer details for the matching orders too.
