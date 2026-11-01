@@ -4807,6 +4807,91 @@ body.dark .of-confirm-cancel {
 
 
 
+
+  
+/* Customers pagination */
+.of-customers-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-customers-pagination[hidden] {
+  display: none;
+}
+
+.of-customers-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-customers-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-customers-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.of-customers-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.of-customers-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-customers-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
 /* =========================================
    ORDERFLOW AI — SMART ASSISTANT
 ========================================= */
@@ -6551,6 +6636,12 @@ let ordersLoading = false;
 let ordersSearchTimer = null;
 let ordersRequestSequence = 0;
 let databaseCustomersForCards = [];
+
+  let customersTotalCount = 0;
+let customersHasMore = false;
+let customersLoading = false;
+let customersSearchTimer = null;
+let customersRequestSequence = 0;
 
 function addRecordField(card, label, value) {
   const row = make("div", "of-record-field");
@@ -8355,42 +8446,19 @@ dialog.showModal();
 ---------------------------- */
 
 
+
 function renderCustomerCards() {
   const container = $("customers-card-list");
-  const searchInput = $("customers-search");
   const count = $("customers-result-count");
 
-  if (!container || !searchInput || !count) return;
+  if (!container || !count) return;
 
-  const query = searchInput.value.trim().toLowerCase();
-
-  const visibleCustomers = databaseCustomersForCards.filter(customer => {
-    const searchableText = [
-      customer.name,
-      customer.email,
-      customer.phone,
-      customer.address,
-      customer.id
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    return searchableText.includes(query);
-  });
+  const visibleCustomers = databaseCustomersForCards;
 
   count.textContent =
-    `${visibleCustomers.length} of ${databaseCustomersForCards.length} customers`;
+    `Showing ${visibleCustomers.length} of ${customersTotalCount} customers`;
 
   container.replaceChildren();
-
-  if (visibleCustomers.length === 0) {
-    container.append(make(
-      "div",
-      "of-record-empty",
-      databaseCustomersForCards.length
-        ? "No customers match your search."
-        : "No customers found. Customers will appear here when added."
-    ));
-    return;
-  }
 
   function getInitials(name) {
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -8419,6 +8487,16 @@ function renderCustomerCards() {
 
     row.append(iconElement, valueElement);
     card.append(row);
+  }
+
+  if (visibleCustomers.length === 0) {
+    container.append(make(
+      "div",
+      "of-record-empty",
+      customersTotalCount
+        ? "No customers match your search."
+        : "No customers found. Customers will appear here when added."
+    ));
   }
 
   visibleCustomers.forEach(customer => {
@@ -8523,114 +8601,222 @@ function renderCustomerCards() {
       "Address"
     );
 
-    // Edit customer
- 
-editButton.addEventListener("click", () => {
-  showCustomerEditDialog(customer, async values => {
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
+    // Edit customer.
+    editButton.addEventListener("click", () => {
+      showCustomerEditDialog(customer, async values => {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
 
-    if (sessionError || !sessionData.session) {
-      throw new Error("Please sign in again.");
-    }
-
-    editButton.disabled = true;
-
-    try {
-      const response = await fetch(
-        `/api/customers/${encodeURIComponent(customer.id)}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionData.session.access_token}`
-          },
-          body: JSON.stringify(values)
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
         }
-      );
 
-      const result = await response.json().catch(() => ({}));
+        editButton.disabled = true;
 
-      if (!response.ok) {
-        throw new Error(result.error || "Could not update customer.");
-      }
+        try {
+          const response = await fetch(
+            `/api/customers/${encodeURIComponent(customer.id)}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${sessionData.session.access_token}`
+              },
+              body: JSON.stringify(values)
+            }
+          );
 
-      if (!result.customer) {
-        throw new Error("The server did not return the updated customer.");
-      }
+          const result = await response.json().catch(() => ({}));
 
-      const index = databaseCustomersForCards.findIndex(
-        item => String(item.id) === String(customer.id)
-      );
-
-      if (index !== -1) {
-        databaseCustomersForCards[index] = result.customer;
-      }
-
-      renderCustomerCards();
-    } finally {
-      editButton.disabled = false;
-    }
-  });
-});
-
-
-    // Delete customer
-
-deleteButton.addEventListener("click", () => {
-  showCustomerDeleteDialog(customer, async () => {
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
-
-    if (sessionError || !sessionData.session) {
-      throw new Error("Please sign in again.");
-    }
-
-    deleteButton.disabled = true;
-
-    try {
-      const response = await fetch(
-        `/api/customers/${encodeURIComponent(customer.id)}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`
+          if (!response.ok) {
+            throw new Error(result.error || "Could not update customer.");
           }
+
+          if (!result.customer) {
+            throw new Error("The server did not return the updated customer.");
+          }
+
+          const index = databaseCustomersForCards.findIndex(
+            item => String(item.id) === String(customer.id)
+          );
+
+          if (index !== -1) {
+            databaseCustomersForCards[index] = result.customer;
+          }
+
+          renderCustomerCards();
+
+        } finally {
+          editButton.disabled = false;
         }
-      );
+      });
+    });
 
-      const result = await response.json().catch(() => ({}));
+    // Delete customer.
+    deleteButton.addEventListener("click", () => {
+      showCustomerDeleteDialog(customer, async () => {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Could not delete customer.");
-      }
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
+        }
 
-      databaseCustomersForCards = databaseCustomersForCards.filter(
-        item => String(item.id) !== String(customer.id)
-      );
+        deleteButton.disabled = true;
 
-      renderCustomerCards();
-    } finally {
-      deleteButton.disabled = false;
-    }
-  });
-});
+        try {
+          const response = await fetch(
+            `/api/customers/${encodeURIComponent(customer.id)}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${sessionData.session.access_token}`
+              }
+            }
+          );
 
+          const result = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(result.error || "Could not delete customer.");
+          }
+
+          databaseCustomersForCards = databaseCustomersForCards.filter(
+            item => String(item.id) !== String(customer.id)
+          );
+
+          customersTotalCount = Math.max(0, customersTotalCount - 1);
+
+          customersHasMore =
+            databaseCustomersForCards.length < customersTotalCount;
+
+          renderCustomerCards();
+
+        } finally {
+          deleteButton.disabled = false;
+        }
+      });
+    });
 
     container.append(card);
   });
+
+  // Create pagination section once.
+  let pagination = $("customers-pagination");
+
+  if (!pagination) {
+    pagination = make("div", "of-customers-pagination");
+    pagination.id = "customers-pagination";
+
+    const info = make("div", "of-customers-pagination-info");
+
+    const paginationCount = make("span", "", "");
+    paginationCount.id = "customers-pagination-count";
+
+    info.append(paginationCount);
+
+    const progressTrack = make(
+      "div",
+      "of-customers-progress-track"
+    );
+
+    const progressBar = make(
+      "div",
+      "of-customers-progress-bar"
+    );
+
+    progressBar.id = "customers-progress-bar";
+
+    progressTrack.append(progressBar);
+
+    const button = make(
+      "button",
+      "of-customers-load-more",
+      "Load more customers"
+    );
+
+    button.id = "customers-load-more";
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      fetchCustomersPage(true);
+    });
+
+    pagination.append(info, progressTrack, button);
+
+    container.insertAdjacentElement("afterend", pagination);
+  }
+
+  // Update progress information.
+  const loaded = databaseCustomersForCards.length;
+
+  const remaining = Math.max(
+    0,
+    customersTotalCount - loaded
+  );
+
+  const paginationCount = $("customers-pagination-count");
+  const progressBar = $("customers-progress-bar");
+  const button = $("customers-load-more");
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${loaded} of ${customersTotalCount} customers loaded`;
+  }
+
+  if (progressBar) {
+    const percentage = customersTotalCount > 0
+      ? Math.min(100, (loaded / customersTotalCount) * 100)
+      : 0;
+
+    progressBar.style.width = `${percentage}%`;
+  }
+
+  if (button) {
+    button.disabled = customersLoading;
+
+    button.textContent = customersLoading
+      ? "Loading customers..."
+      : `Load more customers (${remaining} remaining)`;
+
+    button.hidden = !customersHasMore;
+  }
+
+  // Keep progress visible at 100%; hide only the button.
+  pagination.hidden = customersTotalCount === 0;
 }
+
 
 
   
 
 
-async function renderCustomers() {
+async function fetchCustomersPage(append = false) {
+  if (append && (customersLoading || !customersHasMore)) return;
 
-const container = $("customers-card-list");
-if (!container) return;
+  const container = $("customers-card-list");
+  const count = $("customers-result-count");
 
-showRecordSkeleton(container, "customers");
+  if (!container) return;
+
+  const requestId = ++customersRequestSequence;
+
+  customersLoading = true;
+
+  if (!append) {
+    databaseCustomersForCards = [];
+    customersTotalCount = 0;
+    customersHasMore = false;
+
+    showRecordSkeleton(container, "customers");
+  }
+
+  const loadMoreButton = $("customers-load-more");
+
+  if (loadMoreButton) {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Loading customers...";
+  }
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -8640,11 +8826,28 @@ showRecordSkeleton(container, "customers");
       throw new Error("Please sign in to load customers.");
     }
 
-    const response = await fetch("/api/customers", {
-      headers: {
-        Authorization: `Bearer ${sessionData.session.access_token}`
-      }
+    const searchInput = $("customers-search");
+    const search = searchInput?.value.trim() || "";
+
+    const limit = 25;
+    const offset = append
+      ? databaseCustomersForCards.length
+      : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search
     });
+
+    const response = await fetch(
+      `/api/customers?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
 
     const result = await response.json().catch(() => ({}));
 
@@ -8654,31 +8857,105 @@ showRecordSkeleton(container, "customers");
       );
     }
 
-    databaseCustomersForCards = Array.isArray(result.customers)
+    // Ignore outdated responses.
+    if (requestId !== customersRequestSequence) return;
+
+    const newCustomers = Array.isArray(result.customers)
       ? result.customers
       : [];
 
-    renderCustomerCards();
-
-    const searchInput = $("customers-search");
-    if (searchInput) {
-      searchInput.oninput = renderCustomerCards;
+    if (append) {
+      databaseCustomersForCards = [
+        ...databaseCustomersForCards,
+        ...newCustomers
+      ];
+    } else {
+      databaseCustomersForCards = newCustomers;
     }
-  } catch (error) {
-    console.error("Could not load customers:", error);
 
-    container.replaceChildren(
-      make(
-        "div",
-        "of-record-empty",
-        error.message || "Could not load customers. Please try again."
-      )
+    customersTotalCount = Number(
+      result.total_count ?? result.total ?? 0
     );
 
-    const count = $("customers-result-count");
-    if (count) count.textContent = "";
+    customersHasMore = Boolean(result.has_more);
+
+    renderCustomerCards();
+
+  } catch (error) {
+    if (requestId !== customersRequestSequence) return;
+
+    console.error("Could not load customers:", error);
+
+    if (!append) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load customers. Please try again."
+        )
+      );
+
+      if (count) count.textContent = "";
+    } else {
+      container.append(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load more customers."
+        )
+      );
+    }
+
+  } finally {
+    if (requestId === customersRequestSequence) {
+      customersLoading = false;
+
+      const button = $("customers-load-more");
+      const pagination = $("customers-pagination");
+
+      const remaining = Math.max(
+        0,
+        customersTotalCount - databaseCustomersForCards.length
+      );
+
+      if (button) {
+        button.disabled = false;
+        button.hidden = !customersHasMore;
+
+        button.textContent =
+          `Load more customers (${remaining} remaining)`;
+      }
+
+      if (pagination) {
+        pagination.hidden = customersTotalCount === 0;
+      }
+    }
   }
 }
+
+
+async function renderCustomers() {
+  const searchInput = $("customers-search");
+
+  // Bind the search input once.
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(customersSearchTimer);
+
+      // Invalidate requests using the previous search.
+      customersRequestSequence++;
+
+      customersSearchTimer = setTimeout(() => {
+        fetchCustomersPage(false);
+      }, 350);
+    });
+  }
+
+  await fetchCustomersPage(false);
+}
+
 
 
 
