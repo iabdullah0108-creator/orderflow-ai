@@ -7253,10 +7253,20 @@ function showInvoiceDetails(invoice) {
         let optionsText = "";
 
         if (item.options) {
-          optionsText = typeof item.options === "string"
-            ? item.options
-            : JSON.stringify(item.options);
-        }
+  let parsedOptions = item.options;
+
+  if (typeof parsedOptions === "string") {
+    try {
+      parsedOptions = JSON.parse(parsedOptions);
+    } catch {
+      parsedOptions = {};
+    }
+  }
+
+  optionsText = parsedOptions?.text
+    ? String(parsedOptions.text)
+    : "";
+}
 
         product.append(
           invoiceDetailElement(
