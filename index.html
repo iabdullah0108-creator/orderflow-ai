@@ -4723,6 +4723,309 @@ body.dark .of-confirm-cancel {
 
 
   
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   ORDERFLOW AI — SMART ASSISTANT
+========================================= */
+
+.of-ai-widget,
+.of-ai-widget * {
+  box-sizing: border-box;
+}
+
+.of-ai-widget [hidden] {
+  display: none !important;
+}
+
+.of-ai-widget {
+  --ai-panel-bg: var(--surface, #ffffff);
+  --ai-text: var(--text, #202536);
+  --ai-muted: var(--muted, #788196);
+  --ai-border: var(--border, #e3e7ef);
+  --ai-accent: var(--accent, #6558dc);
+  --ai-soft: var(--accent-soft, #eeecff);
+  font-family: inherit;
+  color: var(--ai-text);
+}
+
+.of-ai-launcher {
+  position: fixed;
+  right: 26px;
+  bottom: 25px;
+  z-index: 9998;
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #7969f5, #5545ce);
+  color: white;
+  box-shadow: 0 9px 28px rgba(83, 69, 206, .35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.of-ai-launcher:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 32px rgba(83, 69, 206, .42);
+}
+
+.of-ai-launcher svg {
+  width: 27px;
+  height: 27px;
+}
+
+.of-ai-panel {
+  position: fixed;
+  right: 26px;
+  bottom: 96px;
+  z-index: 9999;
+  width: min(410px, calc(100vw - 32px));
+  height: min(620px, calc(100dvh - 125px));
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ai-panel-bg);
+  color: var(--ai-text);
+  border: 1px solid var(--ai-border);
+  border-radius: 20px;
+  box-shadow: 0 20px 65px rgba(15, 23, 42, .20);
+  animation: ofAiPanelIn .22s ease-out;
+}
+
+@keyframes ofAiPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.of-ai-header {
+  min-height: 76px;
+  padding: 15px 17px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--ai-border);
+}
+
+.of-ai-avatar {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(145deg, #7969f5, #5545ce);
+}
+
+.of-ai-avatar svg {
+  width: 23px;
+  height: 23px;
+}
+
+.of-ai-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.of-ai-heading strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.of-ai-heading span {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ai-muted);
+}
+
+.of-ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.of-ai-icon-button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ai-muted);
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.of-ai-icon-button:hover {
+  background: var(--ai-soft);
+  color: var(--ai-accent);
+}
+
+.of-ai-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.of-ai-welcome {
+  padding: 17px;
+  border: 1px solid var(--ai-border);
+  border-radius: 15px;
+  background: var(--ai-panel-bg);
+}
+
+.of-ai-welcome h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.of-ai-welcome p {
+  margin: 0;
+  color: var(--ai-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.of-ai-suggestions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.of-ai-suggestion {
+  min-height: 76px;
+  padding: 12px;
+  border: 1px solid var(--ai-border);
+  border-radius: 13px;
+  background: var(--ai-panel-bg);
+  color: var(--ai-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.of-ai-suggestion:hover {
+  border-color: var(--ai-accent);
+  background: var(--ai-soft);
+}
+
+.of-ai-suggestion span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ai-accent);
+  font-size: 18px;
+}
+
+.of-ai-suggestion strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.of-ai-composer {
+  padding: 13px 15px 15px;
+  border-top: 1px solid var(--ai-border);
+}
+
+.of-ai-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  padding: 8px 9px 8px 14px;
+  border: 1px solid var(--ai-border);
+  border-radius: 14px;
+  background: var(--ai-panel-bg);
+}
+
+.of-ai-input {
+  flex: 1;
+  min-width: 0;
+  max-height: 100px;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ai-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 7px 0;
+}
+
+.of-ai-input::placeholder {
+  color: var(--ai-muted);
+}
+
+.of-ai-send {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ai-accent);
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.of-ai-send:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.of-ai-footer-note {
+  margin-top: 9px;
+  color: var(--ai-muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .of-ai-launcher {
+    right: 17px;
+    bottom: 17px;
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .of-ai-panel {
+    right: 10px;
+    bottom: 80px;
+    width: calc(100vw - 20px);
+    height: min(680px, calc(100dvh - 95px));
+    border-radius: 18px;
+  }
+}
+
+
+
+
+
   
   
 
@@ -11909,6 +12212,149 @@ if (list) {
 
   
 
+
+
+
+
+
+
+<!-- OrderFlow AI Smart Assistant -->
+<div class="of-ai-widget" id="of-ai-widget">
+
+  <button
+    class="of-ai-launcher"
+    id="of-ai-launcher"
+    type="button"
+    aria-label="Open Smart Assistant"
+    aria-expanded="false"
+    aria-controls="of-ai-panel"
+  >
+    <svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
+      <path d="M19 14l1 2.5 2 1-2 1-1 2.5-1-2.5-2-1 2-1 1-2.5z"/>
+    </svg>
+  </button>
+
+  <section
+    class="of-ai-panel"
+    id="of-ai-panel"
+    role="dialog"
+    aria-label="Smart Assistant"
+    hidden
+  >
+
+    <header class="of-ai-header">
+
+      <div class="of-ai-avatar">
+        <svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
+        </svg>
+      </div>
+
+      <div class="of-ai-heading">
+        <strong>Smart Assistant</strong>
+        <span>Your business command centre</span>
+      </div>
+
+      <div class="of-ai-header-actions">
+        <button
+          class="of-ai-icon-button"
+          id="of-ai-clear"
+          type="button"
+          aria-label="New conversation"
+          title="New conversation"
+        >↻</button>
+
+        <button
+          class="of-ai-icon-button"
+          id="of-ai-minimize"
+          type="button"
+          aria-label="Minimize assistant"
+          title="Minimize"
+        >−</button>
+      </div>
+
+    </header>
+
+    <main class="of-ai-body" id="of-ai-messages">
+
+      <div class="of-ai-welcome" id="of-ai-welcome">
+        <h3>Welcome to your Smart Assistant ✨</h3>
+        <p>
+          Ask questions about your business, explore your dashboard
+          data, or create a custom order. I'll help you get things done.
+        </p>
+      </div>
+
+      <div class="of-ai-suggestions" id="of-ai-suggestions">
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Analyse my business performance.">
+          <span>↗</span>
+          <strong>Analyse my business</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="I want to create a new custom order.">
+          <span>＋</span>
+          <strong>Create an order</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Help me find a customer.">
+          <span>♙</span>
+          <strong>Find a customer</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Give me an overview of my invoices.">
+          <span>▤</span>
+          <strong>Check invoices</strong>
+        </button>
+
+      </div>
+
+    </main>
+
+    <form class="of-ai-composer" id="of-ai-form">
+
+      <div class="of-ai-input-wrap">
+
+        <textarea
+          class="of-ai-input"
+          id="of-ai-input"
+          rows="1"
+          maxlength="5000"
+          placeholder="Ask anything or give me a task..."
+          aria-label="Message Smart Assistant"
+        ></textarea>
+
+        <button
+          class="of-ai-send"
+          id="of-ai-send"
+          type="submit"
+          aria-label="Send message"
+        >↑</button>
+
+      </div>
+
+      <div class="of-ai-footer-note">
+        Smart Assistant · Your workspace, your data
+      </div>
+
+    </form>
+
+  </section>
+
+</div>
+
+
+
+  
 
 
 
