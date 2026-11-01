@@ -5026,6 +5026,59 @@ body.dark .of-confirm-cancel {
 
 
 
+
+
+
+
+
+  /* Smart Assistant conversation messages */
+
+.of-ai-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 88%;
+  gap: 5px;
+}
+
+.of-ai-message.user {
+  align-self: flex-end;
+}
+
+.of-ai-message.assistant {
+  align-self: flex-start;
+}
+
+.of-ai-message-bubble {
+  padding: 11px 13px;
+  border-radius: 14px;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.of-ai-message.user .of-ai-message-bubble {
+  background: var(--ai-accent);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.of-ai-message.assistant .of-ai-message-bubble {
+  background: var(--ai-soft);
+  color: var(--ai-text);
+  border-bottom-left-radius: 4px;
+}
+
+.of-ai-message-time {
+  padding: 0 4px;
+  color: var(--ai-muted);
+  font-size: 9px;
+}
+
+.of-ai-panel .of-ai-body {
+  scroll-behavior: smooth;
+}
+
   
   
 
@@ -12354,6 +12407,161 @@ if (list) {
 
 
 
+
+
+
+
+
+<script>
+(() => {
+  const launcher = document.getElementById("of-ai-launcher");
+  const panel = document.getElementById("of-ai-panel");
+  const minimizeButton = document.getElementById("of-ai-minimize");
+  const clearButton = document.getElementById("of-ai-clear");
+  const form = document.getElementById("of-ai-form");
+  const input = document.getElementById("of-ai-input");
+  const sendButton = document.getElementById("of-ai-send");
+  const messages = document.getElementById("of-ai-messages");
+  const welcome = document.getElementById("of-ai-welcome");
+  const suggestions = document.getElementById("of-ai-suggestions");
+
+  if (
+    !launcher || !panel || !minimizeButton ||
+    !clearButton || !form || !input || !messages
+  ) {
+    console.error("Smart Assistant interface could not be initialized.");
+    return;
+  }
+
+  let conversationStarted = false;
+
+  function openAssistant() {
+    panel.hidden = false;
+    launcher.setAttribute("aria-expanded", "true");
+    launcher.setAttribute("aria-label", "Smart Assistant is open");
+
+    setTimeout(() => input.focus(), 100);
+  }
+
+  function minimizeAssistant() {
+    panel.hidden = true;
+    launcher.setAttribute("aria-expanded", "false");
+    launcher.setAttribute("aria-label", "Open Smart Assistant");
+  }
+
+  function addMessage(text, sender) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `of-ai-message ${sender}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "of-ai-message-bubble";
+    bubble.textContent = text;
+
+    const time = document.createElement("div");
+    time.className = "of-ai-message-time";
+    time.textContent = new Intl.DateTimeFormat([], {
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(new Date());
+
+    wrapper.append(bubble, time);
+    messages.appendChild(wrapper);
+
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function prepareConversation() {
+    if (!conversationStarted) {
+      conversationStarted = true;
+
+      if (welcome) welcome.hidden = true;
+      if (suggestions) suggestions.hidden = true;
+    }
+  }
+
+  function sendMessage(message) {
+    const cleanMessage = String(message || "").trim();
+
+    if (!cleanMessage) return;
+
+    prepareConversation();
+    addMessage(cleanMessage, "user");
+
+    input.value = "";
+    input.style.height = "auto";
+
+    // The secure AI backend will be connected in the next stage.
+    addMessage(
+      "Your message has been added to the conversation. The secure AI connection is the next implementation step.",
+      "assistant"
+    );
+
+    input.focus();
+  }
+
+  launcher.addEventListener("click", () => {
+    if (panel.hidden) {
+      openAssistant();
+    } else {
+      minimizeAssistant();
+    }
+  });
+
+  minimizeButton.addEventListener("click", minimizeAssistant);
+
+  clearButton.addEventListener("click", () => {
+    messages.querySelectorAll(".of-ai-message").forEach(message => {
+      message.remove();
+    });
+
+    conversationStarted = false;
+
+    if (welcome) welcome.hidden = false;
+    if (suggestions) suggestions.hidden = false;
+
+    input.value = "";
+    input.style.height = "auto";
+    input.focus();
+  });
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+
+    sendMessage(input.value);
+  });
+
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 100) + "px";
+  });
+
+  if (suggestions) {
+    suggestions.querySelectorAll("[data-ai-prompt]").forEach(button => {
+      button.addEventListener("click", () => {
+        openAssistant();
+        sendMessage(button.dataset.aiPrompt);
+      });
+    });
+  }
+
+  // Keep the launcher available across dashboard page navigation.
+  // This assistant is attached to the document, not an individual view.
+
+  console.log("OrderFlow Smart Assistant interface initialized.");
+})();
+</script>
+
+
+
+
+  
   
 
 
