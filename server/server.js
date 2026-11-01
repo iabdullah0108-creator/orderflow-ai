@@ -3047,6 +3047,7 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       });
     }
 
+    // Step 1: Retrieve invoices belonging to this workspace.
     let query = supabase
       .from("invoices")
       .select(`
@@ -3094,23 +3095,73 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       query = query.eq("status", status);
     }
 
-    const { data, error } = await query;
+    const { data: invoices, error: invoiceError } = await query;
 
-    if (error) {
-      console.error("Invoice lookup failed:", error);
+    if (invoiceError) {
+      console.error("Invoice lookup failed:", invoiceError.message);
+
       return res.status(503).json({
         success: false,
         error: "Could not load invoices."
       });
     }
 
+    // Step 2: Collect the order IDs associated with these invoices.
+    const orderIds = [
+      ...new Set(
+        (invoices || [])
+          .map(invoice => invoice.order_id)
+          .filter(Boolean)
+      )
+    ];
+
+    // Step 3: Retrieve the actual order numbers.
+    // Always restrict this lookup to the authenticated workspace.
+    let orderNumberMap = new Map();
+
+    if (orderIds.length > 0) {
+      const { data: orders, error: ordersError } = await supabase
+        .from("orders")
+        .select("id, order_number")
+        .eq("workspace_id", workspace.id)
+        .in("id", orderIds);
+
+      if (ordersError) {
+        console.error(
+          "Invoice order-number lookup failed:",
+          ordersError.message
+        );
+
+        return res.status(503).json({
+          success: false,
+          error: "Could not retrieve invoice order numbers."
+        });
+      }
+
+      orderNumberMap = new Map(
+        (orders || []).map(order => [
+          order.id,
+          order.order_number
+        ])
+      );
+    }
+
+    // Step 4: Attach the actual order number to every invoice.
+    const enrichedInvoices = (invoices || []).map(invoice => ({
+      ...invoice,
+      order_number: invoice.order_id
+        ? orderNumberMap.get(invoice.order_id) || null
+        : null
+    }));
+
+    // Step 5: Return the enriched invoices to the dashboard.
     return res.json({
       success: true,
-      invoices: data || []
+      invoices: enrichedInvoices
     });
 
   } catch (error) {
-    console.error("Invoice endpoint failed:", error);
+    console.error("Invoice endpoint failed:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -3118,6 +3169,7 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
     });
   }
 });
+
 
 
 
