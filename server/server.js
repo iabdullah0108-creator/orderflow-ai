@@ -1909,10 +1909,11 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
 
 
 
-
 app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
   if (!supabase) {
-    return res.status(503).json({ error: "Database is not configured." });
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
   }
 
   try {
@@ -1941,11 +1942,15 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
       .maybeSingle();
 
     if (readError) {
-      return res.status(503).json({ error: "Could not verify the order." });
+      return res.status(503).json({
+        error: "Could not verify the order."
+      });
     }
 
     if (!order) {
-      return res.status(404).json({ error: "Order not found." });
+      return res.status(404).json({
+        error: "Order not found."
+      });
     }
 
     const current = String(order.status || "").toLowerCase();
@@ -1962,6 +1967,57 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
       });
     }
 
+    // Cancellation: cancel the order and void its active invoice
+    // together in one database transaction.
+    if (status === "cancelled") {
+      const { data: result, error: cancelError } = await supabase.rpc(
+        "cancel_order_with_invoice",
+        {
+          p_workspace_id: workspace.id,
+          p_order_id: req.params.id
+        }
+      );
+
+      if (cancelError) {
+        console.error(
+          "Order cancellation failed:",
+          cancelError.message
+        );
+
+        const message = cancelError.message || "";
+
+        if (
+          message.includes("paid or completed invoice")
+        ) {
+          return res.status(409).json({
+            error: "This order has a paid or completed invoice and requires review."
+          });
+        }
+
+        if (message.includes("Order not found")) {
+          return res.status(404).json({
+            error: "Order not found."
+          });
+        }
+
+        return res.status(503).json({
+          error: "Could not cancel the order and update its invoice."
+        });
+      }
+
+      return res.json({
+        success: true,
+        order: {
+          id: req.params.id,
+          status: "cancelled"
+        },
+        invoice: {
+          voided_count: result?.voided_invoice_count || 0
+        }
+      });
+    }
+
+    // Completion: preserve the existing order-only update behaviour.
     const { data: updated, error: updateError } = await supabase
       .from("orders")
       .update({ status })
@@ -1972,7 +2028,11 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
       .maybeSingle();
 
     if (updateError) {
-      console.error("Order status update failed:", updateError.message);
+      console.error(
+        "Order status update failed:",
+        updateError.message
+      );
+
       return res.status(503).json({
         error: "Could not update the order status."
       });
@@ -1984,14 +2044,23 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
       });
     }
 
-    return res.json({ success: true, order: updated });
+    return res.json({
+      success: true,
+      order: updated
+    });
+
   } catch (error) {
-    console.error("Order status update failed:", error.message);
+    console.error(
+      "Order status update failed:",
+      error.message
+    );
+
     return res.status(500).json({
       error: "Could not update the order status."
     });
   }
 });
+
 
 
 
