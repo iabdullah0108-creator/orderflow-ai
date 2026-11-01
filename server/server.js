@@ -3081,6 +3081,141 @@ app.post("/api/integrations/n8n/delivery-status", async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+
+
+app.get("/api/invoices", authenticateUser, async (req, res) => {
+  if (!supabase) {
+    return res.status(503).json({
+      success: false,
+      error: "Database is not configured."
+    });
+  }
+
+  try {
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (workspaceError || !workspace) {
+      return res.status(403).json({
+        success: false,
+        error: "No valid workspace access found."
+      });
+    }
+
+    const allowedStatuses = [
+      "draft",
+      "issued",
+      "paid",
+      "overdue",
+      "voided"
+    ];
+
+    const status = typeof req.query.status === "string"
+      ? req.query.status.trim().toLowerCase()
+      : "all";
+
+    if (status !== "all" && !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid invoice status."
+      });
+    }
+
+    let query = supabase
+      .from("invoices")
+      .select(`
+        id,
+        workspace_id,
+        order_id,
+        invoice_number,
+        status,
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+        business_name,
+        business_email,
+        business_phone,
+        business_address,
+        currency,
+        subtotal,
+        discount_amount,
+        tax_amount,
+        shipping_amount,
+        total_amount,
+        issued_at,
+        due_at,
+        voided_at,
+        void_reason,
+        replaced_by_invoice_id,
+        created_at,
+        updated_at,
+        invoice_items (
+          id,
+          order_item_id,
+          product_name,
+          description,
+          options,
+          quantity,
+          unit_price,
+          line_total
+        )
+      `)
+      .eq("workspace_id", workspace.id)
+      .order("issued_at", { ascending: false });
+
+    if (status !== "all") {
+      query = query.eq("status", status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Invoice lookup failed:", error);
+      return res.status(503).json({
+        success: false,
+        error: "Could not load invoices."
+      });
+    }
+
+    return res.json({
+      success: true,
+      invoices: data || []
+    });
+
+  } catch (error) {
+    console.error("Invoice endpoint failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Could not load invoices."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //if (require.main === module) {
   //app.listen(PORT, "0.0.0.0", () => {
     //console.log(`OrderFlow AI server running on port ${PORT}`);
