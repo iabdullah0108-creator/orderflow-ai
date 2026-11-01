@@ -4266,6 +4266,71 @@ body.dark .of-confirm-cancel {
 
 
 
+
+
+  /* Invoices */
+.of-invoices-toolbar {
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 210px) auto;
+}
+
+.of-invoice-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.of-invoice-status.issued {
+  color: #8058bd;
+  background: #f0e8ff;
+}
+
+.of-invoice-status.paid {
+  color: #176b3a;
+  background: #d9f7e5;
+}
+
+.of-invoice-status.overdue {
+  color: #a45b0a;
+  background: #fff0d7;
+}
+
+.of-invoice-status.voided {
+  color: #a52332;
+  background: #ffe0e3;
+}
+
+:root[data-theme="dark"] .of-invoice-status.issued {
+  color: #d0b7ff;
+  background: #382c50;
+}
+
+:root[data-theme="dark"] .of-invoice-status.paid {
+  color: #8be0b1;
+  background: #203d35;
+}
+
+:root[data-theme="dark"] .of-invoice-status.overdue {
+  color: #ffc078;
+  background: #493625;
+}
+
+:root[data-theme="dark"] .of-invoice-status.voided {
+  color: #ffaaaa;
+  background: #482b32;
+}
+
+@media (max-width: 700px) {
+  .of-invoices-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
   
 
 
@@ -4961,7 +5026,45 @@ body.dark .of-confirm-cancel {
 </section>
 
 
-      <section class="view" id="view-invoices"><div class="page-heading"><div><div class="eyebrow">Billing</div><h1>Invoices</h1><p class="subtitle">Invoice generation will be connected to real orders later.</p></div></div><div class="panel"><h2>Invoice workspace</h2><p class="subtitle" style="margin-top:10px">This prototype does not create or issue real invoices yet. Once the secure backend is ready, we can generate printable PDFs from verified order records.</p></div></section>
+
+      <section class="view" id="view-invoices">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Billing & payments</div>
+      <h1>Invoices</h1>
+      <p class="subtitle">Search, track, and manage invoices issued to your customers.</p>
+    </div>
+  </div>
+
+  <div class="of-orders-toolbar of-invoices-toolbar">
+    <input
+      class="of-record-search"
+      id="invoices-search"
+      type="search"
+      placeholder="Search invoice, customer, or order..."
+      aria-label="Search invoices"
+      autocomplete="off"
+    />
+
+    <select id="invoices-status-filter" aria-label="Filter invoices by status">
+      <option value="all">All statuses</option>
+      <option value="issued">Issued</option>
+      <option value="paid">Paid</option>
+      <option value="overdue">Overdue</option>
+      <option value="voided">Voided</option>
+    </select>
+
+    <span class="of-record-muted" id="invoices-result-count"></span>
+  </div>
+
+  <div class="of-orders-list" id="invoices-card-list">
+    <div class="of-record-empty">Your invoices will appear here.</div>
+  </div>
+</section>
+
+
+
+      
       <section class="view" id="view-analytics"><div class="page-heading"><div><div class="eyebrow">Business insights</div><h1>Analytics</h1><p class="subtitle">Illustrative metrics only; not connected to real business data.</p></div></div><div class="metrics"><div class="metric"><div class="metric-top">Demo conversations</div><div class="metric-number" id="analytics-conversations">6</div></div><div class="metric"><div class="metric-top">Pending reviews</div><div class="metric-number" id="analytics-reviews">2</div></div><div class="metric"><div class="metric-top">Resolved demos</div><div class="metric-number" id="analytics-resolved">0</div></div><div class="metric"><div class="metric-top">Drafts prepared</div><div class="metric-number" id="analytics-drafts">0</div></div></div></section>
 
 
@@ -10915,6 +11018,267 @@ if (list) {
     </div>
   </section>
 </div>
+
+
+
+
+
+
+
+
+  <script>
+(() => {
+  "use strict";
+
+  let invoices = [];
+  let invoicesLoaded = false;
+  let loadingInvoices = false;
+
+  const $invoice = id => document.getElementById(id);
+
+  function invoiceStatus(value) {
+    const status = String(value || "issued").toLowerCase();
+
+    return ["issued", "paid", "overdue", "voided"].includes(status)
+      ? status
+      : "issued";
+  }
+
+  function invoiceStatusLabel(status) {
+    return {
+      issued: "Issued",
+      paid: "Paid",
+      overdue: "Overdue",
+      voided: "Voided"
+    }[status] || "Issued";
+  }
+
+  function invoiceMoney(invoice) {
+    const currency = invoice.currency || "";
+    const amount = Number(
+      invoice.total_amount ?? invoice.total ?? 0
+    );
+
+    return `${currency} ${amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`.trim();
+  }
+
+  function invoiceDate(invoice) {
+    return invoice.issued_at || invoice.created_at;
+  }
+
+  function invoiceOrderNumber(invoice) {
+    return invoice.order?.order_number ||
+      invoice.order_number ||
+      "—";
+  }
+
+  function renderInvoiceCards() {
+    const container = $invoice("invoices-card-list");
+    const searchInput = $invoice("invoices-search");
+    const statusFilter = $invoice("invoices-status-filter");
+    const count = $invoice("invoices-result-count");
+
+    if (!container || !searchInput || !count) return;
+
+    const query = searchInput.value.trim().toLowerCase();
+    const selectedStatus = statusFilter?.value || "all";
+
+    const visibleInvoices = invoices.filter(invoice => {
+      const status = invoiceStatus(invoice.status);
+
+      const searchableText = [
+        invoice.invoice_number,
+        invoice.customer_name,
+        invoice.customer_email,
+        invoice.customer_phone,
+        invoiceOrderNumber(invoice),
+        invoice.currency,
+        invoice.total_amount
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const matchesSearch = searchableText.includes(query);
+      const matchesStatus =
+        selectedStatus === "all" || status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    count.textContent =
+      `${visibleInvoices.length} of ${invoices.length} invoices`;
+
+    container.replaceChildren();
+
+    if (!visibleInvoices.length) {
+      const message = invoices.length
+        ? "No invoices match your search or selected filter."
+        : "No invoices have been generated yet.";
+
+      container.append(
+        make("div", "of-record-empty", message)
+      );
+      return;
+    }
+
+    visibleInvoices.forEach(invoice => {
+      const status = invoiceStatus(invoice.status);
+      const number = invoice.invoice_number || "Invoice";
+
+      const row = make("article", "of-order-row");
+      row.tabIndex = 0;
+      row.setAttribute("role", "button");
+      row.setAttribute("aria-label", `View invoice ${number}`);
+
+      const customer = make("div", "of-order-customer");
+      customer.append(
+        make("div", "", invoice.customer_name || "Customer"),
+        make("span", "of-order-number", number)
+      );
+
+      const date = make("div", "of-order-cell");
+      date.append(
+        make("span", "", formatRecordDate(invoiceDate(invoice))),
+        make("span", "of-order-date", "Invoice date")
+      );
+
+      const order = make("div", "of-order-cell");
+      order.append(
+        make("span", "", invoiceOrderNumber(invoice)),
+        make("span", "of-order-date", "Order number")
+      );
+
+      const total = make(
+        "div",
+        "of-order-cell of-order-total",
+        invoiceMoney(invoice)
+      );
+
+      const badge = make(
+        "span",
+        `of-invoice-status ${status}`,
+        invoiceStatusLabel(status)
+      );
+
+      row.append(customer, date, order, total, badge);
+
+      // Invoice detail popup will be connected in the next implementation step.
+      row.addEventListener("click", () => {
+        if (typeof window.openInvoiceDetails === "function") {
+          window.openInvoiceDetails(invoice);
+        } else {
+          notify("Invoice details will be enabled in the next step.");
+        }
+      });
+
+      row.addEventListener("keydown", event => {
+        if (event.target !== row) return;
+
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          row.click();
+        }
+      });
+
+      container.append(row);
+    });
+  }
+
+  async function renderInvoices(forceRefresh = false) {
+    const container = $invoice("invoices-card-list");
+    if (!container || loadingInvoices) return;
+
+    if (invoicesLoaded && !forceRefresh) {
+      renderInvoiceCards();
+      return;
+    }
+
+    loadingInvoices = true;
+    showRecordSkeleton(container, "invoices");
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        throw new Error("Please sign in to load invoices.");
+      }
+
+      const response = await fetch("/api/invoices", {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Could not load invoices."
+        );
+      }
+
+      invoices = Array.isArray(result.invoices)
+        ? result.invoices
+        : [];
+
+      invoicesLoaded = true;
+
+      renderInvoiceCards();
+
+    } catch (error) {
+      console.error("Could not load invoices:", error);
+
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load invoices."
+        )
+      );
+
+      const count = $invoice("invoices-result-count");
+      if (count) count.textContent = "";
+
+    } finally {
+      loadingInvoices = false;
+    }
+  }
+
+  function initInvoiceFilters() {
+    const search = $invoice("invoices-search");
+    const status = $invoice("invoices-status-filter");
+
+    if (search) {
+      search.addEventListener("input", renderInvoiceCards);
+    }
+
+    if (status) {
+      status.addEventListener("change", renderInvoiceCards);
+    }
+
+    // Load invoices whenever the Invoices navigation tab is opened.
+    const invoicesNav = document.querySelector('[data-view="invoices"]');
+
+    if (invoicesNav) {
+      invoicesNav.addEventListener("click", () => {
+        renderInvoices();
+      });
+    }
+
+    // Expose refresh for after invoice creation or order changes.
+    window.refreshInvoices = () => renderInvoices(true);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initInvoiceFilters);
+  } else {
+    initInvoiceFilters();
+  }
+
+})();
+</script>
 
   
 
