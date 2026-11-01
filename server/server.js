@@ -3452,7 +3452,6 @@ app.post("/api/integrations/n8n/delivery-status", async (req, res) => {
 
 
 
-
 app.get("/api/invoices", authenticateUser, async (req, res) => {
   if (!supabase) {
     return res.status(503).json({
@@ -3472,6 +3471,7 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       });
     }
 
+    // Validate invoice status.
     const allowedStatuses = [
       "draft",
       "issued",
@@ -3491,58 +3491,34 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       });
     }
 
-    // Step 1: Retrieve invoices belonging to this workspace.
-    let query = supabase
-      .from("invoices")
-      .select(`
-        id,
-        workspace_id,
-        order_id,
-        invoice_number,
-        status,
-        customer_name,
-        customer_email,
-        customer_phone,
-        customer_address,
-        business_name,
-        business_email,
-        business_phone,
-        business_address,
-        currency,
-        subtotal,
-        discount_amount,
-        tax_amount,
-        shipping_amount,
-        total_amount,
-        issued_at,
-        due_at,
-        voided_at,
-        void_reason,
-        replaced_by_invoice_id,
-        created_at,
-        updated_at,
-        invoice_items (
-          id,
-          order_item_id,
-          product_name,
-          description,
-          options,
-          quantity,
-          unit_price,
-          line_total
-        )
-      `)
-      .eq("workspace_id", workspace.id)
-      .order("issued_at", { ascending: false });
+    // Pagination settings.
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const requestedOffset = Number.parseInt(req.query.offset, 10);
 
-    if (status !== "all") {
-      query = query.eq("status", status);
-    }
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.max(1, Math.min(requestedLimit, 100))
+      : 25;
 
-    const { data: invoices, error: invoiceError } = await query;
+    const offset = Number.isInteger(requestedOffset)
+      ? Math.max(0, requestedOffset)
+      : 0;
 
-    if (invoiceError) {
-      console.error("Invoice lookup failed:", invoiceError.message);
+    // Search across the complete workspace invoice dataset.
+    const search = typeof req.query.search === "string"
+      ? req.query.search.trim().slice(0, 200)
+      : "";
+
+    const { data: searchResults, error: searchError } =
+      await supabase.rpc("search_workspace_invoices", {
+        p_workspace_id: workspace.id,
+        p_search: search,
+        p_status: status,
+        p_limit: limit,
+        p_offset: offset
+      });
+
+    if (searchError) {
+      console.error("Invoice search failed:", searchError.message);
 
       return res.status(503).json({
         success: false,
@@ -3550,17 +3526,25 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       });
     }
 
-    // Step 2: Collect the order IDs associated with these invoices.
+    const resultRow = Array.isArray(searchResults)
+      ? searchResults[0]
+      : null;
+
+    const invoices = Array.isArray(resultRow?.invoices)
+      ? resultRow.invoices
+      : [];
+
+    const totalCount = Number(resultRow?.total_count || 0);
+
+    // Retrieve order numbers only for invoices in this page.
     const orderIds = [
       ...new Set(
-        (invoices || [])
+        invoices
           .map(invoice => invoice.order_id)
           .filter(Boolean)
       )
     ];
 
-    // Step 3: Retrieve the actual order numbers.
-    // Always restrict this lookup to the authenticated workspace.
     let orderNumberMap = new Map();
 
     if (orderIds.length > 0) {
@@ -3590,18 +3574,22 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
       );
     }
 
-    // Step 4: Attach the actual order number to every invoice.
-    const enrichedInvoices = (invoices || []).map(invoice => ({
+    // Attach order numbers and return the requested page.
+    const enrichedInvoices = invoices.map(invoice => ({
       ...invoice,
       order_number: invoice.order_id
         ? orderNumberMap.get(invoice.order_id) || null
         : null
     }));
 
-    // Step 5: Return the enriched invoices to the dashboard.
     return res.json({
       success: true,
-      invoices: enrichedInvoices
+      invoices: enrichedInvoices,
+      total: totalCount,
+      total_count: totalCount,
+      limit,
+      offset,
+      has_more: offset + enrichedInvoices.length < totalCount
     });
 
   } catch (error) {
@@ -3613,6 +3601,7 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
     });
   }
 });
+
 
 
 
