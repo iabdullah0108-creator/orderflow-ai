@@ -2738,7 +2738,7 @@ app.post(
           "order", "orders", "customer", "customers",
           "client", "clients", "product", "products",
           "item", "items", "containing", "contains",
-          "including", "number", "status", "total",
+          "including", "number", "name","status", "total",
           "all", "any", "older", "oldest", "newest",
           "latest", "recent", "pending", "paid",
           "completed", "complete", "processing",
