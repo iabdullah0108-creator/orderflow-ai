@@ -4781,6 +4781,27 @@ body.dark .of-confirm-cancel {
 
 
 
+  
+/* Orders loading progress bar */
+.of-orders-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-orders-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+
+
 
 
 
@@ -7352,9 +7373,23 @@ function renderOrderCards() {
     pagination.id = "orders-pagination";
 
     const info = make(
-      "div",
-      "of-orders-pagination-info"
-    );
+  "div",
+  "of-orders-pagination-info"
+);
+
+const progressTrack = make(
+  "div",
+  "of-orders-progress-track"
+);
+
+const progressBar = make(
+  "div",
+  "of-orders-progress-bar"
+);
+
+progressBar.id = "orders-progress-bar";
+
+progressTrack.append(progressBar);
 
     const paginationCount = make(
       "span",
@@ -7379,7 +7414,7 @@ function renderOrderCards() {
       fetchOrdersPage(true);
     });
 
-    pagination.append(info, button);
+    pagination.append(info, progressTrack, button);
 
     container.insertAdjacentElement("afterend", pagination);
   }
@@ -7397,6 +7432,19 @@ function renderOrderCards() {
     paginationCount.textContent =
       `${databaseOrdersForCards.length} of ${ordersTotalCount} orders loaded`;
   }
+
+  const progressBar = $("orders-progress-bar");
+
+if (progressBar) {
+  const percentage = ordersTotalCount > 0
+    ? Math.min(
+        100,
+        (databaseOrdersForCards.length / ordersTotalCount) * 100
+      )
+    : 0;
+
+  progressBar.style.width = `${percentage}%`;
+}
 
   if (button) {
     button.disabled = ordersLoading;
