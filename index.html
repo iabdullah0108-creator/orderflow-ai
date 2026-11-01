@@ -4878,6 +4878,78 @@ body.dark .of-confirm-cancel {
 
 
 
+  
+/* Invoice pagination */
+.of-invoices-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-invoices-pagination[hidden] {
+  display: none;
+}
+
+.of-invoices-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-invoices-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-invoices-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.of-invoices-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.of-invoices-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-invoices-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.of-invoices-load-more[hidden] {
+  display: none;
+}
+
 
 
 
@@ -7731,6 +7803,11 @@ async function renderOrders() {
 let databaseInvoicesForCards = [];
 let invoiceLoadSequence = 0;
 
+let invoiceTotalCount = 0;
+let invoiceHasMore = false;
+let invoiceLoading = false;
+let invoiceSearchTimer = null;
+
 function invoiceStatusLabel(status) {
   const value = String(status || "issued").toLowerCase();
   return value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " ");
@@ -8095,119 +8172,327 @@ function showInvoiceDetails(invoice) {
 function renderInvoiceCards() {
   const container = $("invoices-card-list");
   const count = $("invoices-result-count");
+
   if (!container) return;
 
-  const query = ($("invoices-search")?.value || "").trim().toLowerCase();
-  const selectedStatus = $("invoices-status-filter")?.value || "all";
-  const visible = databaseInvoicesForCards.filter(invoice => {
-    const searchable = [
-      invoice.invoice_number, invoice.order_number, invoice.customer_name,
-      invoice.customer_email, invoice.customer_phone, invoice.business_name,
-      invoice.status, invoice.total, invoice.currency
-    ].filter(Boolean).join(" ").toLowerCase();
-    return (!query || searchable.includes(query)) &&
-      (selectedStatus === "all" || String(invoice.status || "").toLowerCase() === selectedStatus);
-  });
+  // The backend already applies search and status filters.
+  // Render every invoice currently loaded.
+  const visible = databaseInvoicesForCards;
 
-  if (count) count.textContent = `${visible.length} of ${databaseInvoicesForCards.length} invoices`;
+  if (count) {
+    count.textContent =
+      `${visible.length} of ${invoiceTotalCount} invoices loaded`;
+  }
+
   container.replaceChildren();
 
   if (!visible.length) {
-    container.append(make("div", "of-record-empty",
-      databaseInvoicesForCards.length ? "No invoices match these filters." : "No invoices found. Create an order to generate its invoice."));
-    return;
+    container.append(
+      make(
+        "div",
+        "of-record-empty",
+        invoiceTotalCount === 0
+          ? "No invoices found. Create an order to generate its invoice."
+          : "No invoices found."
+      )
+    );
   }
 
   visible.forEach(invoice => {
     const row = make("article", "of-order-row");
 
+    row.classList.add("of-invoice-clickable");
+    row.setAttribute("role", "button");
+    row.setAttribute("tabindex", "0");
+    row.setAttribute(
+      "aria-label",
+      `Open invoice ${invoice.invoice_number || ""}`
+    );
 
+    row.addEventListener("click", () => {
+      showInvoiceDetails(invoice);
+    });
 
+    row.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showInvoiceDetails(invoice);
+      }
+    });
 
-    
-row.classList.add("of-invoice-clickable");
-row.setAttribute("role", "button");
-row.setAttribute("tabindex", "0");
-row.setAttribute(
-  "aria-label",
-  `Open invoice ${invoice.invoice_number || ""}`
-);
-
-row.addEventListener("click", () => {
-  showInvoiceDetails(invoice);
-});
-
-row.addEventListener("keydown", event => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    showInvoiceDetails(invoice);
-  }
-});
-
-
-    
-
-
-    
     const identity = make("div", "of-order-customer");
     identity.append(
       make("div", "", invoice.invoice_number || "Invoice"),
-      make("span", "of-order-number", invoice.customer_name || "Customer not recorded")
+      make(
+        "span",
+        "of-order-number",
+        invoice.customer_name || "Customer not recorded"
+      )
     );
 
     const order = make("div", "of-order-cell");
     order.append(
-      make("span", "", invoice.order_number || (invoice.order_id ? String(invoice.order_id).slice(0, 8) : "Order deleted / unavailable")),
+      make(
+        "span",
+        "",
+        invoice.order_number ||
+          (invoice.order_id
+            ? String(invoice.order_id).slice(0, 8)
+            : "Order deleted / unavailable")
+      ),
       make("span", "of-invoice-meta", "Order")
     );
 
     const date = make("div", "of-order-cell");
     date.append(
-      make("span", "", formatRecordDate(invoice.issued_at || invoice.created_at)),
+      make(
+        "span",
+        "",
+        formatRecordDate(invoice.issued_at || invoice.created_at)
+      ),
       make("span", "of-invoice-meta", "Issued")
     );
 
-    const total = make("div", "of-order-cell of-order-total", invoiceMoney(invoice));
+    const total = make(
+      "div",
+      "of-order-cell of-order-total",
+      invoiceMoney(invoice)
+    );
+
     const status = String(invoice.status || "issued").toLowerCase();
-    const badge = make("span", `of-order-status ${status} of-invoice-status`, invoiceStatusLabel(status));
+
+    const badge = make(
+      "span",
+      `of-order-status ${status} of-invoice-status`,
+      invoiceStatusLabel(status)
+    );
+
     row.append(identity, order, date, total, badge);
     container.append(row);
   });
+
+  // Create pagination controls only once.
+  let pagination = $("invoices-pagination");
+
+  if (!pagination) {
+    pagination = make("div", "of-invoices-pagination");
+    pagination.id = "invoices-pagination";
+
+    const info = make("div", "of-invoices-pagination-info");
+    info.id = "invoices-pagination-count";
+
+    const progressTrack = make(
+      "div",
+      "of-invoices-progress-track"
+    );
+
+    const progressBar = make(
+      "div",
+      "of-invoices-progress-bar"
+    );
+
+    progressBar.id = "invoices-progress-bar";
+    progressTrack.append(progressBar);
+
+    const button = make(
+      "button",
+      "of-invoices-load-more",
+      "Load more invoices"
+    );
+
+    button.id = "invoices-load-more";
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      fetchInvoicesPage(true);
+    });
+
+    pagination.append(info, progressTrack, button);
+    container.insertAdjacentElement("afterend", pagination);
+  }
+
+  const paginationCount = $("invoices-pagination-count");
+  const progressBar = $("invoices-progress-bar");
+  const loadMoreButton = $("invoices-load-more");
+
+  const loaded = databaseInvoicesForCards.length;
+  const percentage = invoiceTotalCount > 0
+    ? Math.min(100, (loaded / invoiceTotalCount) * 100)
+    : 0;
+
+  const remaining = Math.max(0, invoiceTotalCount - loaded);
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${loaded} of ${invoiceTotalCount} invoices loaded`;
+  }
+
+  if (progressBar) {
+    progressBar.style.width = `${percentage}%`;
+  }
+
+  if (loadMoreButton) {
+    loadMoreButton.textContent = invoiceLoading
+      ? "Loading invoices..."
+      : `Load more invoices (${remaining} remaining)`;
+
+    loadMoreButton.disabled = invoiceLoading;
+    loadMoreButton.hidden = !invoiceHasMore;
+  }
+
+  // Keep the progress bar visible at 100%.
+  // Hide the entire pagination section only when there are no results.
+  pagination.hidden = invoiceTotalCount === 0;
 }
+
+  
+
+async function fetchInvoicesPage(append = false) {
+  if (invoiceLoading && append) return;
+  if (append && !invoiceHasMore) return;
+
+  const container = $("invoices-card-list");
+  if (!container) return;
+
+  const thisLoad = ++invoiceLoadSequence;
+
+  invoiceLoading = true;
+
+  if (!append) {
+    databaseInvoicesForCards = [];
+    invoiceTotalCount = 0;
+    invoiceHasMore = false;
+    showRecordSkeleton(container, "orders");
+  }
+
+  renderInvoiceCards();
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in to load invoices.");
+    }
+
+    const search = $("invoices-search")?.value?.trim() || "";
+    const status = $("invoices-status-filter")?.value || "all";
+
+    const limit = 25;
+    const offset = append
+      ? databaseInvoicesForCards.length
+      : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search,
+      status
+    });
+
+    const response = await fetch(
+      `/api/invoices?${params.toString()}`,
+      {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not load invoices. Please try again."
+      );
+    }
+
+    // Ignore outdated requests.
+    if (thisLoad !== invoiceLoadSequence) return;
+
+    const newInvoices = Array.isArray(result.invoices)
+      ? result.invoices
+      : [];
+
+    if (append) {
+      databaseInvoicesForCards = [
+        ...databaseInvoicesForCards,
+        ...newInvoices
+      ];
+    } else {
+      databaseInvoicesForCards = newInvoices;
+    }
+
+    invoiceTotalCount = Number(
+      result.total_count ?? result.total ?? 0
+    );
+
+    invoiceHasMore = Boolean(result.has_more);
+
+    renderInvoiceCards();
+
+  } catch (error) {
+    if (thisLoad !== invoiceLoadSequence) return;
+
+    console.error("Could not load invoices:", error);
+
+    if (!append || databaseInvoicesForCards.length === 0) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load invoices."
+        )
+      );
+    } else {
+      console.error("Could not load the next invoice page.");
+    }
+
+  } finally {
+    if (thisLoad === invoiceLoadSequence) {
+      invoiceLoading = false;
+      renderInvoiceCards();
+    }
+  }
+}
+
 
 async function renderInvoices() {
   const container = $("invoices-card-list");
   if (!container) return;
 
-  const thisLoad = ++invoiceLoadSequence;
-  showRecordSkeleton(container, "orders");
+  const searchInput = $("invoices-search");
+  const statusFilter = $("invoices-status-filter");
 
-  try {
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
-    if (sessionError || !sessionData.session) throw new Error("Please sign in to load invoices.");
+  // Bind search once.
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
 
-    const response = await fetch("/api/invoices?status=all", {
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${sessionData.session.access_token}` }
+    searchInput.addEventListener("input", () => {
+      clearTimeout(invoiceSearchTimer);
+
+      // Invalidate any request for the previous search.
+      invoiceLoadSequence++;
+
+      invoiceSearchTimer = setTimeout(() => {
+        fetchInvoicesPage(false);
+      }, 350);
     });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || "Could not load invoices. Please try again.");
-    if (thisLoad !== invoiceLoadSequence) return;
-
-    databaseInvoicesForCards = Array.isArray(result.invoices) ? result.invoices : [];
-    const searchInput = $("invoices-search");
-    const statusFilter = $("invoices-status-filter");
-    if (searchInput) searchInput.oninput = renderInvoiceCards;
-    if (statusFilter) statusFilter.onchange = renderInvoiceCards;
-    renderInvoiceCards();
-  } catch (error) {
-    if (thisLoad !== invoiceLoadSequence) return;
-    console.error("Could not load invoices:", error);
-    container.replaceChildren(make("div", "of-record-empty", error.message || "Could not load invoices."));
-    const count = $("invoices-result-count");
-    if (count) count.textContent = "";
   }
+
+  // Bind status filter once.
+  if (statusFilter && !statusFilter.dataset.paginationBound) {
+    statusFilter.dataset.paginationBound = "true";
+
+    statusFilter.addEventListener("change", () => {
+      fetchInvoicesPage(false);
+    });
+  }
+
+  await fetchInvoicesPage(false);
 }
+
 
 
 
