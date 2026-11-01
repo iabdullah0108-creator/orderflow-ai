@@ -2753,15 +2753,16 @@ app.post(
         const stopWordSet = new Set(stopWords);
 
         return text
-          .replace(/[^\w\s@.+-]/g, " ")
-          .split(/\s+/)
-          .filter(word =>
-            word &&
-            !stopWordSet.has(word.toLowerCase())
-          )
-          .join(" ")
-          .trim()
-          .slice(0, 120);
+  .replace(/[^\w\s@.+-]/g, " ")
+  .split(/\s+/)
+  .map(word => word.replace(/[.,!?;:]+$/g, ""))
+  .filter(word =>
+    word &&
+    !stopWordSet.has(word.toLowerCase())
+  )
+  .join(" ")
+  .trim()
+  .slice(0, 120);
       }
 
       const searchTerm = extractSearchTerm(message);
