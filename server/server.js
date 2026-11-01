@@ -1385,205 +1385,185 @@ app.post("/api/customers", authenticateUser, async (req, res) => {
 
 
 
+
 app.get("/api/orders", authenticateUser, async (req, res) => {
-
   if (!supabase) {
-
     return res.status(503).json({
-
       error: "Database is not configured."
-
     });
-
   }
 
-
-
   try {
-
     // Resolve the signed-in user's workspace.
-
     const { workspace, error: workspaceError } =
-
       await getUserWorkspace(req.user.id);
 
-
-
     if (workspaceError || !workspace) {
-
       return res.status(403).json({
-
         error: "No valid workspace access found."
-
       });
-
     }
-
-
 
     const workspaceId = workspace.id;
 
+    // Read and validate pagination and search parameters.
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const requestedOffset = Number.parseInt(req.query.offset, 10);
 
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.max(1, Math.min(requestedLimit, 100))
+      : 25;
 
-    // Only retrieve orders belonging to this workspace.
+    const offset = Number.isInteger(requestedOffset)
+      ? Math.max(0, requestedOffset)
+      : 0;
 
-    const { data: orders, error: ordersError } = await supabase
+    const search = typeof req.query.search === "string"
+      ? req.query.search.trim().slice(0, 200)
+      : "";
 
-      .from("orders")
+    const status = typeof req.query.status === "string"
+      ? req.query.status.trim().toLowerCase()
+      : "all";
 
-      .select("id, order_number, status, total, currency, customer_id, shipping_address, created_at")
-
-
-      .eq("workspace_id", workspaceId)
-
-      .order("created_at", { ascending: false })
-
-      .limit(100);
-
-
-
-    if (ordersError) {
-
-      console.error("Orders query failed:", ordersError.message);
-
-      return res.status(503).json({
-
-        error: "Could not load orders."
-
+    // Search and paginate across the complete workspace dataset.
+    const { data: searchResults, error: searchError } =
+      await supabase.rpc("search_workspace_orders", {
+        p_workspace_id: workspaceId,
+        p_search: search,
+        p_status: status || "all",
+        p_limit: limit,
+        p_offset: offset
       });
 
-    }
-
-
-
-    // Only retrieve customers belonging to this workspace.
-
-    const { data: customers, error: customersError } = await supabase
-
-      .from("customers")
-
-      .select("id, name, email")
-
-      .eq("workspace_id", workspaceId);
-
-
-
-    if (customersError) {
-
-      console.error("Customer lookup failed:", customersError.message);
+    if (searchError) {
+      console.error("Orders search failed:", searchError.message);
 
       return res.status(503).json({
-
-        error: "Could not load order customers."
-
+        error: "Could not search workspace orders."
       });
-
     }
 
+    // The SQL function returns one result row containing the page
+    // of orders and the total number of matching orders.
+    const resultRow = Array.isArray(searchResults)
+      ? searchResults[0]
+      : null;
 
+    const orders = Array.isArray(resultRow?.orders)
+      ? resultRow.orders
+      : [];
 
-    const customerMap = new Map(
+    const totalCount = Number(resultRow?.total_count || 0);
 
-      customers.map(customer => [customer.id, customer])
+    // Only retrieve customers associated with this page of orders.
+    const customerIds = [
+      ...new Set(
+        orders
+          .map(order => order.customer_id)
+          .filter(Boolean)
+      )
+    ];
 
-    );
+    let customers = [];
 
+    if (customerIds.length > 0) {
+      const { data, error: customersError } = await supabase
+        .from("customers")
+        .select("id, name, email")
+        .eq("workspace_id", workspaceId)
+        .in("id", customerIds);
 
-
-    // Load items only for the orders returned above.
-
-    let items = [];
-
-
-
-    if (orders.length > 0) {
-
-      const { data, error: itemsError } = await supabase
-
-        .from("order_items")
-
-        .select(
-
-          "id, order_id, product_name, quantity, unit_price, options"
-
-        )
-
-        .in("order_id", orders.map(order => order.id));
-
-
-
-      if (itemsError) {
-
-        console.error("Order items query failed:", itemsError.message);
+      if (customersError) {
+        console.error(
+          "Order customer lookup failed:",
+          customersError.message
+        );
 
         return res.status(503).json({
-
-          error: "Could not load order items."
-
+          error: "Could not load order customers."
         });
-
       }
 
-
-
-      items = data;
-
+      customers = data || [];
     }
 
+    const customerMap = new Map(
+      customers.map(customer => [customer.id, customer])
+    );
 
+    // Retrieve items only for the workspace-owned orders on this page.
+    let items = [];
 
+    if (orders.length > 0) {
+      const { data, error: itemsError } = await supabase
+        .from("order_items")
+        .select(
+          "id, order_id, product_name, quantity, unit_price, options"
+        )
+        .in("order_id", orders.map(order => order.id));
+
+      if (itemsError) {
+        console.error(
+          "Order items query failed:",
+          itemsError.message
+        );
+
+        return res.status(503).json({
+          error: "Could not load order items."
+        });
+      }
+
+      items = data || [];
+    }
+
+    // Group items by order so we don't repeatedly filter the full list.
+    const itemsByOrder = new Map();
+
+    for (const item of items) {
+      if (!itemsByOrder.has(item.order_id)) {
+        itemsByOrder.set(item.order_id, []);
+      }
+
+      itemsByOrder.get(item.order_id).push({
+        id: item.id,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        options: item.options
+      });
+    }
+
+    // Preserve the existing response structure used by the Orders UI.
     const enrichedOrders = orders.map(order => ({
-
       ...order,
 
       customers: customerMap.has(order.customer_id)
-
         ? {
-
             name: customerMap.get(order.customer_id).name,
-
             email: customerMap.get(order.customer_id).email
-
           }
-
         : null,
 
-      items: items
-
-        .filter(item => item.order_id === order.id)
-
-        .map(item => ({
-
-          id: item.id,
-
-          product_name: item.product_name,
-
-          quantity: item.quantity,
-
-          unit_price: item.unit_price,
-
-          options: item.options
-
-        }))
-
+      items: itemsByOrder.get(order.id) || []
     }));
 
-
-
-    return res.json({ orders: enrichedOrders });
+    return res.json({
+      orders: enrichedOrders,
+      total: totalCount,
+      total_count: totalCount,
+      limit,
+      offset,
+      has_more: offset + enrichedOrders.length < totalCount
+    });
 
   } catch (error) {
-
     console.error("Orders endpoint failed:", error.message);
 
     return res.status(500).json({
-
       error: "Could not load orders."
-
     });
-
   }
-
 });
 
 
