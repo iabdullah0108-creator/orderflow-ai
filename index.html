@@ -7617,7 +7617,7 @@ if (progressBar) {
       : `Load more orders (${remaining} remaining)`;
   }
 
-  pagination.hidden = !ordersHasMore && !ordersLoading;
+  pagination.hidden = ordersTotalCount === 0;
 }
 
 
@@ -7743,28 +7743,34 @@ async function fetchOrdersPage(append = false) {
     }
 
   } finally {
-  if (requestId === ordersRequestSequence) {
-    ordersLoading = false;
+  
+if (requestId === ordersRequestSequence) {
+  ordersLoading = false;
 
-    const button = $("orders-load-more");
-    const pagination = $("orders-pagination");
+  const button = $("orders-load-more");
+  const pagination = $("orders-pagination");
 
-    const remaining = Math.max(
-      0,
-      ordersTotalCount - databaseOrdersForCards.length
-    );
+  const remaining = Math.max(
+    0,
+    ordersTotalCount - databaseOrdersForCards.length
+  );
 
-    if (button) {
-      button.disabled = false;
+  if (button) {
+    button.disabled = false;
 
-      button.textContent =
-        `Load more orders (${remaining} remaining)`;
-    }
+    button.textContent =
+      `Load more orders (${remaining} remaining)`;
 
-    if (pagination) {
-      pagination.hidden = !ordersHasMore;
-    }
+    // Hide only the button when all orders are loaded.
+    button.hidden = !ordersHasMore;
   }
+
+  // Keep the progress bar and loaded count visible.
+  if (pagination) {
+    pagination.hidden = ordersTotalCount === 0;
+  }
+}
+
 }
 }
 
@@ -8454,12 +8460,36 @@ async function fetchInvoicesPage(append = false) {
       console.error("Could not load the next invoice page.");
     }
 
-  } finally {
-    if (thisLoad === invoiceLoadSequence) {
-      invoiceLoading = false;
-      renderInvoiceCards();
+  } 
+finally {
+  if (thisLoad === invoiceLoadSequence) {
+    invoiceLoading = false;
+
+    const button = $("invoices-load-more");
+    const pagination = $("invoices-pagination");
+
+    const remaining = Math.max(
+      0,
+      invoiceTotalCount - databaseInvoicesForCards.length
+    );
+
+    if (button) {
+      button.disabled = false;
+
+      button.textContent =
+        `Load more invoices (${remaining} remaining)`;
+
+      button.hidden = !invoiceHasMore;
     }
+
+    if (pagination) {
+      pagination.hidden = invoiceTotalCount === 0;
+    }
+
+    renderInvoiceCards();
   }
+}
+
 }
 
 
@@ -9196,31 +9226,34 @@ async function fetchCustomersPage(append = false) {
       );
     }
 
-  } finally {
-    if (requestId === customersRequestSequence) {
-      customersLoading = false;
+  } 
+if (requestId === customersRequestSequence) {
+  customersLoading = false;
 
-      const button = $("customers-load-more");
-      const pagination = $("customers-pagination");
+  const button = $("customers-load-more");
+  const pagination = $("customers-pagination");
 
-      const remaining = Math.max(
-        0,
-        customersTotalCount - databaseCustomersForCards.length
-      );
+  const remaining = Math.max(
+    0,
+    customersTotalCount - databaseCustomersForCards.length
+  );
 
-      if (button) {
-        button.disabled = false;
-        button.hidden = !customersHasMore;
+  if (button) {
+    button.disabled = false;
 
-        button.textContent =
-          `Load more customers (${remaining} remaining)`;
-      }
+    button.textContent =
+      `Load more customers (${remaining} remaining)`;
 
-      if (pagination) {
-        pagination.hidden = customersTotalCount === 0;
-      }
-    }
+    // Hide only the button when all customers are loaded.
+    button.hidden = !customersHasMore;
   }
+
+  // Keep the progress bar and loaded count visible.
+  if (pagination) {
+    pagination.hidden = customersTotalCount === 0;
+  }
+}
+
 }
 
 
