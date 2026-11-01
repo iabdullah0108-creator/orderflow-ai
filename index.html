@@ -8175,6 +8175,11 @@ function renderInvoiceCards() {
 
   if (!container) return;
 
+  // Keep the loading skeleton visible while the first request is running.
+  if (invoiceLoading && databaseInvoicesForCards.length === 0) {
+    return;
+  }
+
   // The backend already applies search and status filters.
   // Render every invoice currently loaded.
   const visible = databaseInvoicesForCards;
