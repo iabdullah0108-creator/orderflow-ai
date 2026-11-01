@@ -4718,11 +4718,64 @@ body.dark .of-confirm-cancel {
 }
 
 
+
+  
+/* =========================================
+   ORDERFLOW AI — Load more orders
+========================================= */
   
 
 
 
   
+/* Orders pagination section */
+.of-orders-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-orders-pagination[hidden] {
+  display: none;
+}
+
+.of-orders-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-orders-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.of-orders-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-orders-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 
 
 
@@ -7291,33 +7344,71 @@ function renderOrderCards() {
     container.append(row);
   });
 
-  // Create the Load more button automatically.
-  let loadMoreButton = $("orders-load-more");
+  // Create the pagination section once.
+  let pagination = $("orders-pagination");
 
-  if (!loadMoreButton) {
-    loadMoreButton = make(
+  if (!pagination) {
+    pagination = make("div", "of-orders-pagination");
+    pagination.id = "orders-pagination";
+
+    const info = make(
+      "div",
+      "of-orders-pagination-info"
+    );
+
+    const paginationCount = make(
+      "span",
+      "",
+      ""
+    );
+
+    paginationCount.id = "orders-pagination-count";
+
+    info.append(paginationCount);
+
+    const button = make(
       "button",
-      "btn btn-secondary",
+      "of-orders-load-more",
       "Load more orders"
     );
 
-    loadMoreButton.id = "orders-load-more";
-    loadMoreButton.type = "button";
+    button.id = "orders-load-more";
+    button.type = "button";
 
-    container.insertAdjacentElement("afterend", loadMoreButton);
-
-    loadMoreButton.addEventListener("click", () => {
+    button.addEventListener("click", () => {
       fetchOrdersPage(true);
     });
+
+    pagination.append(info, button);
+
+    container.insertAdjacentElement("afterend", pagination);
   }
 
-  loadMoreButton.hidden = !ordersHasMore;
-  loadMoreButton.disabled = ordersLoading;
+  // Update pagination information.
+  const remaining = Math.max(
+    0,
+    ordersTotalCount - databaseOrdersForCards.length
+  );
 
-  loadMoreButton.textContent = ordersLoading
-    ? "Loading..."
-    : "Load more orders";
+  const paginationCount = $("orders-pagination-count");
+  const button = $("orders-load-more");
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${databaseOrdersForCards.length} of ${ordersTotalCount} orders loaded`;
+  }
+
+  if (button) {
+    button.disabled = ordersLoading;
+
+    button.textContent = ordersLoading
+      ? "Loading orders..."
+      : `Load more orders (${remaining} remaining)`;
+  }
+
+  pagination.hidden = !ordersHasMore && !ordersLoading;
 }
+
 
 
 async function fetchOrdersPage(append = false) {
@@ -7441,18 +7532,29 @@ async function fetchOrdersPage(append = false) {
     }
 
   } finally {
-    if (requestId === ordersRequestSequence) {
-      ordersLoading = false;
+  if (requestId === ordersRequestSequence) {
+    ordersLoading = false;
 
-      const button = $("orders-load-more");
+    const button = $("orders-load-more");
+    const pagination = $("orders-pagination");
 
-      if (button) {
-        button.disabled = false;
-        button.hidden = !ordersHasMore;
-        button.textContent = "Load more orders";
-      }
+    const remaining = Math.max(
+      0,
+      ordersTotalCount - databaseOrdersForCards.length
+    );
+
+    if (button) {
+      button.disabled = false;
+
+      button.textContent =
+        `Load more orders (${remaining} remaining)`;
+    }
+
+    if (pagination) {
+      pagination.hidden = !ordersHasMore;
     }
   }
+}
 }
 
 
