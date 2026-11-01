@@ -781,82 +781,94 @@ app.get("/api/db-health", async (req, res) => {
 
 
 app.get("/api/customers", authenticateUser, async (req, res) => {
-
   if (!supabase) {
-
     return res.status(503).json({
-
       error: "Database is not configured."
-
     });
-
   }
-
-
 
   try {
-
     const { workspace, error: workspaceError } =
-
       await getUserWorkspace(req.user.id);
 
-
-
     if (workspaceError || !workspace) {
-
       return res.status(403).json({
-
         error: "No valid workspace access found."
-
       });
-
     }
 
+    const workspaceId = workspace.id;
 
+    // Pagination parameters.
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const requestedOffset = Number.parseInt(req.query.offset, 10);
 
-    const { data, error } = await supabase
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.max(1, Math.min(requestedLimit, 100))
+      : 25;
 
-      .from("customers")
+    const offset = Number.isInteger(requestedOffset)
+      ? Math.max(0, requestedOffset)
+      : 0;
 
-      .select("id, name, email, phone, address, created_at")
+    // Search across the complete workspace customer database.
+    const search = typeof req.query.search === "string"
+      ? req.query.search.trim().slice(0, 200)
+      : "";
 
-      .eq("workspace_id", workspace.id)
+    const { data: searchResults, error: searchError } =
+      await supabase.rpc("search_workspace_customers", {
+        p_workspace_id: workspaceId,
+        p_search: search,
+        p_limit: limit,
+        p_offset: offset
+      });
 
-      .order("created_at", { ascending: false })
-
-      .limit(100);
-
-
-
-    if (error) {
-
-      console.error("Customer query failed:", error.message);
+    if (searchError) {
+      console.error(
+        "Customer search failed:",
+        searchError.message
+      );
 
       return res.status(503).json({
-
-        error: "Could not load customers."
-
+        error: "Could not search workspace customers."
       });
-
     }
 
+    const resultRow = Array.isArray(searchResults)
+      ? searchResults[0]
+      : null;
 
+    const customers = Array.isArray(resultRow?.customers)
+      ? resultRow.customers
+      : [];
 
-    return res.json({ customers: data });
+    const totalCount = Number(resultRow?.total_count || 0);
 
-  } catch (error) {
-
-    console.error("Customer endpoint failed:", error.message);
-
-    return res.status(500).json({
-
-      error: "Could not load customers."
-
+    return res.json({
+      customers,
+      total: totalCount,
+      total_count: totalCount,
+      limit,
+      offset,
+      has_more: offset + customers.length < totalCount
     });
 
-  }
+  } catch (error) {
+    console.error(
+      "Customer endpoint failed:",
+      error.message
+    );
 
+    return res.status(500).json({
+      error: "Could not load customers."
+    });
+  }
 });
+
+
+
+
 
 
 
