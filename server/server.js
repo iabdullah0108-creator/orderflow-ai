@@ -1622,407 +1622,131 @@ app.get("/api/orders", authenticateUser, async (req, res) => {
 
 
 
+
 app.post("/api/orders", authenticateUser, async (req, res) => {
-
   if (!supabase) {
-
     return res.status(503).json({
-
       error: "Database is not configured."
-
     });
-
   }
 
-
-
   try {
-
-    // Resolve the authenticated user's workspace.
-
     const { workspace, error: workspaceError } =
-
       await getUserWorkspace(req.user.id);
 
-
-
     if (workspaceError || !workspace) {
-
       return res.status(403).json({
-
         error: "No valid workspace access found."
-
       });
-
     }
-
-
-
-    const workspaceId = workspace.id;
-
-
 
     const {
-
       customer_id,
-
       items,
-
-      currency = "PKR",
-
       shipping_address
-
     } = req.body || {};
 
-
-
-    const allowedCurrencies = [
-
-      "USD", "PKR", "GBP", "EUR", "AED", "CAD", "AUD"
-
-    ];
-
-
-
     if (
-
-      typeof currency !== "string" ||
-
-      !allowedCurrencies.includes(currency)
-
-    ) {
-
-      return res.status(400).json({
-
-        error: "Please select a supported currency."
-
-      });
-
-    }
-
-
-
-    if (
-
-      shipping_address !== undefined &&
-
-      (typeof shipping_address !== "string" ||
-
-        shipping_address.trim().length > 500)
-
-    ) {
-
-      return res.status(400).json({
-
-        error: "The shipping address is invalid."
-
-      });
-
-    }
-
-
-
-    if (
-
       typeof customer_id !== "string" ||
-
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customer_id)
-
     ) {
-
       return res.status(400).json({
-
         error: "Please select a valid customer."
-
       });
-
     }
-
-
 
     if (
-
-      !Array.isArray(items) ||
-
-      items.length === 0 ||
-
-      items.length > 50
-
+      shipping_address !== undefined &&
+      (typeof shipping_address !== "string" ||
+        shipping_address.trim().length > 500)
     ) {
-
       return res.status(400).json({
-
-        error: "An order must contain between 1 and 50 items."
-
+        error: "The shipping address is invalid."
       });
-
     }
 
-
+    if (
+      !Array.isArray(items) ||
+      items.length < 1 ||
+      items.length > 50
+    ) {
+      return res.status(400).json({
+        error: "An order must contain between 1 and 50 items."
+      });
+    }
 
     const validatedItems = [];
 
-
-
     for (const item of items) {
-
       if (
-
         !item ||
-
         typeof item.product_name !== "string" ||
-
         !item.product_name.trim() ||
-
         item.product_name.trim().length > 150 ||
-
         !Number.isSafeInteger(item.quantity) ||
-
         item.quantity < 1 ||
-
         item.quantity > 999 ||
-
         typeof item.unit_price !== "number" ||
-
         !Number.isFinite(item.unit_price) ||
-
         item.unit_price < 0 ||
-
-        item.unit_price > 100000000
-
+        item.unit_price > 100000000 ||
+        (item.options != null &&
+          typeof item.options !== "string")
       ) {
-
         return res.status(400).json({
-
           error: "One or more order items are invalid."
-
         });
-
       }
-
-
 
       validatedItems.push({
-
         product_name: item.product_name.trim(),
-
         quantity: item.quantity,
-
         unit_price: item.unit_price,
-
-        options:
-
-          typeof item.options === "string"
-
-            ? item.options.trim().slice(0, 500)
-
-            : ""
-
+        options: (item.options || "").trim().slice(0, 500)
       });
-
     }
 
-
-
-    // The customer must belong to this exact workspace.
-
-    const { data: customer, error: customerError } = await supabase
-
-      .from("customers")
-
-      .select("id, address")
-
-      .eq("id", customer_id)
-
-      .eq("workspace_id", workspaceId)
-
-      .maybeSingle();
-
-
-
-    if (customerError) {
-
-      console.error("Customer validation failed:", customerError.message);
-
-      return res.status(503).json({
-
-        error: "Could not validate the selected customer."
-
-      });
-
-    }
-
-
-
-    if (!customer) {
-
-      return res.status(400).json({
-
-        error: "The selected customer does not exist in your workspace."
-
-      });
-
-    }
-
-
-
-    const total = Math.round(
-
-      validatedItems.reduce(
-
-        (sum, item) => sum + item.quantity * item.unit_price,
-
-        0
-
-      ) * 100
-
-    ) / 100;
-
-
-
-    const orderNumber =
-
-      `OF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-
-
-    // Save the order with its workspace ownership.
-
-    const { data: order, error: orderError } = await supabase
-
-      .from("orders")
-
-      .insert({
-
-        workspace_id: workspaceId,
-
-        customer_id,
-
-        order_number: orderNumber,
-
-        status: "pending",
-
-        total,
-
-        currency,
-
-        shipping_address:
-
+    // Create the order, order items, invoice and invoice
+    // item snapshots together in one database transaction.
+    const { data, error } = await supabase.rpc(
+      "create_order_with_invoice",
+      {
+        p_workspace_id: workspace.id,
+        p_customer_id: customer_id,
+        p_items: validatedItems,
+        p_shipping_address:
           shipping_address !== undefined
-
             ? shipping_address.trim() || null
-
-            : customer.address || null
-
-      })
-
-      .select(
-
-        "id, order_number, status, total, currency, customer_id, shipping_address, created_at"
-
-      )
-
-      .single();
-
-
-
-    if (orderError) {
-
-      console.error("Order creation failed:", orderError.message);
-
-      return res.status(503).json({
-
-        error: "Could not save the order."
-
-      });
-
-    }
-
-
-
-    const itemsToInsert = validatedItems.map(item => ({
-
-      order_id: order.id,
-
-      product_name: item.product_name,
-
-      quantity: item.quantity,
-
-      unit_price: item.unit_price,
-
-      options: item.options || null
-
-    }));
-
-
-
-    const { error: itemsError } = await supabase
-
-      .from("order_items")
-
-      .insert(itemsToInsert);
-
-
-
-    if (itemsError) {
-
-      console.error("Order items creation failed:", itemsError.message);
-
-
-
-      const { error: cleanupError } = await supabase
-
-        .from("orders")
-
-        .delete()
-
-        .eq("id", order.id)
-
-        .eq("workspace_id", workspaceId);
-
-
-
-      if (cleanupError) {
-
-        console.error("Order cleanup failed:", cleanupError.message);
-
+            : null,
+        p_user_email: req.user.email || null
       }
+    );
 
-
+    if (error) {
+      console.error("Order and invoice creation failed:", error);
 
       return res.status(503).json({
-
-        error: "Could not save the order items. Please check before retrying."
-
+        error: "Could not create the order and invoice. No order was saved."
       });
-
     }
-
-
 
     return res.status(201).json({
-
-      message: "Order created successfully.",
-
-      order
-
+      message: "Order and invoice created successfully.",
+      order: data.order,
+      invoice: data.invoice
     });
 
   } catch (error) {
-
     console.error("Order creation endpoint failed:", error.message);
 
-
-
     return res.status(500).json({
-
-      error: "Could not create the order."
-
+      error: "Could not create the order and invoice."
     });
-
   }
-
 });
+
+
+
 
 app.put("/api/orders/:id", authenticateUser, async (req, res) => {
   if (!supabase) {
