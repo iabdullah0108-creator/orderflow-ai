@@ -6470,6 +6470,12 @@ function showRecordSkeleton(container, type) {
 
 
 let databaseOrdersForCards = [];
+  let ordersTotalCount = 0;
+let ordersOffset = 0;
+let ordersHasMore = false;
+let ordersLoading = false;
+let ordersSearchTimer = null;
+let ordersRequestSequence = 0;
 let databaseCustomersForCards = [];
 
 function addRecordField(card, label, value) {
@@ -7191,45 +7197,14 @@ async function changeOrderStatus(order, newStatus) {
 
 function renderOrderCards() {
   const container = $("orders-card-list");
-  const searchInput = $("orders-search");
-  const statusFilter = $("orders-status-filter");
   const count = $("orders-result-count");
 
-  if (!container || !searchInput || !count) return;
+  if (!container || !count) return;
 
-  const query = searchInput.value.trim().toLowerCase();
-  const selectedStatus = statusFilter?.value || "all";
-
-  const visibleOrders = databaseOrdersForCards.filter(order => {
-    const customerName = order.customers?.name || "";
-    const itemText = (order.items || [])
-      .map(item => [
-        item.product_name,
-        item.options,
-        item.quantity
-      ].filter(Boolean).join(" "))
-      .join(" ");
-
-    const searchableText = [
-      order.order_number,
-      order.id,
-      customerName,
-      order.status,
-      order.currency,
-      order.total,
-      itemText
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    const matchesSearch = searchableText.includes(query);
-    const matchesStatus =
-      selectedStatus === "all" ||
-      normalizeOrderStatus(order.status) === selectedStatus;
-
-    return matchesSearch && matchesStatus;
-  });
+  const visibleOrders = databaseOrdersForCards;
 
   count.textContent =
-    `${visibleOrders.length} of ${databaseOrdersForCards.length} orders`;
+    `Showing ${visibleOrders.length} of ${ordersTotalCount} orders`;
 
   container.replaceChildren();
 
@@ -7237,11 +7212,10 @@ function renderOrderCards() {
     container.append(make(
       "div",
       "of-record-empty",
-      databaseOrdersForCards.length
-        ? "No orders match these filters."
-        : "No orders found. Create an order to get started."
+      ordersTotalCount === 0
+        ? "No orders found. Create an order to get started."
+        : "No orders match these filters."
     ));
-    return;
   }
 
   visibleOrders.forEach(order => {
@@ -7273,7 +7247,11 @@ function renderOrderCards() {
       make("span", "of-order-items-count", "Quantity")
     );
 
-    const total = make("div", "of-order-cell of-order-total", orderMoney(order));
+    const total = make(
+      "div",
+      "of-order-cell of-order-total",
+      orderMoney(order)
+    );
 
     const badge = make(
       "span",
@@ -7300,6 +7278,7 @@ function renderOrderCards() {
     row.append(customer, date, itemCount, total, badge, actions);
 
     row.addEventListener("click", () => showOrderDetails(order));
+
     row.addEventListener("keydown", event => {
       if (event.target !== row) return;
 
@@ -7311,14 +7290,63 @@ function renderOrderCards() {
 
     container.append(row);
   });
+
+  // Create the Load more button automatically.
+  let loadMoreButton = $("orders-load-more");
+
+  if (!loadMoreButton) {
+    loadMoreButton = make(
+      "button",
+      "btn btn-secondary",
+      "Load more orders"
+    );
+
+    loadMoreButton.id = "orders-load-more";
+    loadMoreButton.type = "button";
+
+    container.insertAdjacentElement("afterend", loadMoreButton);
+
+    loadMoreButton.addEventListener("click", () => {
+      fetchOrdersPage(true);
+    });
+  }
+
+  loadMoreButton.hidden = !ordersHasMore;
+  loadMoreButton.disabled = ordersLoading;
+
+  loadMoreButton.textContent = ordersLoading
+    ? "Loading..."
+    : "Load more orders";
 }
 
 
-async function renderOrders() {
+async function fetchOrdersPage(append = false) {
+  if (append && (ordersLoading || !ordersHasMore)) return;
+
   const container = $("orders-card-list");
+  const count = $("orders-result-count");
+
   if (!container) return;
 
-  showRecordSkeleton(container, "orders");
+  const requestId = ++ordersRequestSequence;
+
+  ordersLoading = true;
+
+  if (!append) {
+    ordersOffset = 0;
+    databaseOrdersForCards = [];
+    ordersTotalCount = 0;
+    ordersHasMore = false;
+
+    showRecordSkeleton(container, "orders");
+  }
+
+  const loadMoreButton = $("orders-load-more");
+
+  if (loadMoreButton) {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Loading...";
+  }
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -7328,11 +7356,30 @@ async function renderOrders() {
       throw new Error("Please sign in to load orders.");
     }
 
-    const response = await fetch("/api/orders", {
-      headers: {
-        Authorization: `Bearer ${sessionData.session.access_token}`
-      }
+    const searchInput = $("orders-search");
+    const statusFilter = $("orders-status-filter");
+
+    const search = searchInput?.value.trim() || "";
+    const status = statusFilter?.value || "all";
+
+    const limit = 25;
+    const offset = append ? databaseOrdersForCards.length : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search,
+      status
     });
+
+    const response = await fetch(
+      `/api/orders?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
 
     const result = await response.json().catch(() => ({}));
 
@@ -7342,32 +7389,103 @@ async function renderOrders() {
       );
     }
 
-    databaseOrdersForCards = Array.isArray(result.orders)
+    // Ignore outdated responses if the user has changed their search.
+    if (requestId !== ordersRequestSequence) return;
+
+    const newOrders = Array.isArray(result.orders)
       ? result.orders
       : [];
 
-    const searchInput = $("orders-search");
-    const statusFilter = $("orders-status-filter");
+    if (append) {
+      databaseOrdersForCards = [
+        ...databaseOrdersForCards,
+        ...newOrders
+      ];
+    } else {
+      databaseOrdersForCards = newOrders;
+    }
 
-    if (searchInput) searchInput.oninput = renderOrderCards;
-    if (statusFilter) statusFilter.onchange = renderOrderCards;
-
-    renderOrderCards();
-  } catch (error) {
-    console.error("Could not load orders:", error);
-
-    container.replaceChildren(
-      make(
-        "div",
-        "of-record-empty",
-        error.message || "Could not load orders. Please try again."
-      )
+    ordersTotalCount = Number(
+      result.total_count ?? result.total ?? 0
     );
 
-    const count = $("orders-result-count");
-    if (count) count.textContent = "";
+    ordersOffset = databaseOrdersForCards.length;
+
+    ordersHasMore = Boolean(result.has_more);
+
+    renderOrderCards();
+
+  } catch (error) {
+    if (requestId !== ordersRequestSequence) return;
+
+    console.error("Could not load orders:", error);
+
+    if (!append) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load orders. Please try again."
+        )
+      );
+
+      if (count) count.textContent = "";
+    } else {
+      const errorMessage = make(
+        "div",
+        "of-record-empty",
+        error.message || "Could not load more orders."
+      );
+
+      container.append(errorMessage);
+    }
+
+  } finally {
+    if (requestId === ordersRequestSequence) {
+      ordersLoading = false;
+
+      const button = $("orders-load-more");
+
+      if (button) {
+        button.disabled = false;
+        button.hidden = !ordersHasMore;
+        button.textContent = "Load more orders";
+      }
+    }
   }
 }
+
+
+async function renderOrders() {
+  const searchInput = $("orders-search");
+  const statusFilter = $("orders-status-filter");
+
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(ordersSearchTimer);
+
+      // Invalidate any request using the previous search.
+      ordersRequestSequence++;
+
+      ordersSearchTimer = setTimeout(() => {
+        fetchOrdersPage(false);
+      }, 350);
+    });
+  }
+
+  if (statusFilter && !statusFilter.dataset.paginationBound) {
+    statusFilter.dataset.paginationBound = "true";
+
+    statusFilter.addEventListener("change", () => {
+      fetchOrdersPage(false);
+    });
+  }
+
+  await fetchOrdersPage(false);
+}
+
 
 let databaseInvoicesForCards = [];
 let invoiceLoadSequence = 0;
