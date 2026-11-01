@@ -4371,6 +4371,358 @@ body.dark .of-confirm-cancel {
 
 
 
+
+
+
+
+
+
+
+  
+/* =========================================
+   PREMIUM INVOICE DETAILS POPUP
+========================================= */
+
+#of-order-dialog:has(.of-invoice-detail) .of-order-dialog-card {
+  width: min(100%, 820px);
+  max-height: min(88vh, 900px);
+  padding: 24px;
+}
+
+.of-invoice-clickable {
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.of-invoice-clickable:hover {
+  background: var(--surface-hover, rgba(100, 116, 139, 0.07));
+}
+
+.of-invoice-clickable:focus-visible {
+  outline: 2px solid var(--primary, #6366f1);
+  outline-offset: 3px;
+}
+
+.of-invoice-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--text, #202938);
+}
+
+.of-invoice-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.of-invoice-detail-eyebrow {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+  color: var(--muted, #64748b);
+  margin-bottom: 7px;
+}
+
+.of-invoice-detail-number {
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-detail-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: capitalize;
+  background: var(--surface-hover, #f1f5f9);
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.of-invoice-detail-status.issued {
+  color: #15803d;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.of-invoice-detail-status.paid {
+  color: #0369a1;
+  background: #e0f2fe;
+  border-color: #bae6fd;
+}
+
+.of-invoice-detail-status.overdue,
+.of-invoice-detail-status.voided {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.of-invoice-detail-status.draft {
+  color: #a16207;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.of-invoice-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.of-invoice-detail-stat {
+  padding: 15px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+
+.of-invoice-detail-stat-label {
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted, #64748b);
+  margin-bottom: 7px;
+}
+
+.of-invoice-detail-stat-value {
+  font-size: 14px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-parties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.of-invoice-detail-panel {
+  padding: 17px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 13px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+
+.of-invoice-detail-panel-title {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted, #64748b);
+  margin-bottom: 12px;
+}
+
+.of-invoice-detail-party-name {
+  font-size: 15px;
+  font-weight: 750;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-party-info {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted, #64748b);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.of-invoice-items-heading {
+  font-size: 14px;
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+
+.of-invoice-items-table {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.of-invoice-items-header,
+.of-invoice-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 65px 115px 115px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.of-invoice-items-header {
+  background: var(--surface-hover, #f8fafc);
+  color: var(--muted, #64748b);
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.of-invoice-item-row {
+  border-top: 1px solid var(--border, #e2e8f0);
+  font-size: 12px;
+}
+
+.of-invoice-item-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-item-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-item-number,
+.of-invoice-item-money {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: min(100%, 340px);
+  margin-left: auto;
+  padding: 17px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 13px;
+  background: var(--surface, #fff);
+}
+
+.of-invoice-total-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-total-line strong {
+  color: var(--text, #202938);
+  text-align: right;
+}
+
+.of-invoice-grand-total {
+  padding-top: 13px;
+  margin-top: 2px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text, #202938);
+}
+
+.of-invoice-void-note {
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.of-invoice-close-btn {
+  padding: 9px 18px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.of-invoice-close-btn:hover {
+  background: var(--surface-hover, #f1f5f9);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .of-invoice-detail-status.issued {
+  color: #86efac;
+  background: rgba(22, 163, 74, 0.15);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.paid {
+  color: #7dd3fc;
+  background: rgba(2, 132, 199, 0.15);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.overdue,
+:root[data-theme="dark"] .of-invoice-detail-status.voided {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.draft {
+  color: #fcd34d;
+  background: rgba(217, 119, 6, 0.15);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-void-note {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+@media (max-width: 600px) {
+  #of-order-dialog:has(.of-invoice-detail) .of-order-dialog-card {
+    padding: 16px;
+  }
+
+  .of-invoice-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .of-invoice-detail-parties {
+    grid-template-columns: 1fr;
+  }
+
+  .of-invoice-items-header,
+  .of-invoice-item-row {
+    grid-template-columns: minmax(0, 1fr) 42px 85px 90px;
+    gap: 6px;
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+
+  .of-invoice-detail-number {
+    font-size: 21px;
+  }
+}
+
+
+  
+
+
+
+  
   
   
 
@@ -6454,6 +6806,31 @@ async function changeOrderStatus(order, newStatus) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
   
 
 function renderOrderCards() {
@@ -6650,6 +7027,346 @@ function invoiceMoney(invoice) {
   return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+
+
+
+  
+function invoiceDetailElement(tag, className, text) {
+  const element = document.createElement(tag);
+
+  if (className) element.className = className;
+
+  if (text !== undefined && text !== null) {
+    element.textContent = String(text);
+  }
+
+  return element;
+}
+
+function invoiceDetailField(label, value) {
+  const field = invoiceDetailElement("div", "of-invoice-detail-stat");
+
+  field.append(
+    invoiceDetailElement("div", "of-invoice-detail-stat-label", label),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-stat-value",
+      value || "—"
+    )
+  );
+
+  return field;
+}
+
+function invoiceDetailMoney(value, currency) {
+  const amount = Number(value ?? 0);
+
+  return `${String(currency || "PKR").toUpperCase()} ${
+    amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }`;
+}
+
+function showInvoiceDetails(invoice) {
+  const content = invoiceDetailElement("div", "of-invoice-detail");
+
+  const currency = String(invoice.currency || "PKR").toUpperCase();
+  const status = String(invoice.status || "issued").toLowerCase();
+
+  // Header
+  const header = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-header"
+  );
+
+  const heading = document.createElement("div");
+
+  heading.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-eyebrow",
+      "INVOICE"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-number",
+      invoice.invoice_number || "Invoice"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-subtitle",
+      `Order ${invoice.order_number || "Unavailable"}`
+    )
+  );
+
+  const statusBadge = invoiceDetailElement(
+    "span",
+    `of-invoice-detail-status ${status}`,
+    invoiceStatusLabel(status)
+  );
+
+  header.append(heading, statusBadge);
+  content.append(header);
+
+  // Summary information
+  const summary = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-summary"
+  );
+
+  summary.append(
+    invoiceDetailField(
+      "Invoice total",
+      invoiceDetailMoney(invoice.total_amount, currency)
+    ),
+    invoiceDetailField(
+      "Issued date",
+      formatRecordDate(invoice.issued_at || invoice.created_at)
+    ),
+    invoiceDetailField(
+      "Due date",
+      invoice.due_at ? formatRecordDate(invoice.due_at) : "Not specified"
+    )
+  );
+
+  content.append(summary);
+
+  // Business and customer details
+  const parties = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-parties"
+  );
+
+  const businessPanel = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-panel"
+  );
+
+  businessPanel.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-panel-title",
+      "From"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-name",
+      invoice.business_name || "Business"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-info",
+      [
+        invoice.business_email,
+        invoice.business_phone,
+        invoice.business_address
+      ].filter(Boolean).join("\n") || "No business contact details recorded."
+    )
+  );
+
+  const customerPanel = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-panel"
+  );
+
+  customerPanel.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-panel-title",
+      "Bill to"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-name",
+      invoice.customer_name || "Customer"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-info",
+      [
+        invoice.customer_email,
+        invoice.customer_phone,
+        invoice.customer_address
+      ].filter(Boolean).join("\n") || "No customer contact details recorded."
+    )
+  );
+
+  parties.append(businessPanel, customerPanel);
+  content.append(parties);
+
+  // Invoice items
+  content.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-items-heading",
+      "Invoice items"
+    )
+  );
+
+  const itemsTable = invoiceDetailElement(
+    "div",
+    "of-invoice-items-table"
+  );
+
+  const itemsHeader = invoiceDetailElement(
+    "div",
+    "of-invoice-items-header"
+  );
+
+  [
+    ["Product", ""],
+    ["Qty", "of-invoice-item-number"],
+    ["Unit price", "of-invoice-item-money"],
+    ["Amount", "of-invoice-item-money"]
+  ].forEach(([label, className]) => {
+    itemsHeader.append(
+      invoiceDetailElement("div", className, label)
+    );
+  });
+
+  itemsTable.append(itemsHeader);
+
+  const items = Array.isArray(invoice.invoice_items)
+    ? invoice.invoice_items
+    : [];
+
+  if (items.length) {
+    items.forEach(item => {
+      const row = invoiceDetailElement(
+        "div",
+        "of-invoice-item-row"
+      );
+
+      const product = invoiceDetailElement("div");
+
+      product.append(
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-name",
+          item.product_name || "Product"
+        )
+      );
+
+      if (item.description || item.options) {
+        let optionsText = "";
+
+        if (item.options) {
+          optionsText = typeof item.options === "string"
+            ? item.options
+            : JSON.stringify(item.options);
+        }
+
+        product.append(
+          invoiceDetailElement(
+            "span",
+            "of-invoice-item-description",
+            [item.description, optionsText].filter(Boolean).join(" · ")
+          )
+        );
+      }
+
+      row.append(
+        product,
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-number",
+          item.quantity ?? 0
+        ),
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-money",
+          invoiceDetailMoney(item.unit_price, currency)
+        ),
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-money",
+          invoiceDetailMoney(item.line_total, currency)
+        )
+      );
+
+      itemsTable.append(row);
+    });
+  } else {
+    itemsTable.append(
+      invoiceDetailElement(
+        "div",
+        "of-invoice-item-row",
+        "No invoice items recorded."
+      )
+    );
+  }
+
+  content.append(itemsTable);
+
+  // Totals
+  const totals = invoiceDetailElement(
+    "div",
+    "of-invoice-totals"
+  );
+
+  const addTotalLine = (label, amount, className = "") => {
+    const line = invoiceDetailElement(
+      "div",
+      `of-invoice-total-line ${className}`
+    );
+
+    line.append(
+      invoiceDetailElement("span", "", label),
+      invoiceDetailElement(
+        "strong",
+        "",
+        invoiceDetailMoney(amount, currency)
+      )
+    );
+
+    totals.append(line);
+  };
+
+  addTotalLine("Subtotal", invoice.subtotal);
+  addTotalLine("Discount", invoice.discount_amount);
+  addTotalLine("Tax", invoice.tax_amount);
+  addTotalLine("Shipping", invoice.shipping_amount);
+  addTotalLine("Total", invoice.total_amount, "of-invoice-grand-total");
+
+  content.append(totals);
+
+  // Void reason, when applicable
+  if (status === "voided" && invoice.void_reason) {
+    content.append(
+      invoiceDetailElement(
+        "div",
+        "of-invoice-void-note",
+        `Void reason: ${invoice.void_reason}`
+      )
+    );
+  }
+
+  // Open the existing OrderFlow dialog.
+  const closeButton = invoiceDetailElement(
+    "button",
+    "of-invoice-close-btn",
+    "Close"
+  );
+
+  closeButton.type = "button";
+  closeButton.addEventListener("click", closeOrderDialog);
+
+  showOrderDialog(
+    "Invoice details",
+    content,
+    [closeButton]
+  );
+}
+
+
+
+  
+
+
+  
+
 function renderInvoiceCards() {
   const container = $("invoices-card-list");
   const count = $("invoices-result-count");
@@ -6678,6 +7395,35 @@ function renderInvoiceCards() {
 
   visible.forEach(invoice => {
     const row = make("article", "of-order-row");
+
+
+
+
+    
+row.classList.add("of-invoice-clickable");
+row.setAttribute("role", "button");
+row.setAttribute("tabindex", "0");
+row.setAttribute(
+  "aria-label",
+  `Open invoice ${invoice.invoice_number || ""}`
+);
+
+row.addEventListener("click", () => {
+  showInvoiceDetails(invoice);
+});
+
+row.addEventListener("keydown", event => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    showInvoiceDetails(invoice);
+  }
+});
+
+
+    
+
+
+    
     const identity = make("div", "of-order-customer");
     identity.append(
       make("div", "", invoice.invoice_number || "Invoice"),
