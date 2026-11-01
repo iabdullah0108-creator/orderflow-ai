@@ -1747,10 +1747,11 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
 
 
 
-
 app.put("/api/orders/:id", authenticateUser, async (req, res) => {
   if (!supabase) {
-    return res.status(503).json({ error: "Database is not configured." });
+    return res.status(503).json({
+      error: "Database is not configured."
+    });
   }
 
   try {
@@ -1766,33 +1767,24 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
     const workspaceId = workspace.id;
     const orderId = req.params.id;
 
-    if (
-      typeof orderId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orderId)
-    ) {
-      return res.status(400).json({ error: "Invalid order ID." });
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (typeof orderId !== "string" || !uuidPattern.test(orderId)) {
+      return res.status(400).json({
+        error: "Invalid order ID."
+      });
     }
 
     const {
       customer_id,
-      currency,
       shipping_address,
       items
     } = req.body || {};
 
-    const allowedCurrencies = [
-      "USD", "PKR", "GBP", "EUR", "AED", "CAD", "AUD"
-    ];
-
-    if (!allowedCurrencies.includes(currency)) {
-      return res.status(400).json({
-        error: "Please select a supported currency."
-      });
-    }
-
     if (
       typeof customer_id !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customer_id)
+      !uuidPattern.test(customer_id)
     ) {
       return res.status(400).json({
         error: "Please select a valid customer."
@@ -1830,8 +1822,7 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
         !Number.isFinite(item.unit_price) ||
         item.unit_price < 0 ||
         item.unit_price > 100000000 ||
-        (item.options != null &&
-          typeof item.options !== "string")
+        (item.options != null && typeof item.options !== "string")
       ) {
         return res.status(400).json({
           error: "One or more order items are invalid."
@@ -1846,136 +1837,64 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
       });
     }
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .select("id, status, customer_id, shipping_address")
-      .eq("id", orderId)
-      .eq("workspace_id", workspaceId)
-      .maybeSingle();
+    const { data, error } = await supabase.rpc(
+      "update_order_with_replacement_invoice",
+      {
+        p_workspace_id: workspaceId,
+        p_order_id: orderId,
+        p_customer_id: customer_id,
+        p_items: validatedItems,
+        p_shipping_address:
+          shipping_address === undefined ? null : shipping_address.trim(),
+        p_shipping_address_provided: shipping_address !== undefined,
+        p_user_email: req.user.email || null
+      }
+    );
 
-    if (orderError) {
-      return res.status(503).json({
-        error: "Could not verify the order."
-      });
-    }
+    if (error) {
+      console.error("Atomic order edit failed:", error.message);
 
-    if (!order) {
-      return res.status(404).json({ error: "Order not found." });
-    }
+      const message = error.message || "";
 
-    const currentStatus = String(order.status || "").toLowerCase();
+      if (
+        /not found/i.test(message)
+      ) {
+        return res.status(404).json({
+          error: "Order not found."
+        });
+      }
 
-    if (["completed", "cancelled", "canceled"].includes(currentStatus)) {
-      return res.status(409).json({
-        error: "Completed or cancelled orders cannot be edited."
-      });
-    }
+      if (
+        /cannot be edited|does not allow editing|paid or completed|multiple active invoices/i.test(message)
+      ) {
+        return res.status(409).json({
+          error: message
+        });
+      }
 
-    const { data: customer, error: customerError } = await supabase
-      .from("customers")
-      .select("id, address")
-      .eq("id", customer_id)
-      .eq("workspace_id", workspaceId)
-      .maybeSingle();
-
-    if (customerError) {
-      return res.status(503).json({
-        error: "Could not validate the customer."
-      });
-    }
-
-    if (!customer) {
-      return res.status(400).json({
-        error: "The selected customer is not in your workspace."
-      });
-    }
-
-    const total = Math.round(
-      validatedItems.reduce(
-        (sum, item) => sum + item.quantity * item.unit_price,
-        0
-      ) * 100
-    ) / 100;
-
-    // Preserve the existing items in case replacement fails.
-    const { data: oldItems, error: oldItemsError } = await supabase
-      .from("order_items")
-      .select("product_name, quantity, unit_price, options")
-      .eq("order_id", orderId);
-
-    if (oldItemsError) {
-      return res.status(503).json({
-        error: "Could not load the existing order items."
-      });
-    }
-
-    const address = shipping_address !== undefined
-      ? shipping_address.trim() || null
-      : order.shipping_address || customer.address || null;
-
-    const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        customer_id,
-        currency,
-        shipping_address: address,
-        total
-      })
-      .eq("id", orderId)
-      .eq("workspace_id", workspaceId)
-      .in("status", ["pending", "review", "needs_review"]);
-
-    if (updateError) {
-      console.error("Order update failed:", updateError.message);
-      return res.status(503).json({
-        error: "Could not update the order."
-      });
-    }
-
-    const { error: deleteError } = await supabase
-      .from("order_items")
-      .delete()
-      .eq("order_id", orderId);
-
-    if (deleteError) {
-      return res.status(503).json({
-        error: "Order details could not be replaced. Please reload and check the order."
-      });
-    }
-
-    const { error: insertError } = await supabase
-      .from("order_items")
-      .insert(validatedItems.map(item => ({
-        order_id: orderId,
-        ...item
-      })));
-
-    if (insertError) {
-      console.error("Replacement order items failed:", insertError.message);
-
-      // Best-effort restoration of the previous items.
-      const { error: restoreError } = await supabase
-        .from("order_items")
-        .insert(oldItems.map(item => ({
-          order_id: orderId,
-          ...item
-        })));
-
-      if (restoreError) {
-        console.error("Order item restoration failed:", restoreError.message);
+      if (
+        /invalid|must contain|too long|exceeds the supported limit|not in this workspace|unsupported/i.test(message)
+      ) {
+        return res.status(400).json({
+          error: message
+        });
       }
 
       return res.status(503).json({
-        error: "Could not save the edited items. Reload and verify the order before trying again."
+        error: "Could not update the order and replace its invoice."
       });
     }
 
     return res.json({
       success: true,
-      message: "Order updated successfully."
+      message: "Order and invoice updated successfully.",
+      order_id: data.order_id,
+      invoice_id: data.invoice_id,
+      invoice_number: data.invoice_number
     });
   } catch (error) {
     console.error("Order edit failed:", error.message);
+
     return res.status(500).json({
       error: "Could not update the order."
     });
