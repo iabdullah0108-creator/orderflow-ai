@@ -5277,8 +5277,8 @@ body.dark .of-confirm-cancel {
     box-shadow: 0 9px 28px rgba(83, 69, 206, .30);
   }
   50% {
-    transform: translateY(-4px) scale(1.035);
-    box-shadow: 0 13px 34px rgba(83, 69, 206, .43);
+    transform: translateY(-8px) scale(1.035);
+    box-shadow: 0 15px 36px rgba(83, 69, 206, .43);
   }
 }
 
@@ -5388,15 +5388,38 @@ body.dark .of-confirm-cancel {
     transform: translateY(0) scale(1);
   }
 }
+  /* Living greeting cloud */
+
+.of-ai-greeting {
+  transform-origin: bottom right;
+  animation:
+    ofAiGreetingIn .45s ease forwards,
+    ofAiCloudFloat 3.2s ease-in-out .45s infinite;
+}
+
+@keyframes ofAiCloudFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 6px 24px rgba(25, 25, 60, .12);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 10px 29px rgba(101, 88, 220, .17);
+  }
+}
 
 .of-ai-greeting.of-ai-greeting-hide {
-  animation: ofAiGreetingOut .35s ease forwards;
+  animation: ofAiGreetingOut .55s cubic-bezier(.22, 1, .36, 1) forwards;
 }
 
 @keyframes ofAiGreetingOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
   to {
     opacity: 0;
-    transform: translateY(7px) scale(.96);
+    transform: translateY(9px) scale(.94);
   }
 }
 
@@ -13621,15 +13644,17 @@ function showNextAssistantGreeting() {
 
   greetingIndex = nextIndex;
 
-  greetingBox.classList.remove("of-ai-greeting-hide");
+ greetingBox.classList.remove("of-ai-greeting-hide");
 
-  greetingText.textContent = assistantGreetings[greetingIndex];
-  greetingBox.style.animation = "none";
+greetingText.textContent = assistantGreetings[greetingIndex];
 
-  void greetingBox.offsetWidth;
+greetingBox.style.animation = "none";
 
-  greetingBox.style.animation = "";
+void greetingBox.offsetWidth;
 
+greetingBox.style.animation =
+  "ofAiGreetingIn .45s ease forwards, " +
+  "ofAiCloudFloat 3.2s ease-in-out .45s infinite";
   setTimeout(() => {
     greetingBox.classList.add("of-ai-greeting-hide");
   }, 3500);
