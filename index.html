@@ -5273,12 +5273,10 @@ body.dark .of-confirm-cancel {
 
 @keyframes ofAiBreathing {
   0%, 100% {
-    transform: translateY(0) scale(1);
-    box-shadow: 0 9px 28px rgba(83, 69, 206, .30);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translateY(-8px) scale(1.035);
-    box-shadow: 0 15px 36px rgba(83, 69, 206, .43);
+    transform: translate3d(0, -6px, 0) scale(1.025);
   }
 }
 
@@ -5351,7 +5349,7 @@ body.dark .of-confirm-cancel {
 .of-ai-greeting {
   position: fixed;
   right: 26px;
-  bottom: 98px;
+  bottom: 108px;
   z-index: 9997;
   max-width: min(230px, calc(100vw - 100px));
   padding: 10px 15px;
@@ -5399,12 +5397,10 @@ body.dark .of-confirm-cancel {
 
 @keyframes ofAiCloudFloat {
   0%, 100% {
-    transform: translateY(0) scale(1);
-    box-shadow: 0 6px 24px rgba(25, 25, 60, .12);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translateY(-3px) scale(1.015);
-    box-shadow: 0 10px 29px rgba(101, 88, 220, .17);
+    transform: translate3d(0, -3px, 0) scale(1.01);
   }
 }
 
@@ -5505,6 +5501,34 @@ body.dark .of-confirm-cancel {
 }
 
 
+
+
+
+
+  
+
+
+  .of-ai-launcher,
+.of-ai-launcher svg,
+.of-ai-sparkle,
+.of-ai-greeting {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.of-ai-launcher,
+.of-ai-greeting {
+  will-change: transform, opacity;
+}
+
+.of-ai-sparkle {
+  will-change: transform, opacity;
+}
+  
+
+
+
+  
 
 
 
