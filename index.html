@@ -5523,8 +5523,10 @@ body.dark .of-confirm-cancel {
 
 .of-ai-typing-content {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
 }
 
 .of-ai-typing-heading {
@@ -5537,9 +5539,7 @@ body.dark .of-confirm-cancel {
 }
 
 .of-ai-typing-sparkle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
   color: var(--ai-accent);
   font-size: 17px;
   animation: ofAiSparkle 1.8s ease-in-out infinite;
@@ -5554,8 +5554,8 @@ body.dark .of-confirm-cancel {
 .of-ai-typing-dots {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding-left: 2px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .of-ai-typing-dots span {
