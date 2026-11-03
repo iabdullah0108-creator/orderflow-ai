@@ -5258,6 +5258,7 @@ body.dark .of-confirm-cancel {
    SMART ASSISTANT — LIVING LAUNCHER
 ========================================= */
 
+
 .of-ai-launcher {
   isolation: isolate;
   overflow: visible;
@@ -5362,10 +5363,12 @@ body.dark .of-confirm-cancel {
   font-weight: 600;
   line-height: 1.4;
   opacity: 0;
-  transform: translateY(8px) scale(.96);
   pointer-events: none;
-  animation: ofAiGreetingIn .45s ease forwards;
+  animation: ofAiGreetingIn .45s ease forwards,
+             ofAiCloudFloat 3.2s ease-in-out .45s infinite;
 }
+
+/* Greeting tail */
 
 .of-ai-greeting::after {
   content: "";
@@ -5380,42 +5383,40 @@ body.dark .of-confirm-cancel {
   transform: rotate(45deg);
 }
 
+/* Smooth appearance without scaling text */
+
 @keyframes ofAiGreetingIn {
+  from {
+    opacity: 0;
+  }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
-  /* Living greeting cloud */
 
-.of-ai-greeting {
-  transform-origin: bottom right;
-  animation:
-    ofAiGreetingIn .45s ease forwards,
-    ofAiCloudFloat 3.2s ease-in-out .45s infinite;
-}
+/* Floating greeting cloud without transforming text */
 
 @keyframes ofAiCloudFloat {
   0%, 100% {
-    transform: translate3d(0, 0, 0);
+    bottom: 108px;
   }
   50% {
-    transform: translate3d(0, -3px, 0);
+    bottom: 111px;
   }
 }
 
+/* Smooth disappearance without scaling text */
+
 .of-ai-greeting.of-ai-greeting-hide {
-  animation: ofAiGreetingOut .55s cubic-bezier(.22, 1, .36, 1) forwards;
+  animation: ofAiGreetingOut .55s ease forwards;
 }
 
 @keyframes ofAiGreetingOut {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(9px) scale(.94);
   }
 }
 
@@ -5444,6 +5445,7 @@ body.dark .of-confirm-cancel {
     transform: none;
   }
 }
+
 
 
 
