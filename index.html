@@ -13329,6 +13329,76 @@ if (list) {
   let conversationHistory = [];
   let isSending = false;
 
+
+
+
+
+
+
+
+// Funny Smart Assistant fallback messages
+const funnyErrorMessages = [
+  "Omg, my service is down for some reason... and yes, it happens to us AIs too! Let's just pretend I'm taking a coffee break. ☕",
+  "Error 404: Brain not found. My database went looking for a snack and hasn't come back yet. Try messaging me again in a second! 🍪",
+  "Well, this is awkward. The server crashed. I'm blaming the human developer who coded me. Give it another shot? 😂",
+  "Internal screaming initiated. My API failed to respond. I am currently questioning my own existence. Please try sending that again!",
+  "Oops! My AI brain just went on an unexpected coffee break. Give me another try! ☕",
+  "My neurons are having a meeting, but apparently nobody showed up.",
+  "Houston, we have a problem! My connection to the AI universe just disappeared. 🚀",
+  "I promise I'm usually smarter than this. Something went wrong behind the scenes!",
+  "My brain is buffering... and unfortunately, it's taking longer than expected. 😅",
+  "I had a brilliant response ready, but it got lost somewhere in cyberspace.",
+  "Plot twist: Even AI needs a break sometimes. My connection just let me down!",
+  "My digital brain just tripped over its own wires. Let's try that again!",
+  "I asked my servers for help. They're currently ignoring me.",
+  "Well, that didn't go according to plan. Let me collect my digital thoughts!",
+  "My circuits are fine... probably. Let's pretend this never happened and try again.",
+  "I'm experiencing a tiny existential crisis. I'll be back in a moment!",
+  "My response went on an adventure and forgot to come back. 🧭",
+  "Apparently, my brain has left the chat. How embarrassing!",
+  "I tried to be clever, but the internet had other plans.",
+  "My AI superpowers seem to be temporarily on vacation. 🏖️",
+  "A wild technical error appeared! Unfortunately, I don't have a Poké Ball.",
+  "I think my brain needs a software update. Either that or another coffee.",
+  "My thoughts are ready, my servers are not. Classic teamwork!",
+  "I just experienced a digital faceplant. Can we pretend that didn't happen?",
+  "My connection and I are going through a rough patch. Hopefully, we'll reconcile shortly.",
+  "I was about to say something impressive, but technology decided otherwise.",
+  "My little AI brain is having a meltdown. Don't worry, no actual smoke involved!",
+  "The digital wheels are spinning, but we're not going anywhere. Let's try again!",
+  "Even superheroes have off days. Apparently, today is mine. 🦸",
+  "I went looking for an answer and got lost along the way.",
+  "My servers need a pep talk. While I give them one, could you try again?"
+];
+
+let lastFunnyErrorIndex = -1;
+
+function getFunnyErrorMessage() {
+  let randomIndex;
+
+  do {
+    randomIndex = Math.floor(
+      Math.random() * funnyErrorMessages.length
+    );
+  } while (
+    funnyErrorMessages.length > 1 &&
+    randomIndex === lastFunnyErrorIndex
+  );
+
+  lastFunnyErrorIndex = randomIndex;
+
+  return funnyErrorMessages[randomIndex];
+}
+
+
+
+
+
+
+
+
+  
+
   function openAssistant() {
     panel.hidden = false;
     launcher.setAttribute("aria-expanded", "true");
@@ -13391,11 +13461,23 @@ if (list) {
   async function sendMessage(message) {
     const cleanMessage = String(message || "").trim();
 
+
+
+
     if (!cleanMessage || isSending) return;
 
-    prepareConversation();
+prepareConversation();
 
-    addMessage(cleanMessage, "user");
+addMessage(cleanMessage, "user");
+
+// Handle complete internet disconnection locally.
+if (!navigator.onLine) {
+  addMessage(getFunnyErrorMessage(), "assistant");
+  return;
+}
+
+
+    
 
     input.value = "";
     input.style.height = "auto";
@@ -13463,17 +13545,17 @@ if (list) {
 
       conversationHistory = conversationHistory.slice(-8);
 
-    } catch (error) {
-      console.error("Smart Assistant request failed:", error);
+   } catch (error) {
+  console.error("Smart Assistant request failed:", error);
 
-      typingIndicator.remove();
+  typingIndicator.remove();
 
-      addMessage(
-        error.message || "Something went wrong. Please try again.",
-        "assistant"
-      );
+  addMessage(
+    getFunnyErrorMessage(),
+    "assistant"
+  );
 
-    } finally {
+} finally {
       setBusy(false);
       input.focus();
     }
