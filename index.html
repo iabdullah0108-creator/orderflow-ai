@@ -5254,6 +5254,177 @@ body.dark .of-confirm-cancel {
 }
 
 
+  /* =========================================
+   SMART ASSISTANT — LIVING LAUNCHER
+========================================= */
+
+.of-ai-launcher {
+  isolation: isolate;
+  overflow: visible;
+  animation: ofAiBreathing 3.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.of-ai-launcher svg {
+  position: relative;
+  z-index: 2;
+  animation: ofAiIconGlow 3.4s ease-in-out infinite;
+}
+
+@keyframes ofAiBreathing {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 9px 28px rgba(83, 69, 206, .30);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.035);
+    box-shadow: 0 13px 34px rgba(83, 69, 206, .43);
+  }
+}
+
+@keyframes ofAiIconGlow {
+  0%, 100% { opacity: .9; }
+  50% { opacity: 1; }
+}
+
+/* Floating sparkles */
+
+.of-ai-sparkle {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 9px rgba(255,255,255,.9);
+}
+
+.sparkle-one {
+  top: -9px;
+  right: 4px;
+  font-size: 13px;
+  animation: ofAiSparkleOne 2.7s ease-in-out infinite;
+}
+
+.sparkle-two {
+  top: 7px;
+  left: -10px;
+  font-size: 15px;
+  animation: ofAiSparkleTwo 3.1s ease-in-out infinite;
+}
+
+.sparkle-three {
+  bottom: -8px;
+  right: 8px;
+  font-size: 11px;
+  animation: ofAiSparkleThree 2.4s ease-in-out infinite;
+}
+
+.sparkle-four {
+  top: -13px;
+  left: 20px;
+  font-size: 22px;
+  animation: ofAiSparkleFour 3s ease-in-out infinite;
+}
+
+@keyframes ofAiSparkleOne {
+  0%, 100% { opacity: .2; transform: translate(0, 4px) scale(.7); }
+  50% { opacity: 1; transform: translate(5px, -7px) scale(1.15); }
+}
+
+@keyframes ofAiSparkleTwo {
+  0%, 100% { opacity: .15; transform: translate(3px, 3px) scale(.7); }
+  50% { opacity: 1; transform: translate(-5px, -6px) scale(1.1); }
+}
+
+@keyframes ofAiSparkleThree {
+  0%, 100% { opacity: .2; transform: translate(0, 0) scale(.7); }
+  50% { opacity: 1; transform: translate(6px, 5px) scale(1.2); }
+}
+
+@keyframes ofAiSparkleFour {
+  0%, 100% { opacity: .1; transform: translateY(3px) rotate(0deg); }
+  50% { opacity: .9; transform: translateY(-8px) rotate(35deg); }
+}
+
+/* Greeting bubble */
+
+.of-ai-greeting {
+  position: fixed;
+  right: 26px;
+  bottom: 98px;
+  z-index: 9997;
+  max-width: min(230px, calc(100vw - 100px));
+  padding: 10px 15px;
+  border: 1px solid rgba(101, 88, 220, .16);
+  border-radius: 15px 15px 5px 15px;
+  background: var(--surface, #fff);
+  color: var(--text, #202536);
+  box-shadow: 0 6px 24px rgba(25, 25, 60, .12);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(8px) scale(.96);
+  pointer-events: none;
+  animation: ofAiGreetingIn .45s ease forwards;
+}
+
+.of-ai-greeting::after {
+  content: "";
+  position: absolute;
+  right: 17px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  background: var(--surface, #fff);
+  border-right: 1px solid rgba(101, 88, 220, .16);
+  border-bottom: 1px solid rgba(101, 88, 220, .16);
+  transform: rotate(45deg);
+}
+
+@keyframes ofAiGreetingIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.of-ai-greeting.of-ai-greeting-hide {
+  animation: ofAiGreetingOut .35s ease forwards;
+}
+
+@keyframes ofAiGreetingOut {
+  to {
+    opacity: 0;
+    transform: translateY(7px) scale(.96);
+  }
+}
+
+/* Hide greetings while the assistant is open */
+
+.of-ai-widget:has(.of-ai-panel:not([hidden])) .of-ai-greeting {
+  display: none;
+}
+
+/* Hover and accessibility */
+
+.of-ai-launcher:hover {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-ai-launcher,
+  .of-ai-launcher svg,
+  .of-ai-sparkle,
+  .of-ai-greeting {
+    animation: none !important;
+  }
+
+  .of-ai-launcher {
+    transform: none;
+  }
+}
 
 
 
@@ -13243,20 +13414,30 @@ if (list) {
 <div class="of-ai-widget" id="of-ai-widget">
 
   <button
-    class="of-ai-launcher"
-    id="of-ai-launcher"
-    type="button"
-    aria-label="Open Smart Assistant"
-    aria-expanded="false"
-    aria-controls="of-ai-panel"
-  >
-    <svg viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="1.8"
-      stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
-      <path d="M19 14l1 2.5 2 1-2 1-1 2.5-1-2.5-2-1 2-1 1-2.5z"/>
-    </svg>
-  </button>
+  class="of-ai-launcher"
+  id="of-ai-launcher"
+  type="button"
+  aria-label="Open Smart Assistant"
+  aria-expanded="false"
+  aria-controls="of-ai-panel"
+>
+  <span class="of-ai-sparkle sparkle-one">✦</span>
+  <span class="of-ai-sparkle sparkle-two">✧</span>
+  <span class="of-ai-sparkle sparkle-three">✦</span>
+  <span class="of-ai-sparkle sparkle-four">·</span>
+
+  <svg viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="1.8"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
+    <path d="M19 14l1 2.5 2 1-2 1-1 2.5-1-2.5-2-1 2-1 1-2.5z"/>
+  </svg>
+</button>
+
+<div class="of-ai-greeting" id="of-ai-greeting" aria-live="polite">
+  <span id="of-ai-greeting-text">Hey! Need a hand? ✨</span>
+</div>
+  
 
   <section
     class="of-ai-panel"
@@ -13394,6 +13575,75 @@ if (list) {
   const messages = document.getElementById("of-ai-messages");
   const welcome = document.getElementById("of-ai-welcome");
   const suggestions = document.getElementById("of-ai-suggestions");
+
+
+
+
+  // Smart Assistant rotating greetings
+const greetingBox = document.getElementById("of-ai-greeting");
+const greetingText = document.getElementById("of-ai-greeting-text");
+
+const assistantGreetings = [
+  "Hey! 👋",
+  "Talk to me! ✨",
+  "Need a hand?",
+  "I can help with that!",
+  "Got a question? 💭",
+  "Let's get things done!",
+  "Psst... need some help?",
+  "Ask me anything!",
+  "I'm all ears! 👀",
+  "Ready when you are!",
+  "Let's figure it out together!",
+  "Your AI assistant is here! ✨"
+];
+
+let greetingIndex = -1;
+
+function showNextAssistantGreeting() {
+  if (!greetingBox || !greetingText) return;
+
+  if (
+    document.getElementById("of-ai-panel") &&
+    !document.getElementById("of-ai-panel").hidden
+  ) {
+    return;
+  }
+
+  let nextIndex;
+
+  do {
+    nextIndex = Math.floor(Math.random() * assistantGreetings.length);
+  } while (
+    assistantGreetings.length > 1 &&
+    nextIndex === greetingIndex
+  );
+
+  greetingIndex = nextIndex;
+
+  greetingBox.classList.remove("of-ai-greeting-hide");
+
+  greetingText.textContent = assistantGreetings[greetingIndex];
+  greetingBox.style.animation = "none";
+
+  void greetingBox.offsetWidth;
+
+  greetingBox.style.animation = "";
+
+  setTimeout(() => {
+    greetingBox.classList.add("of-ai-greeting-hide");
+  }, 3500);
+}
+
+// First greeting after a short delay
+setTimeout(showNextAssistantGreeting, 1200);
+
+// Rotate greetings periodically
+setInterval(showNextAssistantGreeting, 6500);
+
+
+
+  
 
   if (
     !launcher || !panel || !minimizeButton || !clearButton ||
@@ -13560,9 +13810,9 @@ function addTypingIndicator() {
 
   const status = document.createElement("span");
   status.className = "of-ai-typing-status";
-  status.textContent = "Generating response";
+  status.remove();
 
-  heading.append(sparkle, status);
+  
 
   const dots = document.createElement("div");
   dots.className = "of-ai-typing-dots";
@@ -13571,7 +13821,7 @@ function addTypingIndicator() {
     dots.appendChild(document.createElement("span"));
   }
 
-  content.append(heading, dots);
+  content.append(sparkle, dots);
   bubble.appendChild(content);
 
   return wrapper;
