@@ -16269,6 +16269,212 @@ if (!navigator.onLine) {
 })();
 
 
+
+
+
+
+    
+/* =========================================================
+   ORDERFLOW AI — SUBSCRIPTION PLAN CONFIGURATION
+========================================================= */
+
+const subscriptionPlans = [
+  {
+    id: "free",
+    name: "Free",
+    price: 0,
+    replies: 100,
+    orders: 100,
+    automations: 1,
+    channels: 1,
+    members: 1,
+    description: "Explore OrderFlow AI and manage your business.",
+    features: [
+      "100 AI replies per month",
+      "100 orders per month",
+      "1 active automation",
+      "1 connected channel",
+      "1 team member",
+      "Customers and invoices",
+      "Basic analytics"
+    ]
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: 2499,
+    replies: 500,
+    orders: 500,
+    automations: 3,
+    channels: 2,
+    members: 1,
+    description: "Everything you need to manage a growing shop.",
+    features: [
+      "500 AI replies per month",
+      "500 orders per month",
+      "3 active automations",
+      "2 connected channels",
+      "1 team member",
+      "Full order and invoice management",
+      "Business Knowledge and Smart Inbox"
+    ]
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    price: 6999,
+    replies: 2000,
+    orders: 2000,
+    automations: 10,
+    channels: 3,
+    members: 3,
+    description: "More automation and control for growing businesses.",
+    features: [
+      "2,000 AI replies per month",
+      "2,000 orders per month",
+      "10 active automations",
+      "All 3 connected channels",
+      "3 team members",
+      "Advanced analytics",
+      "Priority support"
+    ]
+  },
+  {
+    id: "business",
+    name: "Business",
+    price: 14999,
+    replies: 6000,
+    orders: 6000,
+    automations: 30,
+    channels: 3,
+    members: 5,
+    description: "More capacity for businesses operating at scale.",
+    features: [
+      "6,000 AI replies per month",
+      "6,000 orders per month",
+      "30 active automations",
+      "All 3 connected channels",
+      "5 team members",
+      "Advanced analytics and reporting",
+      "Priority support",
+      "Higher API and automation limits"
+    ]
+  }
+];
+
+
+/* Current plan placeholder.
+   Later this will come from the subscription database. */
+
+let currentSubscriptionPlan = "free";
+
+
+/* Currency formatting */
+
+function formatSubscriptionPrice(price) {
+  return "Rs. " + Number(price).toLocaleString("en-PK");
+}
+
+
+/* Render plan cards */
+
+function renderSubscriptionPlans() {
+  const container = document.getElementById(
+    "subscription-plan-options"
+  );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  subscriptionPlans.forEach(plan => {
+    const isCurrent = plan.id === currentSubscriptionPlan;
+
+    const card = document.createElement("div");
+
+    card.className =
+      "subscription-plan-card" +
+      (isCurrent ? " current" : "");
+
+    card.innerHTML = `
+      ${isCurrent
+        ? `<span class="plan-current-label">CURRENT PLAN</span>`
+        : ""
+      }
+
+      <h3>${plan.name}</h3>
+
+      <div class="plan-price">
+        ${formatSubscriptionPrice(plan.price)}
+        <small>/ month</small>
+      </div>
+
+      <p>${plan.description}</p>
+
+      <ul>
+        ${plan.features.map(feature =>
+          `<li>${feature}</li>`
+        ).join("")}
+      </ul>
+
+      <button
+        class="btn ${isCurrent ? "btn-secondary" : "btn-primary"}"
+        data-select-plan="${plan.id}"
+        ${isCurrent ? "disabled" : ""}
+      >
+        ${isCurrent ? "Current plan" : "Select plan"}
+      </button>
+    `;
+
+    container.appendChild(card);
+  });
+
+  const currentPlan = subscriptionPlans.find(
+    plan => plan.id === currentSubscriptionPlan
+  );
+
+  if (currentPlan) {
+    const currentName = document.getElementById(
+      "change-plan-current-name"
+    );
+
+    const manageName = document.getElementById(
+      "manage-modal-plan-name"
+    );
+
+    if (currentName) currentName.textContent = currentPlan.name;
+    if (manageName) manageName.textContent = currentPlan.name;
+  }
+
+  // Temporary selection feedback.
+  // Actual plan changes require checkout and backend verification.
+
+  container.querySelectorAll("[data-select-plan]").forEach(button => {
+    button.addEventListener("click", () => {
+      const selectedPlan = subscriptionPlans.find(
+        plan => plan.id === button.dataset.selectPlan
+      );
+
+      if (!selectedPlan) return;
+
+      alert(
+        `${selectedPlan.name} — ${formatSubscriptionPrice(selectedPlan.price)} / month\n\n` +
+        "Your plan has not been changed. Payment and checkout integration will be connected next."
+      );
+    });
+  });
+}
+
+
+/* Populate the plans when the page loads */
+
+renderSubscriptionPlans();
+
+
+    
+
+
+    
     
   </script>
 
