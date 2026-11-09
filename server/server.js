@@ -1660,10 +1660,26 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
     }
 
     const {
-      customer_id,
-      items,
-      shipping_address
-    } = req.body || {};
+  customer_id,
+  items,
+  shipping_address,
+  currency
+} = req.body || {};
+
+const supportedCurrencies = [
+  "PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"
+];
+
+const orderCurrency =
+  typeof currency === "string"
+    ? currency.trim().toUpperCase()
+    : workspace.currency;
+
+if (!supportedCurrencies.includes(orderCurrency)) {
+  return res.status(400).json({
+    error: "Unsupported order currency."
+  });
+}
 
     if (
       typeof customer_id !== "string" ||
@@ -1737,7 +1753,8 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
           shipping_address !== undefined
             ? shipping_address.trim() || null
             : null,
-        p_user_email: req.user.email || null
+        p_user_email: req.user.email || null,
+        p_currency: orderCurrency
       }
     );
 
@@ -1796,10 +1813,26 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
     }
 
     const {
-      customer_id,
-      shipping_address,
-      items
-    } = req.body || {};
+  customer_id,
+  shipping_address,
+  items,
+  currency
+} = req.body || {};
+
+const supportedCurrencies = [
+  "PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"
+];
+
+const orderCurrency =
+  typeof currency === "string"
+    ? currency.trim().toUpperCase()
+    : workspace.currency;
+
+if (!supportedCurrencies.includes(orderCurrency)) {
+  return res.status(400).json({
+    error: "Unsupported order currency."
+  });
+}
 
     if (
       typeof customer_id !== "string" ||
@@ -1866,7 +1899,8 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
         p_shipping_address:
           shipping_address === undefined ? null : shipping_address.trim(),
         p_shipping_address_provided: shipping_address !== undefined,
-        p_user_email: req.user.email || null
+        p_user_email: req.user.email || null,
+        p_currency: orderCurrency
       }
     );
 
