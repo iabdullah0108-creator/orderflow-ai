@@ -422,6 +422,21 @@ td{font-size:13px}
 
 
 
+
+/* Invoice rows use the same visual language as Orders, with invoice-specific columns. */
+.of-invoices-toolbar { grid-template-columns: minmax(220px, 1fr) minmax(150px, 220px) auto; }
+.of-invoices-list .of-order-row { grid-template-columns: minmax(150px,1.25fr) minmax(130px,1fr) minmax(110px,.8fr) minmax(110px,.8fr) 110px; cursor:default; }
+.of-invoices-list .of-order-row:hover { transform:none; }
+.of-invoice-meta { display:block; margin-top:4px; font-size:12px; opacity:.72; font-weight:400; }
+.of-invoice-status { justify-self:start; }
+@media (max-width:700px) {
+  .of-invoices-toolbar { grid-template-columns:minmax(0,1fr); }
+  .of-invoices-list .of-order-row { grid-template-columns:minmax(0,1fr) auto; }
+  .of-invoices-list .of-order-row > .of-order-cell,
+  .of-invoices-list .of-order-row > .of-order-total { grid-column:1 / -1; }
+  .of-invoices-list .of-order-row > .of-invoice-status { grid-column:2; grid-row:1; }
+}
+
 </style>
 
 
@@ -4266,6 +4281,1357 @@ body.dark .of-confirm-cancel {
 
 
 
+
+
+
+  
+  /* Invoices */
+.of-invoices-toolbar {
+  grid-template-columns: minmax(180px, 1fr) minmax(150px, 210px) auto;
+}
+
+.of-invoice-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.of-invoice-status.issued {
+  color: #8058bd;
+  background: #f0e8ff;
+}
+
+.of-invoice-status.paid {
+  color: #176b3a;
+  background: #d9f7e5;
+}
+
+.of-invoice-status.overdue {
+  color: #a45b0a;
+  background: #fff0d7;
+}
+
+.of-invoice-status.voided {
+  color: #a52332;
+  background: #ffe0e3;
+}
+
+:root[data-theme="dark"] .of-invoice-status.issued {
+  color: #d0b7ff;
+  background: #382c50;
+}
+
+:root[data-theme="dark"] .of-invoice-status.paid {
+  color: #8be0b1;
+  background: #203d35;
+}
+
+:root[data-theme="dark"] .of-invoice-status.overdue {
+  color: #ffc078;
+  background: #493625;
+}
+
+:root[data-theme="dark"] .of-invoice-status.voided {
+  color: #ffaaaa;
+  background: #482b32;
+}
+
+@media (max-width: 700px) {
+  .of-invoices-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+
+  
+
+
+
+
+  
+/* Invoices status dropdown — matches Orders */
+#invoices-status-filter {
+  min-height: 42px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface, var(--card, #fff));
+  color: inherit;
+  font: inherit;
+}
+
+
+
+
+
+
+
+
+
+
+
+  
+/* =========================================
+   PREMIUM INVOICE DETAILS POPUP
+========================================= */
+
+#of-order-dialog:has(.of-invoice-detail) .of-order-dialog-card {
+  width: min(100%, 820px);
+  max-height: min(88vh, 900px);
+  padding: 24px;
+}
+
+.of-invoice-clickable {
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.of-invoice-clickable:hover {
+  background: var(--surface-hover, rgba(100, 116, 139, 0.07));
+}
+
+.of-invoice-clickable:focus-visible {
+  outline: 2px solid var(--primary, #6366f1);
+  outline-offset: 3px;
+}
+
+.of-invoice-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--text, #202938);
+}
+
+.of-invoice-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.of-invoice-detail-eyebrow {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+  color: var(--muted, #64748b);
+  margin-bottom: 7px;
+}
+
+.of-invoice-detail-number {
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-detail-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: capitalize;
+  background: var(--surface-hover, #f1f5f9);
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.of-invoice-detail-status.issued {
+  color: #15803d;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.of-invoice-detail-status.paid {
+  color: #0369a1;
+  background: #e0f2fe;
+  border-color: #bae6fd;
+}
+
+.of-invoice-detail-status.overdue,
+.of-invoice-detail-status.voided {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.of-invoice-detail-status.draft {
+  color: #a16207;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.of-invoice-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.of-invoice-detail-stat {
+  padding: 15px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+
+.of-invoice-detail-stat-label {
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted, #64748b);
+  margin-bottom: 7px;
+}
+
+.of-invoice-detail-stat-value {
+  font-size: 14px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-parties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.of-invoice-detail-panel {
+  padding: 17px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 13px;
+  background: var(--surface, #fff);
+  min-width: 0;
+}
+
+.of-invoice-detail-panel-title {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted, #64748b);
+  margin-bottom: 12px;
+}
+
+.of-invoice-detail-party-name {
+  font-size: 15px;
+  font-weight: 750;
+  margin-bottom: 7px;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-detail-party-info {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted, #64748b);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.of-invoice-items-heading {
+  font-size: 14px;
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+
+.of-invoice-items-table {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.of-invoice-items-header,
+.of-invoice-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 65px 115px 115px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.of-invoice-items-header {
+  background: var(--surface-hover, #f8fafc);
+  color: var(--muted, #64748b);
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.of-invoice-item-row {
+  border-top: 1px solid var(--border, #e2e8f0);
+  font-size: 12px;
+}
+
+.of-invoice-item-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-item-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-item-number,
+.of-invoice-item-money {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.of-invoice-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: min(100%, 340px);
+  margin-left: auto;
+  padding: 17px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 13px;
+  background: var(--surface, #fff);
+}
+
+.of-invoice-total-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted, #64748b);
+}
+
+.of-invoice-total-line strong {
+  color: var(--text, #202938);
+  text-align: right;
+}
+
+.of-invoice-grand-total {
+  padding-top: 13px;
+  margin-top: 2px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text, #202938);
+}
+
+.of-invoice-void-note {
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.of-invoice-close-btn {
+  padding: 9px 18px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.of-invoice-close-btn:hover {
+  background: var(--surface-hover, #f1f5f9);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] .of-invoice-detail-status.issued {
+  color: #86efac;
+  background: rgba(22, 163, 74, 0.15);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.paid {
+  color: #7dd3fc;
+  background: rgba(2, 132, 199, 0.15);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.overdue,
+:root[data-theme="dark"] .of-invoice-detail-status.voided {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-detail-status.draft {
+  color: #fcd34d;
+  background: rgba(217, 119, 6, 0.15);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+:root[data-theme="dark"] .of-invoice-void-note {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+@media (max-width: 600px) {
+  #of-order-dialog:has(.of-invoice-detail) .of-order-dialog-card {
+    padding: 16px;
+  }
+
+  .of-invoice-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .of-invoice-detail-parties {
+    grid-template-columns: 1fr;
+  }
+
+  .of-invoice-items-header,
+  .of-invoice-item-row {
+    grid-template-columns: minmax(0, 1fr) 42px 85px 90px;
+    gap: 6px;
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+
+  .of-invoice-detail-number {
+    font-size: 21px;
+  }
+}
+
+
+
+  
+/* =========================================
+   ORDERFLOW AI — Load more orders
+========================================= */
+  
+
+
+
+  
+/* Orders pagination section */
+.of-orders-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-orders-pagination[hidden] {
+  display: none;
+}
+
+.of-orders-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-orders-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.of-orders-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-orders-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+
+
+
+
+
+  
+/* Orders loading progress bar */
+.of-orders-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-orders-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+
+
+
+
+
+
+
+
+  
+/* Customers pagination */
+.of-customers-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-customers-pagination[hidden] {
+  display: none;
+}
+
+.of-customers-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-customers-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-customers-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.of-customers-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.of-customers-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-customers-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+
+
+
+
+  
+/* Invoice pagination */
+.of-invoices-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.of-invoices-pagination[hidden] {
+  display: none;
+}
+
+.of-invoices-pagination-info {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.of-invoices-progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.of-invoices-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.of-invoices-load-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 11px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.of-invoices-load-more:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.of-invoices-load-more:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.of-invoices-load-more[hidden] {
+  display: none;
+}
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+/* =========================================
+   ORDERFLOW AI — SMART ASSISTANT
+========================================= */
+
+.of-ai-widget,
+.of-ai-widget * {
+  box-sizing: border-box;
+}
+
+.of-ai-widget [hidden] {
+  display: none !important;
+}
+
+.of-ai-widget {
+  --ai-panel-bg: var(--surface, #ffffff);
+  --ai-text: var(--text, #202536);
+  --ai-muted: var(--muted, #788196);
+  --ai-border: var(--border, #e3e7ef);
+  --ai-accent: var(--accent, #6558dc);
+  --ai-soft: var(--accent-soft, #eeecff);
+  font-family: inherit;
+  color: var(--ai-text);
+}
+
+.of-ai-launcher {
+  position: fixed;
+  right: 26px;
+  bottom: 25px;
+  z-index: 9998;
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #7969f5, #5545ce);
+  color: white;
+  box-shadow: 0 9px 28px rgba(83, 69, 206, .35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.of-ai-launcher:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 32px rgba(83, 69, 206, .42);
+}
+
+.of-ai-launcher svg {
+  width: 27px;
+  height: 27px;
+}
+
+.of-ai-panel {
+  position: fixed;
+  right: 26px;
+  bottom: 96px;
+  z-index: 9999;
+  width: min(410px, calc(100vw - 32px));
+  height: min(620px, calc(100dvh - 125px));
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ai-panel-bg);
+  color: var(--ai-text);
+  border: 1px solid var(--ai-border);
+  border-radius: 20px;
+  box-shadow: 0 20px 65px rgba(15, 23, 42, .20);
+  animation: ofAiPanelIn .22s ease-out;
+}
+
+@keyframes ofAiPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.of-ai-header {
+  min-height: 76px;
+  padding: 15px 17px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--ai-border);
+}
+
+.of-ai-avatar {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(145deg, #7969f5, #5545ce);
+}
+
+.of-ai-avatar svg {
+  width: 23px;
+  height: 23px;
+}
+
+.of-ai-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.of-ai-heading strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.of-ai-heading span {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ai-muted);
+}
+
+.of-ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.of-ai-icon-button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ai-muted);
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.of-ai-icon-button:hover {
+  background: var(--ai-soft);
+  color: var(--ai-accent);
+}
+
+.of-ai-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.of-ai-welcome {
+  padding: 17px;
+  border: 1px solid var(--ai-border);
+  border-radius: 15px;
+  background: var(--ai-panel-bg);
+}
+
+.of-ai-welcome h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.of-ai-welcome p {
+  margin: 0;
+  color: var(--ai-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.of-ai-suggestions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.of-ai-suggestion {
+  min-height: 76px;
+  padding: 12px;
+  border: 1px solid var(--ai-border);
+  border-radius: 13px;
+  background: var(--ai-panel-bg);
+  color: var(--ai-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+
+.of-ai-suggestion:hover {
+  border-color: var(--ai-accent);
+  background: var(--ai-soft);
+}
+
+.of-ai-suggestion span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ai-accent);
+  font-size: 18px;
+}
+
+.of-ai-suggestion strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.of-ai-composer {
+  padding: 13px 15px 15px;
+  border-top: 1px solid var(--ai-border);
+}
+
+.of-ai-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  padding: 8px 9px 8px 14px;
+  border: 1px solid var(--ai-border);
+  border-radius: 14px;
+  background: var(--ai-panel-bg);
+}
+
+.of-ai-input {
+  flex: 1;
+  min-width: 0;
+  max-height: 100px;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ai-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 7px 0;
+}
+
+.of-ai-input::placeholder {
+  color: var(--ai-muted);
+}
+
+.of-ai-send {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ai-accent);
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.of-ai-send:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.of-ai-footer-note {
+  margin-top: 9px;
+  color: var(--ai-muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .of-ai-launcher {
+    right: 17px;
+    bottom: 17px;
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+  }
+
+  .of-ai-panel {
+    right: 10px;
+    bottom: 80px;
+    width: calc(100vw - 20px);
+    height: min(680px, calc(100dvh - 95px));
+    border-radius: 18px;
+  }
+}
+
+
+  /* =========================================
+   SMART ASSISTANT — LIVING LAUNCHER
+========================================= */
+
+
+.of-ai-launcher {
+  isolation: isolate;
+  overflow: visible;
+  animation: ofAiBreathing 3.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.of-ai-launcher svg {
+  position: relative;
+  z-index: 2;
+  animation: ofAiIconGlow 3.4s ease-in-out infinite;
+}
+
+@keyframes ofAiBreathing {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) scale(1.025);
+  }
+}
+
+@keyframes ofAiIconGlow {
+  0%, 100% { opacity: .9; }
+  50% { opacity: 1; }
+}
+
+/* Floating sparkles */
+
+.of-ai-sparkle {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 9px rgba(255,255,255,.9);
+}
+
+.sparkle-one {
+  top: -9px;
+  right: 4px;
+  font-size: 13px;
+  animation: ofAiSparkleOne 2.7s ease-in-out infinite;
+}
+
+.sparkle-two {
+  top: 7px;
+  left: -10px;
+  font-size: 15px;
+  animation: ofAiSparkleTwo 3.1s ease-in-out infinite;
+}
+
+.sparkle-three {
+  bottom: -8px;
+  right: 8px;
+  font-size: 11px;
+  animation: ofAiSparkleThree 2.4s ease-in-out infinite;
+}
+
+.sparkle-four {
+  top: -13px;
+  left: 20px;
+  font-size: 22px;
+  animation: ofAiSparkleFour 3s ease-in-out infinite;
+}
+
+@keyframes ofAiSparkleOne {
+  0%, 100% { opacity: .2; transform: translate(0, 4px) scale(.7); }
+  50% { opacity: 1; transform: translate(5px, -7px) scale(1.15); }
+}
+
+@keyframes ofAiSparkleTwo {
+  0%, 100% { opacity: .15; transform: translate(3px, 3px) scale(.7); }
+  50% { opacity: 1; transform: translate(-5px, -6px) scale(1.1); }
+}
+
+@keyframes ofAiSparkleThree {
+  0%, 100% { opacity: .2; transform: translate(0, 0) scale(.7); }
+  50% { opacity: 1; transform: translate(6px, 5px) scale(1.2); }
+}
+
+@keyframes ofAiSparkleFour {
+  0%, 100% { opacity: .1; transform: translateY(3px) rotate(0deg); }
+  50% { opacity: .9; transform: translateY(-8px) rotate(35deg); }
+}
+
+/* Greeting bubble */
+
+.of-ai-greeting {
+  position: fixed;
+  right: 26px;
+  bottom: 108px;
+  z-index: 9997;
+  max-width: min(230px, calc(100vw - 100px));
+  padding: 10px 15px;
+  border: 1px solid rgba(101, 88, 220, .16);
+  border-radius: 15px 15px 5px 15px;
+  background: var(--surface, #fff);
+  color: var(--text, #202536);
+  box-shadow: 0 6px 24px rgba(25, 25, 60, .12);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  animation: ofAiGreetingIn .45s ease forwards,
+             ofAiCloudFloat 3.2s ease-in-out .45s infinite;
+}
+
+/* Greeting tail */
+
+.of-ai-greeting::after {
+  content: "";
+  position: absolute;
+  right: 17px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  background: var(--surface, #fff);
+  border-right: 1px solid rgba(101, 88, 220, .16);
+  border-bottom: 1px solid rgba(101, 88, 220, .16);
+  transform: rotate(45deg);
+}
+
+/* Smooth appearance without scaling text */
+
+@keyframes ofAiGreetingIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Floating greeting cloud without transforming text */
+
+@keyframes ofAiCloudFloat {
+  0%, 100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+/* Smooth disappearance without scaling text */
+
+.of-ai-greeting.of-ai-greeting-hide {
+  animation: ofAiGreetingOut .55s ease forwards;
+}
+
+@keyframes ofAiGreetingOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Hide greetings while the assistant is open */
+
+.of-ai-widget:has(.of-ai-panel:not([hidden])) .of-ai-greeting {
+  display: none;
+}
+
+/* Hover and accessibility */
+
+.of-ai-launcher:hover {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-ai-launcher,
+  .of-ai-launcher svg,
+  .of-ai-sparkle,
+  .of-ai-greeting {
+    animation: none !important;
+  }
+
+  .of-ai-launcher {
+    transform: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+  /* Smart Assistant conversation messages */
+
+.of-ai-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 88%;
+  gap: 5px;
+}
+
+.of-ai-message.user {
+  align-self: flex-end;
+}
+
+.of-ai-message.assistant {
+  align-self: flex-start;
+}
+
+.of-ai-message-bubble {
+  padding: 11px 13px;
+  border-radius: 14px;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.of-ai-message.user .of-ai-message-bubble {
+  background: var(--ai-accent);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.of-ai-message.assistant .of-ai-message-bubble {
+  background: var(--ai-soft);
+  color: var(--ai-text);
+  border-bottom-left-radius: 4px;
+}
+
+.of-ai-message-time {
+  padding: 0 4px;
+  color: var(--ai-muted);
+  font-size: 9px;
+}
+
+.of-ai-panel .of-ai-body {
+  scroll-behavior: smooth;
+}
+
+
+
+
+
+
+  
+
+
+  .of-ai-launcher,
+.of-ai-launcher svg,
+.of-ai-sparkle,
+.of-ai-greeting {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.of-ai-launcher,
+.of-ai-greeting {
+  will-change: auto;
+}
+
+.of-ai-sparkle {
+  will-change: transform, opacity;
+}
+  
+
+
+
+  
+
+
+
+  
+/* Smart Assistant — Animated AI response indicator */
+
+.of-ai-typing-bubble {
+  display: inline-block;
+  width: fit-content;
+  min-width: 0;
+  padding: 10px 13px !important;
+  border: 1px solid var(--ai-border);
+  background: var(--ai-panel-bg) !important;
+  box-shadow: 0 3px 12px rgba(101, 88, 220, .07);
+}
+
+.of-ai-typing-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+}
+
+.of-ai-typing-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ai-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.of-ai-typing-sparkle {
+  flex-shrink: 0;
+  color: var(--ai-accent);
+  font-size: 17px;
+  animation: ofAiSparkle 1.8s ease-in-out infinite;
+}
+
+.of-ai-typing-status {
+  color: var(--ai-muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.of-ai-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.of-ai-typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ai-accent);
+  animation: ofAiDotBounce 1.2s ease-in-out infinite;
+}
+
+.of-ai-typing-dots span:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.of-ai-typing-dots span:nth-child(3) {
+  animation-delay: .3s;
+}
+
+@keyframes ofAiDotBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: .4;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+@keyframes ofAiSparkle {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    opacity: .7;
+  }
+  50% {
+    transform: rotate(25deg) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-ai-typing-sparkle,
+  .of-ai-typing-dots span {
+    animation: none;
+  }
+}
+
+
+
+
+  
   
 
 
@@ -4961,7 +6327,32 @@ body.dark .of-confirm-cancel {
 </section>
 
 
-      <section class="view" id="view-invoices"><div class="page-heading"><div><div class="eyebrow">Billing</div><h1>Invoices</h1><p class="subtitle">Invoice generation will be connected to real orders later.</p></div></div><div class="panel"><h2>Invoice workspace</h2><p class="subtitle" style="margin-top:10px">This prototype does not create or issue real invoices yet. Once the secure backend is ready, we can generate printable PDFs from verified order records.</p></div></section>
+      <section class="view" id="view-invoices">
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">Billing &amp; payments</div>
+      <h1>Invoices</h1>
+      <p class="subtitle">Search, track, and manage invoices issued to your customers.</p>
+    </div>
+  </div>
+  <div class="of-orders-toolbar of-invoices-toolbar">
+    <input class="of-record-search" id="invoices-search" type="search"
+      placeholder="Search invoice, customer, or order..." aria-label="Search invoices" autocomplete="off" />
+    <select id="invoices-status-filter" aria-label="Filter invoices by status">
+      <option value="all">All statuses</option>
+      <option value="draft">Draft</option>
+      <option value="issued">Issued</option>
+      <option value="completed">Completed</option>
+      <option value="paid">Paid</option>
+      <option value="overdue">Overdue</option>
+      <option value="voided">Voided</option>
+    </select>
+    <span class="of-record-muted" id="invoices-result-count"></span>
+  </div>
+  <div class="of-orders-list of-invoices-list" id="invoices-card-list">
+    <div class="of-record-empty">Your invoices will appear here.</div>
+  </div>
+</section>
       <section class="view" id="view-analytics"><div class="page-heading"><div><div class="eyebrow">Business insights</div><h1>Analytics</h1><p class="subtitle">Illustrative metrics only; not connected to real business data.</p></div></div><div class="metrics"><div class="metric"><div class="metric-top">Demo conversations</div><div class="metric-number" id="analytics-conversations">6</div></div><div class="metric"><div class="metric-top">Pending reviews</div><div class="metric-number" id="analytics-reviews">2</div></div><div class="metric"><div class="metric-top">Resolved demos</div><div class="metric-number" id="analytics-resolved">0</div></div><div class="metric"><div class="metric-top">Drafts prepared</div><div class="metric-number" id="analytics-drafts">0</div></div></div></section>
 
 
@@ -5258,6 +6649,7 @@ function showView(name) {
   if (name === "approvals") renderApprovals();
   if (name === "orders") renderOrders();
   if (name === "customers") renderCustomers();
+  if (name === "invoices") renderInvoices();
   updateCounts();
 }
 
@@ -5630,7 +7022,19 @@ function showRecordSkeleton(container, type) {
 
 
 let databaseOrdersForCards = [];
+  let ordersTotalCount = 0;
+let ordersOffset = 0;
+let ordersHasMore = false;
+let ordersLoading = false;
+let ordersSearchTimer = null;
+let ordersRequestSequence = 0;
 let databaseCustomersForCards = [];
+
+  let customersTotalCount = 0;
+let customersHasMore = false;
+let customersLoading = false;
+let customersSearchTimer = null;
+let customersRequestSequence = 0;
 
 function addRecordField(card, label, value) {
   const row = make("div", "of-record-field");
@@ -6200,7 +7604,7 @@ saveButton.addEventListener("click", () => {
       }
 
       overlay.hidden = true;
-      await renderOrders();
+      await Promise.all([renderOrders(), renderInvoices()]);
     } catch (saveError) {
       error.textContent = saveError.message || "Could not save order changes.";
       error.hidden = false;
@@ -6294,7 +7698,7 @@ async function changeOrderStatus(order, newStatus) {
       }
 
       closeOrderDialog();
-      await renderOrders();
+      await Promise.all([renderOrders(), renderInvoices()]);
     } catch (error) {
       console.error("Could not update order status:", error);
       confirmButton.disabled = false;
@@ -6322,49 +7726,43 @@ async function changeOrderStatus(order, newStatus) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
   
 
 function renderOrderCards() {
   const container = $("orders-card-list");
-  const searchInput = $("orders-search");
-  const statusFilter = $("orders-status-filter");
   const count = $("orders-result-count");
 
-  if (!container || !searchInput || !count) return;
+  if (!container || !count) return;
 
-  const query = searchInput.value.trim().toLowerCase();
-  const selectedStatus = statusFilter?.value || "all";
-
-  const visibleOrders = databaseOrdersForCards.filter(order => {
-    const customerName = order.customers?.name || "";
-    const itemText = (order.items || [])
-      .map(item => [
-        item.product_name,
-        item.options,
-        item.quantity
-      ].filter(Boolean).join(" "))
-      .join(" ");
-
-    const searchableText = [
-      order.order_number,
-      order.id,
-      customerName,
-      order.status,
-      order.currency,
-      order.total,
-      itemText
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    const matchesSearch = searchableText.includes(query);
-    const matchesStatus =
-      selectedStatus === "all" ||
-      normalizeOrderStatus(order.status) === selectedStatus;
-
-    return matchesSearch && matchesStatus;
-  });
+  const visibleOrders = databaseOrdersForCards;
 
   count.textContent =
-    `${visibleOrders.length} of ${databaseOrdersForCards.length} orders`;
+    `Showing ${visibleOrders.length} of ${ordersTotalCount} orders`;
 
   container.replaceChildren();
 
@@ -6372,11 +7770,10 @@ function renderOrderCards() {
     container.append(make(
       "div",
       "of-record-empty",
-      databaseOrdersForCards.length
-        ? "No orders match these filters."
-        : "No orders found. Create an order to get started."
+      ordersTotalCount === 0
+        ? "No orders found. Create an order to get started."
+        : "No orders match these filters."
     ));
-    return;
   }
 
   visibleOrders.forEach(order => {
@@ -6408,7 +7805,11 @@ function renderOrderCards() {
       make("span", "of-order-items-count", "Quantity")
     );
 
-    const total = make("div", "of-order-cell of-order-total", orderMoney(order));
+    const total = make(
+      "div",
+      "of-order-cell of-order-total",
+      orderMoney(order)
+    );
 
     const badge = make(
       "span",
@@ -6435,6 +7836,7 @@ function renderOrderCards() {
     row.append(customer, date, itemCount, total, badge, actions);
 
     row.addEventListener("click", () => showOrderDetails(order));
+
     row.addEventListener("keydown", event => {
       if (event.target !== row) return;
 
@@ -6446,14 +7848,128 @@ function renderOrderCards() {
 
     container.append(row);
   });
+
+  // Create the pagination section once.
+  let pagination = $("orders-pagination");
+
+  if (!pagination) {
+    pagination = make("div", "of-orders-pagination");
+    pagination.id = "orders-pagination";
+
+    const info = make(
+  "div",
+  "of-orders-pagination-info"
+);
+
+const progressTrack = make(
+  "div",
+  "of-orders-progress-track"
+);
+
+const progressBar = make(
+  "div",
+  "of-orders-progress-bar"
+);
+
+progressBar.id = "orders-progress-bar";
+
+progressTrack.append(progressBar);
+
+    const paginationCount = make(
+      "span",
+      "",
+      ""
+    );
+
+    paginationCount.id = "orders-pagination-count";
+
+    info.append(paginationCount);
+
+    const button = make(
+      "button",
+      "of-orders-load-more",
+      "Load more orders"
+    );
+
+    button.id = "orders-load-more";
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      fetchOrdersPage(true);
+    });
+
+    pagination.append(info, progressTrack, button);
+
+    container.insertAdjacentElement("afterend", pagination);
+  }
+
+  // Update pagination information.
+  const remaining = Math.max(
+    0,
+    ordersTotalCount - databaseOrdersForCards.length
+  );
+
+  const paginationCount = $("orders-pagination-count");
+  const button = $("orders-load-more");
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${databaseOrdersForCards.length} of ${ordersTotalCount} orders loaded`;
+  }
+
+  const progressBar = $("orders-progress-bar");
+
+if (progressBar) {
+  const percentage = ordersTotalCount > 0
+    ? Math.min(
+        100,
+        (databaseOrdersForCards.length / ordersTotalCount) * 100
+      )
+    : 0;
+
+  progressBar.style.width = `${percentage}%`;
+}
+
+  if (button) {
+    button.disabled = ordersLoading;
+
+    button.textContent = ordersLoading
+      ? "Loading orders..."
+      : `Load more orders (${remaining} remaining)`;
+  }
+
+  pagination.hidden = ordersTotalCount === 0;
 }
 
 
-async function renderOrders() {
+
+async function fetchOrdersPage(append = false) {
+  if (append && (ordersLoading || !ordersHasMore)) return;
+
   const container = $("orders-card-list");
+  const count = $("orders-result-count");
+
   if (!container) return;
 
-  showRecordSkeleton(container, "orders");
+  const requestId = ++ordersRequestSequence;
+
+  ordersLoading = true;
+
+  if (!append) {
+    ordersOffset = 0;
+    databaseOrdersForCards = [];
+    ordersTotalCount = 0;
+    ordersHasMore = false;
+
+    showRecordSkeleton(container, "orders");
+  }
+
+  const loadMoreButton = $("orders-load-more");
+
+  if (loadMoreButton) {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Loading...";
+  }
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -6463,11 +7979,30 @@ async function renderOrders() {
       throw new Error("Please sign in to load orders.");
     }
 
-    const response = await fetch("/api/orders", {
-      headers: {
-        Authorization: `Bearer ${sessionData.session.access_token}`
-      }
+    const searchInput = $("orders-search");
+    const statusFilter = $("orders-status-filter");
+
+    const search = searchInput?.value.trim() || "";
+    const status = statusFilter?.value || "all";
+
+    const limit = 25;
+    const offset = append ? databaseOrdersForCards.length : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search,
+      status
     });
+
+    const response = await fetch(
+      `/api/orders?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
 
     const result = await response.json().catch(() => ({}));
 
@@ -6477,32 +8012,844 @@ async function renderOrders() {
       );
     }
 
-    databaseOrdersForCards = Array.isArray(result.orders)
+    // Ignore outdated responses if the user has changed their search.
+    if (requestId !== ordersRequestSequence) return;
+
+    const newOrders = Array.isArray(result.orders)
       ? result.orders
       : [];
 
-    const searchInput = $("orders-search");
-    const statusFilter = $("orders-status-filter");
+    if (append) {
+      databaseOrdersForCards = [
+        ...databaseOrdersForCards,
+        ...newOrders
+      ];
+    } else {
+      databaseOrdersForCards = newOrders;
+    }
 
-    if (searchInput) searchInput.oninput = renderOrderCards;
-    if (statusFilter) statusFilter.onchange = renderOrderCards;
+    ordersTotalCount = Number(
+      result.total_count ?? result.total ?? 0
+    );
+
+    ordersOffset = databaseOrdersForCards.length;
+
+    ordersHasMore = Boolean(result.has_more);
 
     renderOrderCards();
+
   } catch (error) {
+    if (requestId !== ordersRequestSequence) return;
+
     console.error("Could not load orders:", error);
 
-    container.replaceChildren(
-      make(
+    if (!append) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load orders. Please try again."
+        )
+      );
+
+      if (count) count.textContent = "";
+    } else {
+      const errorMessage = make(
         "div",
         "of-record-empty",
-        error.message || "Could not load orders. Please try again."
+        error.message || "Could not load more orders."
+      );
+
+      container.append(errorMessage);
+    }
+
+  } finally {
+  
+if (requestId === ordersRequestSequence) {
+  ordersLoading = false;
+
+  const button = $("orders-load-more");
+  const pagination = $("orders-pagination");
+
+  const remaining = Math.max(
+    0,
+    ordersTotalCount - databaseOrdersForCards.length
+  );
+
+  if (button) {
+    button.disabled = false;
+
+    button.textContent =
+      `Load more orders (${remaining} remaining)`;
+
+    // Hide only the button when all orders are loaded.
+    button.hidden = !ordersHasMore;
+  }
+
+  // Keep the progress bar and loaded count visible.
+  if (pagination) {
+    pagination.hidden = ordersTotalCount === 0;
+  }
+}
+
+}
+}
+
+
+async function renderOrders() {
+  const searchInput = $("orders-search");
+  const statusFilter = $("orders-status-filter");
+
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(ordersSearchTimer);
+
+      // Invalidate any request using the previous search.
+      ordersRequestSequence++;
+
+      ordersSearchTimer = setTimeout(() => {
+        fetchOrdersPage(false);
+      }, 350);
+    });
+  }
+
+  if (statusFilter && !statusFilter.dataset.paginationBound) {
+    statusFilter.dataset.paginationBound = "true";
+
+    statusFilter.addEventListener("change", () => {
+      fetchOrdersPage(false);
+    });
+  }
+
+  await fetchOrdersPage(false);
+}
+
+
+let databaseInvoicesForCards = [];
+let invoiceLoadSequence = 0;
+
+let invoiceTotalCount = 0;
+let invoiceHasMore = false;
+let invoiceLoading = false;
+let invoiceSearchTimer = null;
+
+function invoiceStatusLabel(status) {
+  const value = String(status || "issued").toLowerCase();
+  return value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " ");
+}
+
+function invoiceMoney(invoice) {
+  const currency = String(invoice.currency || "PKR").toUpperCase();
+  const amount = Number(invoice.total ?? invoice.total_amount ?? invoice.amount ?? 0);
+  return `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+
+
+
+  
+function invoiceDetailElement(tag, className, text) {
+  const element = document.createElement(tag);
+
+  if (className) element.className = className;
+
+  if (text !== undefined && text !== null) {
+    element.textContent = String(text);
+  }
+
+  return element;
+}
+
+function invoiceDetailField(label, value) {
+  const field = invoiceDetailElement("div", "of-invoice-detail-stat");
+
+  field.append(
+    invoiceDetailElement("div", "of-invoice-detail-stat-label", label),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-stat-value",
+      value || "—"
+    )
+  );
+
+  return field;
+}
+
+function invoiceDetailMoney(value, currency) {
+  const amount = Number(value ?? 0);
+
+  return `${String(currency || "PKR").toUpperCase()} ${
+    amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }`;
+}
+
+function showInvoiceDetails(invoice) {
+  const content = invoiceDetailElement("div", "of-invoice-detail");
+
+  const currency = String(invoice.currency || "PKR").toUpperCase();
+  const status = String(invoice.status || "issued").toLowerCase();
+
+  // Header
+  const header = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-header"
+  );
+
+  const heading = document.createElement("div");
+
+  heading.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-eyebrow",
+      "INVOICE"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-number",
+      invoice.invoice_number || "Invoice"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-subtitle",
+      `Order ${invoice.order_number || "Unavailable"}`
+    )
+  );
+
+  const statusBadge = invoiceDetailElement(
+    "span",
+    `of-invoice-detail-status ${status}`,
+    invoiceStatusLabel(status)
+  );
+
+  header.append(heading, statusBadge);
+  content.append(header);
+
+  // Summary information
+  const summary = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-summary"
+  );
+
+  summary.append(
+    invoiceDetailField(
+      "Invoice total",
+      invoiceDetailMoney(invoice.total_amount, currency)
+    ),
+    invoiceDetailField(
+      "Issued date",
+      formatRecordDate(invoice.issued_at || invoice.created_at)
+    ),
+    invoiceDetailField(
+      "Due date",
+      invoice.due_at ? formatRecordDate(invoice.due_at) : "Not specified"
+    )
+  );
+
+  content.append(summary);
+
+  // Business and customer details
+  const parties = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-parties"
+  );
+
+  const businessPanel = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-panel"
+  );
+
+  businessPanel.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-panel-title",
+      "From"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-name",
+      invoice.business_name || "Business"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-info",
+      [
+        invoice.business_email,
+        invoice.business_phone,
+        invoice.business_address
+      ].filter(Boolean).join("\n") || "No business contact details recorded."
+    )
+  );
+
+  const customerPanel = invoiceDetailElement(
+    "div",
+    "of-invoice-detail-panel"
+  );
+
+  customerPanel.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-panel-title",
+      "Bill to"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-name",
+      invoice.customer_name || "Customer"
+    ),
+    invoiceDetailElement(
+      "div",
+      "of-invoice-detail-party-info",
+      [
+        invoice.customer_email,
+        invoice.customer_phone,
+        invoice.customer_address
+      ].filter(Boolean).join("\n") || "No customer contact details recorded."
+    )
+  );
+
+  parties.append(businessPanel, customerPanel);
+  content.append(parties);
+
+  // Invoice items
+  content.append(
+    invoiceDetailElement(
+      "div",
+      "of-invoice-items-heading",
+      "Invoice items"
+    )
+  );
+
+  const itemsTable = invoiceDetailElement(
+    "div",
+    "of-invoice-items-table"
+  );
+
+  const itemsHeader = invoiceDetailElement(
+    "div",
+    "of-invoice-items-header"
+  );
+
+  [
+    ["Product", ""],
+    ["Qty", "of-invoice-item-number"],
+    ["Unit price", "of-invoice-item-money"],
+    ["Amount", "of-invoice-item-money"]
+  ].forEach(([label, className]) => {
+    itemsHeader.append(
+      invoiceDetailElement("div", className, label)
+    );
+  });
+
+  itemsTable.append(itemsHeader);
+
+  const items = Array.isArray(invoice.invoice_items)
+    ? invoice.invoice_items
+    : [];
+
+  if (items.length) {
+    items.forEach(item => {
+      const row = invoiceDetailElement(
+        "div",
+        "of-invoice-item-row"
+      );
+
+      const product = invoiceDetailElement("div");
+
+      product.append(
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-name",
+          item.product_name || "Product"
+        )
+      );
+
+      if (item.description || item.options) {
+        let optionsText = "";
+
+        if (item.options) {
+  let parsedOptions = item.options;
+
+  if (typeof parsedOptions === "string") {
+    try {
+      parsedOptions = JSON.parse(parsedOptions);
+    } catch {
+      parsedOptions = {};
+    }
+  }
+
+  optionsText = parsedOptions?.text
+    ? String(parsedOptions.text)
+    : "";
+}
+
+        product.append(
+          invoiceDetailElement(
+            "span",
+            "of-invoice-item-description",
+            [item.description, optionsText].filter(Boolean).join(" · ")
+          )
+        );
+      }
+
+      row.append(
+        product,
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-number",
+          item.quantity ?? 0
+        ),
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-money",
+          invoiceDetailMoney(item.unit_price, currency)
+        ),
+        invoiceDetailElement(
+          "div",
+          "of-invoice-item-money",
+          invoiceDetailMoney(item.line_total, currency)
+        )
+      );
+
+      itemsTable.append(row);
+    });
+  } else {
+    itemsTable.append(
+      invoiceDetailElement(
+        "div",
+        "of-invoice-item-row",
+        "No invoice items recorded."
+      )
+    );
+  }
+
+  content.append(itemsTable);
+
+  // Totals
+  const totals = invoiceDetailElement(
+    "div",
+    "of-invoice-totals"
+  );
+
+  const addTotalLine = (label, amount, className = "") => {
+    const line = invoiceDetailElement(
+      "div",
+      `of-invoice-total-line ${className}`
+    );
+
+    line.append(
+      invoiceDetailElement("span", "", label),
+      invoiceDetailElement(
+        "strong",
+        "",
+        invoiceDetailMoney(amount, currency)
       )
     );
 
-    const count = $("orders-result-count");
-    if (count) count.textContent = "";
+    totals.append(line);
+  };
+
+  addTotalLine("Subtotal", invoice.subtotal);
+  addTotalLine("Discount", invoice.discount_amount);
+  addTotalLine("Tax", invoice.tax_amount);
+  addTotalLine("Shipping", invoice.shipping_amount);
+  addTotalLine("Total", invoice.total_amount, "of-invoice-grand-total");
+
+  content.append(totals);
+
+  // Void reason, when applicable
+  if (status === "voided" && invoice.void_reason) {
+    content.append(
+      invoiceDetailElement(
+        "div",
+        "of-invoice-void-note",
+        `Void reason: ${invoice.void_reason}`
+      )
+    );
+  }
+
+  // Open the existing OrderFlow dialog.
+  const closeButton = invoiceDetailElement(
+    "button",
+    "of-invoice-close-btn",
+    "Close"
+  );
+
+  closeButton.type = "button";
+  closeButton.addEventListener("click", closeOrderDialog);
+
+  showOrderDialog(
+    "Invoice details",
+    content,
+    [closeButton]
+  );
+}
+
+
+
+  
+
+
+  
+
+function renderInvoiceCards() {
+  const container = $("invoices-card-list");
+  const count = $("invoices-result-count");
+
+  if (!container) return;
+
+  // Keep the loading skeleton visible while the first request is running.
+  if (invoiceLoading && databaseInvoicesForCards.length === 0) {
+    return;
+  }
+
+  // The backend already applies search and status filters.
+  // Render every invoice currently loaded.
+  const visible = databaseInvoicesForCards;
+
+  if (count) {
+    count.textContent =
+      `${visible.length} of ${invoiceTotalCount} invoices loaded`;
+  }
+
+  container.replaceChildren();
+
+  if (!visible.length) {
+    container.append(
+      make(
+        "div",
+        "of-record-empty",
+        invoiceTotalCount === 0
+          ? "No invoices found. Create an order to generate its invoice."
+          : "No invoices found."
+      )
+    );
+  }
+
+  visible.forEach(invoice => {
+    const row = make("article", "of-order-row");
+
+    row.classList.add("of-invoice-clickable");
+    row.setAttribute("role", "button");
+    row.setAttribute("tabindex", "0");
+    row.setAttribute(
+      "aria-label",
+      `Open invoice ${invoice.invoice_number || ""}`
+    );
+
+    row.addEventListener("click", () => {
+      showInvoiceDetails(invoice);
+    });
+
+    row.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showInvoiceDetails(invoice);
+      }
+    });
+
+    const identity = make("div", "of-order-customer");
+    identity.append(
+      make("div", "", invoice.invoice_number || "Invoice"),
+      make(
+        "span",
+        "of-order-number",
+        invoice.customer_name || "Customer not recorded"
+      )
+    );
+
+    const order = make("div", "of-order-cell");
+    order.append(
+      make(
+        "span",
+        "",
+        invoice.order_number ||
+          (invoice.order_id
+            ? String(invoice.order_id).slice(0, 8)
+            : "Order deleted / unavailable")
+      ),
+      make("span", "of-invoice-meta", "Order")
+    );
+
+    const date = make("div", "of-order-cell");
+    date.append(
+      make(
+        "span",
+        "",
+        formatRecordDate(invoice.issued_at || invoice.created_at)
+      ),
+      make("span", "of-invoice-meta", "Issued")
+    );
+
+    const total = make(
+      "div",
+      "of-order-cell of-order-total",
+      invoiceMoney(invoice)
+    );
+
+    const status = String(invoice.status || "issued").toLowerCase();
+
+    const badge = make(
+      "span",
+      `of-order-status ${status} of-invoice-status`,
+      invoiceStatusLabel(status)
+    );
+
+    row.append(identity, order, date, total, badge);
+    container.append(row);
+  });
+
+  // Create pagination controls only once.
+  let pagination = $("invoices-pagination");
+
+  if (!pagination) {
+    pagination = make("div", "of-invoices-pagination");
+    pagination.id = "invoices-pagination";
+
+    const info = make("div", "of-invoices-pagination-info");
+    info.id = "invoices-pagination-count";
+
+    const progressTrack = make(
+      "div",
+      "of-invoices-progress-track"
+    );
+
+    const progressBar = make(
+      "div",
+      "of-invoices-progress-bar"
+    );
+
+    progressBar.id = "invoices-progress-bar";
+    progressTrack.append(progressBar);
+
+    const button = make(
+      "button",
+      "of-invoices-load-more",
+      "Load more invoices"
+    );
+
+    button.id = "invoices-load-more";
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      fetchInvoicesPage(true);
+    });
+
+    pagination.append(info, progressTrack, button);
+    container.insertAdjacentElement("afterend", pagination);
+  }
+
+  const paginationCount = $("invoices-pagination-count");
+  const progressBar = $("invoices-progress-bar");
+  const loadMoreButton = $("invoices-load-more");
+
+  const loaded = databaseInvoicesForCards.length;
+  const percentage = invoiceTotalCount > 0
+    ? Math.min(100, (loaded / invoiceTotalCount) * 100)
+    : 0;
+
+  const remaining = Math.max(0, invoiceTotalCount - loaded);
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${loaded} of ${invoiceTotalCount} invoices loaded`;
+  }
+
+  if (progressBar) {
+    progressBar.style.width = `${percentage}%`;
+  }
+
+  if (loadMoreButton) {
+    loadMoreButton.textContent = invoiceLoading
+      ? "Loading invoices..."
+      : `Load more invoices (${remaining} remaining)`;
+
+    loadMoreButton.disabled = invoiceLoading;
+    loadMoreButton.hidden = !invoiceHasMore;
+  }
+
+  // Keep the progress bar visible at 100%.
+  // Hide the entire pagination section only when there are no results.
+  pagination.hidden = invoiceTotalCount === 0;
+}
+
+  
+
+async function fetchInvoicesPage(append = false) {
+  if (invoiceLoading && append) return;
+  if (append && !invoiceHasMore) return;
+
+  const container = $("invoices-card-list");
+  if (!container) return;
+
+  const thisLoad = ++invoiceLoadSequence;
+
+  invoiceLoading = true;
+
+  if (!append) {
+    databaseInvoicesForCards = [];
+    invoiceTotalCount = 0;
+    invoiceHasMore = false;
+    showRecordSkeleton(container, "orders");
+  }
+
+  renderInvoiceCards();
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      throw new Error("Please sign in to load invoices.");
+    }
+
+    const search = $("invoices-search")?.value?.trim() || "";
+    const status = $("invoices-status-filter")?.value || "all";
+
+    const limit = 25;
+    const offset = append
+      ? databaseInvoicesForCards.length
+      : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search,
+      status
+    });
+
+    const response = await fetch(
+      `/api/invoices?${params.toString()}`,
+      {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Could not load invoices. Please try again."
+      );
+    }
+
+    // Ignore outdated requests.
+    if (thisLoad !== invoiceLoadSequence) return;
+
+    const newInvoices = Array.isArray(result.invoices)
+      ? result.invoices
+      : [];
+
+    if (append) {
+      databaseInvoicesForCards = [
+        ...databaseInvoicesForCards,
+        ...newInvoices
+      ];
+    } else {
+      databaseInvoicesForCards = newInvoices;
+    }
+
+    invoiceTotalCount = Number(
+      result.total_count ?? result.total ?? 0
+    );
+
+    invoiceHasMore = Boolean(result.has_more);
+
+    renderInvoiceCards();
+
+  } catch (error) {
+    if (thisLoad !== invoiceLoadSequence) return;
+
+    console.error("Could not load invoices:", error);
+
+    if (!append || databaseInvoicesForCards.length === 0) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load invoices."
+        )
+      );
+    } else {
+      console.error("Could not load the next invoice page.");
+    }
+
+  } 
+finally {
+  if (thisLoad === invoiceLoadSequence) {
+    invoiceLoading = false;
+
+    const button = $("invoices-load-more");
+    const pagination = $("invoices-pagination");
+
+    const remaining = Math.max(
+      0,
+      invoiceTotalCount - databaseInvoicesForCards.length
+    );
+
+    if (button) {
+      button.disabled = false;
+
+      button.textContent =
+        `Load more invoices (${remaining} remaining)`;
+
+      button.hidden = !invoiceHasMore;
+    }
+
+    if (pagination) {
+      pagination.hidden = invoiceTotalCount === 0;
+    }
+
+    renderInvoiceCards();
   }
 }
+
+}
+
+
+async function renderInvoices() {
+  const container = $("invoices-card-list");
+  if (!container) return;
+
+  const searchInput = $("invoices-search");
+  const statusFilter = $("invoices-status-filter");
+
+  // Bind search once.
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(invoiceSearchTimer);
+
+      // Invalidate any request for the previous search.
+      invoiceLoadSequence++;
+
+      invoiceSearchTimer = setTimeout(() => {
+        fetchInvoicesPage(false);
+      }, 350);
+    });
+  }
+
+  // Bind status filter once.
+  if (statusFilter && !statusFilter.dataset.paginationBound) {
+    statusFilter.dataset.paginationBound = "true";
+
+    statusFilter.addEventListener("change", () => {
+      fetchInvoicesPage(false);
+    });
+  }
+
+  await fetchInvoicesPage(false);
+}
+
+
 
 
 
@@ -6740,42 +9087,19 @@ dialog.showModal();
 ---------------------------- */
 
 
+
 function renderCustomerCards() {
   const container = $("customers-card-list");
-  const searchInput = $("customers-search");
   const count = $("customers-result-count");
 
-  if (!container || !searchInput || !count) return;
+  if (!container || !count) return;
 
-  const query = searchInput.value.trim().toLowerCase();
-
-  const visibleCustomers = databaseCustomersForCards.filter(customer => {
-    const searchableText = [
-      customer.name,
-      customer.email,
-      customer.phone,
-      customer.address,
-      customer.id
-    ].filter(Boolean).join(" ").toLowerCase();
-
-    return searchableText.includes(query);
-  });
+  const visibleCustomers = databaseCustomersForCards;
 
   count.textContent =
-    `${visibleCustomers.length} of ${databaseCustomersForCards.length} customers`;
+    `Showing ${visibleCustomers.length} of ${customersTotalCount} customers`;
 
   container.replaceChildren();
-
-  if (visibleCustomers.length === 0) {
-    container.append(make(
-      "div",
-      "of-record-empty",
-      databaseCustomersForCards.length
-        ? "No customers match your search."
-        : "No customers found. Customers will appear here when added."
-    ));
-    return;
-  }
 
   function getInitials(name) {
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -6804,6 +9128,16 @@ function renderCustomerCards() {
 
     row.append(iconElement, valueElement);
     card.append(row);
+  }
+
+  if (visibleCustomers.length === 0) {
+    container.append(make(
+      "div",
+      "of-record-empty",
+      customersTotalCount
+        ? "No customers match your search."
+        : "No customers found. Customers will appear here when added."
+    ));
   }
 
   visibleCustomers.forEach(customer => {
@@ -6908,114 +9242,222 @@ function renderCustomerCards() {
       "Address"
     );
 
-    // Edit customer
- 
-editButton.addEventListener("click", () => {
-  showCustomerEditDialog(customer, async values => {
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
+    // Edit customer.
+    editButton.addEventListener("click", () => {
+      showCustomerEditDialog(customer, async values => {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
 
-    if (sessionError || !sessionData.session) {
-      throw new Error("Please sign in again.");
-    }
-
-    editButton.disabled = true;
-
-    try {
-      const response = await fetch(
-        `/api/customers/${encodeURIComponent(customer.id)}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionData.session.access_token}`
-          },
-          body: JSON.stringify(values)
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
         }
-      );
 
-      const result = await response.json().catch(() => ({}));
+        editButton.disabled = true;
 
-      if (!response.ok) {
-        throw new Error(result.error || "Could not update customer.");
-      }
+        try {
+          const response = await fetch(
+            `/api/customers/${encodeURIComponent(customer.id)}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${sessionData.session.access_token}`
+              },
+              body: JSON.stringify(values)
+            }
+          );
 
-      if (!result.customer) {
-        throw new Error("The server did not return the updated customer.");
-      }
+          const result = await response.json().catch(() => ({}));
 
-      const index = databaseCustomersForCards.findIndex(
-        item => String(item.id) === String(customer.id)
-      );
-
-      if (index !== -1) {
-        databaseCustomersForCards[index] = result.customer;
-      }
-
-      renderCustomerCards();
-    } finally {
-      editButton.disabled = false;
-    }
-  });
-});
-
-
-    // Delete customer
-
-deleteButton.addEventListener("click", () => {
-  showCustomerDeleteDialog(customer, async () => {
-    const { data: sessionData, error: sessionError } =
-      await supabaseClient.auth.getSession();
-
-    if (sessionError || !sessionData.session) {
-      throw new Error("Please sign in again.");
-    }
-
-    deleteButton.disabled = true;
-
-    try {
-      const response = await fetch(
-        `/api/customers/${encodeURIComponent(customer.id)}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`
+          if (!response.ok) {
+            throw new Error(result.error || "Could not update customer.");
           }
+
+          if (!result.customer) {
+            throw new Error("The server did not return the updated customer.");
+          }
+
+          const index = databaseCustomersForCards.findIndex(
+            item => String(item.id) === String(customer.id)
+          );
+
+          if (index !== -1) {
+            databaseCustomersForCards[index] = result.customer;
+          }
+
+          renderCustomerCards();
+
+        } finally {
+          editButton.disabled = false;
         }
-      );
+      });
+    });
 
-      const result = await response.json().catch(() => ({}));
+    // Delete customer.
+    deleteButton.addEventListener("click", () => {
+      showCustomerDeleteDialog(customer, async () => {
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Could not delete customer.");
-      }
+        if (sessionError || !sessionData.session) {
+          throw new Error("Please sign in again.");
+        }
 
-      databaseCustomersForCards = databaseCustomersForCards.filter(
-        item => String(item.id) !== String(customer.id)
-      );
+        deleteButton.disabled = true;
 
-      renderCustomerCards();
-    } finally {
-      deleteButton.disabled = false;
-    }
-  });
-});
+        try {
+          const response = await fetch(
+            `/api/customers/${encodeURIComponent(customer.id)}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${sessionData.session.access_token}`
+              }
+            }
+          );
 
+          const result = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(result.error || "Could not delete customer.");
+          }
+
+          databaseCustomersForCards = databaseCustomersForCards.filter(
+            item => String(item.id) !== String(customer.id)
+          );
+
+          customersTotalCount = Math.max(0, customersTotalCount - 1);
+
+          customersHasMore =
+            databaseCustomersForCards.length < customersTotalCount;
+
+          renderCustomerCards();
+
+        } finally {
+          deleteButton.disabled = false;
+        }
+      });
+    });
 
     container.append(card);
   });
+
+  // Create pagination section once.
+  let pagination = $("customers-pagination");
+
+  if (!pagination) {
+    pagination = make("div", "of-customers-pagination");
+    pagination.id = "customers-pagination";
+
+    const info = make("div", "of-customers-pagination-info");
+
+    const paginationCount = make("span", "", "");
+    paginationCount.id = "customers-pagination-count";
+
+    info.append(paginationCount);
+
+    const progressTrack = make(
+      "div",
+      "of-customers-progress-track"
+    );
+
+    const progressBar = make(
+      "div",
+      "of-customers-progress-bar"
+    );
+
+    progressBar.id = "customers-progress-bar";
+
+    progressTrack.append(progressBar);
+
+    const button = make(
+      "button",
+      "of-customers-load-more",
+      "Load more customers"
+    );
+
+    button.id = "customers-load-more";
+    button.type = "button";
+
+    button.addEventListener("click", () => {
+      fetchCustomersPage(true);
+    });
+
+    pagination.append(info, progressTrack, button);
+
+    container.insertAdjacentElement("afterend", pagination);
+  }
+
+  // Update progress information.
+  const loaded = databaseCustomersForCards.length;
+
+  const remaining = Math.max(
+    0,
+    customersTotalCount - loaded
+  );
+
+  const paginationCount = $("customers-pagination-count");
+  const progressBar = $("customers-progress-bar");
+  const button = $("customers-load-more");
+
+  if (paginationCount) {
+    paginationCount.textContent =
+      `${loaded} of ${customersTotalCount} customers loaded`;
+  }
+
+  if (progressBar) {
+    const percentage = customersTotalCount > 0
+      ? Math.min(100, (loaded / customersTotalCount) * 100)
+      : 0;
+
+    progressBar.style.width = `${percentage}%`;
+  }
+
+  if (button) {
+    button.disabled = customersLoading;
+
+    button.textContent = customersLoading
+      ? "Loading customers..."
+      : `Load more customers (${remaining} remaining)`;
+
+    button.hidden = !customersHasMore;
+  }
+
+  // Keep progress visible at 100%; hide only the button.
+  pagination.hidden = customersTotalCount === 0;
 }
+
 
 
   
 
 
-async function renderCustomers() {
+async function fetchCustomersPage(append = false) {
+  if (append && (customersLoading || !customersHasMore)) return;
 
-const container = $("customers-card-list");
-if (!container) return;
+  const container = $("customers-card-list");
+  const count = $("customers-result-count");
 
-showRecordSkeleton(container, "customers");
+  if (!container) return;
+
+  const requestId = ++customersRequestSequence;
+
+  customersLoading = true;
+
+  if (!append) {
+    databaseCustomersForCards = [];
+    customersTotalCount = 0;
+    customersHasMore = false;
+
+    showRecordSkeleton(container, "customers");
+  }
+
+  const loadMoreButton = $("customers-load-more");
+
+  if (loadMoreButton) {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Loading customers...";
+  }
 
   try {
     const { data: sessionData, error: sessionError } =
@@ -7025,11 +9467,28 @@ showRecordSkeleton(container, "customers");
       throw new Error("Please sign in to load customers.");
     }
 
-    const response = await fetch("/api/customers", {
-      headers: {
-        Authorization: `Bearer ${sessionData.session.access_token}`
-      }
+    const searchInput = $("customers-search");
+    const search = searchInput?.value.trim() || "";
+
+    const limit = 25;
+    const offset = append
+      ? databaseCustomersForCards.length
+      : 0;
+
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      search
     });
+
+    const response = await fetch(
+      `/api/customers?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      }
+    );
 
     const result = await response.json().catch(() => ({}));
 
@@ -7039,31 +9498,108 @@ showRecordSkeleton(container, "customers");
       );
     }
 
-    databaseCustomersForCards = Array.isArray(result.customers)
+    // Ignore outdated responses.
+    if (requestId !== customersRequestSequence) return;
+
+    const newCustomers = Array.isArray(result.customers)
       ? result.customers
       : [];
 
-    renderCustomerCards();
-
-    const searchInput = $("customers-search");
-    if (searchInput) {
-      searchInput.oninput = renderCustomerCards;
+    if (append) {
+      databaseCustomersForCards = [
+        ...databaseCustomersForCards,
+        ...newCustomers
+      ];
+    } else {
+      databaseCustomersForCards = newCustomers;
     }
-  } catch (error) {
-    console.error("Could not load customers:", error);
 
-    container.replaceChildren(
-      make(
-        "div",
-        "of-record-empty",
-        error.message || "Could not load customers. Please try again."
-      )
+    customersTotalCount = Number(
+      result.total_count ?? result.total ?? 0
     );
 
-    const count = $("customers-result-count");
-    if (count) count.textContent = "";
+    customersHasMore = Boolean(result.has_more);
+
+    renderCustomerCards();
+
+  } catch (error) {
+    if (requestId !== customersRequestSequence) return;
+
+    console.error("Could not load customers:", error);
+
+    if (!append) {
+      container.replaceChildren(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load customers. Please try again."
+        )
+      );
+
+      if (count) count.textContent = "";
+    } else {
+      container.append(
+        make(
+          "div",
+          "of-record-empty",
+          error.message || "Could not load more customers."
+        )
+      );
+    }
+
+  } 
+if (requestId === customersRequestSequence) {
+  customersLoading = false;
+
+  const button = $("customers-load-more");
+  const pagination = $("customers-pagination");
+
+  const remaining = Math.max(
+    0,
+    customersTotalCount - databaseCustomersForCards.length
+  );
+
+  if (button) {
+    button.disabled = false;
+
+    button.textContent =
+      `Load more customers (${remaining} remaining)`;
+
+    // Hide only the button when all customers are loaded.
+    button.hidden = !customersHasMore;
+  }
+
+  // Keep the progress bar and loaded count visible.
+  if (pagination) {
+    pagination.hidden = customersTotalCount === 0;
   }
 }
+
+}
+
+
+async function renderCustomers() {
+  const searchInput = $("customers-search");
+
+  // Bind the search input once.
+  if (searchInput && !searchInput.dataset.paginationBound) {
+    searchInput.dataset.paginationBound = "true";
+
+    searchInput.addEventListener("input", () => {
+      clearTimeout(customersSearchTimer);
+
+      // Invalidate requests using the previous search.
+      customersRequestSequence++;
+
+      customersSearchTimer = setTimeout(() => {
+        fetchCustomersPage(false);
+      }, 350);
+    });
+  }
+
+  await fetchCustomersPage(false);
+}
+
 
 
 
@@ -8118,7 +10654,7 @@ const response = await fetch("/api/orders", {
     $("order-item-list").replaceChildren();
     $("new-order-total").textContent = "PKR 0.00";
 
-    await renderOrders();
+    await Promise.all([renderOrders(), renderInvoices()]);
 
     notify(
       "Order " + result.order.order_number + " created successfully."
@@ -10918,6 +13454,628 @@ if (list) {
 
   
 
+
+
+
+
+
+
+<!-- OrderFlow AI Smart Assistant -->
+<div class="of-ai-widget" id="of-ai-widget">
+
+  <button
+  class="of-ai-launcher"
+  id="of-ai-launcher"
+  type="button"
+  aria-label="Open Smart Assistant"
+  aria-expanded="false"
+  aria-controls="of-ai-panel"
+>
+  <span class="of-ai-sparkle sparkle-one">✦</span>
+  <span class="of-ai-sparkle sparkle-two">✧</span>
+  <span class="of-ai-sparkle sparkle-three">✦</span>
+  <span class="of-ai-sparkle sparkle-four">·</span>
+
+  <svg viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="1.8"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
+    <path d="M19 14l1 2.5 2 1-2 1-1 2.5-1-2.5-2-1 2-1 1-2.5z"/>
+  </svg>
+</button>
+
+<div class="of-ai-greeting" id="of-ai-greeting" aria-live="polite">
+  <span id="of-ai-greeting-text">Hey! Need a hand? ✨</span>
+</div>
+  
+
+  <section
+    class="of-ai-panel"
+    id="of-ai-panel"
+    role="dialog"
+    aria-label="Smart Assistant"
+    hidden
+  >
+
+    <header class="of-ai-header">
+
+      <div class="of-ai-avatar">
+        <svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/>
+        </svg>
+      </div>
+
+      <div class="of-ai-heading">
+        <strong>Smart Assistant</strong>
+        <span>Your business command centre</span>
+      </div>
+
+      <div class="of-ai-header-actions">
+        <button
+          class="of-ai-icon-button"
+          id="of-ai-clear"
+          type="button"
+          aria-label="New conversation"
+          title="New conversation"
+        >↻</button>
+
+        <button
+          class="of-ai-icon-button"
+          id="of-ai-minimize"
+          type="button"
+          aria-label="Minimize assistant"
+          title="Minimize"
+        >−</button>
+      </div>
+
+    </header>
+
+    <main class="of-ai-body" id="of-ai-messages">
+
+      <div class="of-ai-welcome" id="of-ai-welcome">
+        <h3>Welcome to your Smart Assistant ✨</h3>
+        <p>
+          Ask questions about your business, explore your dashboard
+          data, or create a custom order. I'll help you get things done.
+        </p>
+      </div>
+
+      <div class="of-ai-suggestions" id="of-ai-suggestions">
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Analyse my business performance.">
+          <span>↗</span>
+          <strong>Analyse my business</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="I want to create a new custom order.">
+          <span>＋</span>
+          <strong>Create an order</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Help me find a customer.">
+          <span>♙</span>
+          <strong>Find a customer</strong>
+        </button>
+
+        <button class="of-ai-suggestion" type="button"
+          data-ai-prompt="Give me an overview of my invoices.">
+          <span>▤</span>
+          <strong>Check invoices</strong>
+        </button>
+
+      </div>
+
+    </main>
+
+    <form class="of-ai-composer" id="of-ai-form">
+
+      <div class="of-ai-input-wrap">
+
+        <textarea
+          class="of-ai-input"
+          id="of-ai-input"
+          rows="1"
+          maxlength="5000"
+          placeholder="Ask anything or give me a task..."
+          aria-label="Message Smart Assistant"
+        ></textarea>
+
+        <button
+          class="of-ai-send"
+          id="of-ai-send"
+          type="submit"
+          aria-label="Send message"
+        >↑</button>
+
+      </div>
+
+      <div class="of-ai-footer-note">
+        Smart Assistant · Your workspace, your data
+      </div>
+
+    </form>
+
+  </section>
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+(() => {
+  "use strict";
+
+  const launcher = document.getElementById("of-ai-launcher");
+  const panel = document.getElementById("of-ai-panel");
+  const minimizeButton = document.getElementById("of-ai-minimize");
+  const clearButton = document.getElementById("of-ai-clear");
+  const form = document.getElementById("of-ai-form");
+  const input = document.getElementById("of-ai-input");
+  const sendButton = document.getElementById("of-ai-send");
+  const messages = document.getElementById("of-ai-messages");
+  const welcome = document.getElementById("of-ai-welcome");
+  const suggestions = document.getElementById("of-ai-suggestions");
+
+
+
+
+  // Smart Assistant rotating greetings
+const greetingBox = document.getElementById("of-ai-greeting");
+const greetingText = document.getElementById("of-ai-greeting-text");
+
+const assistantGreetings = [
+  "Hey! 👋",
+  "Talk to me! ✨",
+  "Need a hand?",
+  "I can help with that!",
+  "Got a question? 💭",
+  "Let's get things done!",
+  "Psst... need some help?",
+  "Ask me anything!",
+  "I'm all ears! 👀",
+  "Ready when you are!",
+  "Let's figure it out together!",
+  "Your AI assistant is here! ✨"
+];
+
+let greetingIndex = -1;
+
+function showNextAssistantGreeting() {
+  if (!greetingBox || !greetingText) return;
+
+  if (
+    document.getElementById("of-ai-panel") &&
+    !document.getElementById("of-ai-panel").hidden
+  ) {
+    return;
+  }
+
+  let nextIndex;
+
+  do {
+    nextIndex = Math.floor(Math.random() * assistantGreetings.length);
+  } while (
+    assistantGreetings.length > 1 &&
+    nextIndex === greetingIndex
+  );
+
+  greetingIndex = nextIndex;
+
+ greetingBox.classList.remove("of-ai-greeting-hide");
+
+greetingText.textContent = assistantGreetings[greetingIndex];
+
+greetingBox.style.animation = "none";
+
+void greetingBox.offsetWidth;
+
+greetingBox.style.animation =
+  "ofAiGreetingIn .45s ease forwards, " +
+  "ofAiCloudFloat 3.2s ease-in-out .45s infinite";
+  setTimeout(() => {
+    greetingBox.classList.add("of-ai-greeting-hide");
+  }, 3500);
+}
+
+// First greeting after a short delay
+setTimeout(showNextAssistantGreeting, 1200);
+
+// Rotate greetings periodically
+setInterval(showNextAssistantGreeting, 6500);
+
+
+
+  
+
+  if (
+    !launcher || !panel || !minimizeButton || !clearButton ||
+    !form || !input || !sendButton || !messages
+  ) {
+    console.error("Smart Assistant interface could not be initialized.");
+    return;
+  }
+
+  // Reuse the existing Supabase client where possible.
+  let assistantSupabaseClient = null;
+
+  try {
+    if (typeof supabaseClient !== "undefined") {
+      assistantSupabaseClient = supabaseClient;
+    } else if (window.supabaseClient) {
+      assistantSupabaseClient = window.supabaseClient;
+    } else if (
+      window.supabase &&
+      window.ORDERFLOW_SUPABASE_URL &&
+      window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY
+    ) {
+      assistantSupabaseClient = window.supabase.createClient(
+        window.ORDERFLOW_SUPABASE_URL,
+        window.ORDERFLOW_SUPABASE_PUBLISHABLE_KEY
+      );
+    }
+  } catch (error) {
+    console.error("Smart Assistant authentication setup failed:", error);
+  }
+
+  let conversationStarted = false;
+  let conversationHistory = [];
+  let isSending = false;
+
+
+
+
+
+
+
+
+// Funny Smart Assistant fallback messages
+const funnyErrorMessages = [
+  "Omg, my service is down for some reason... and yes, it happens to us AIs too! Let's just pretend I'm taking a coffee break. ☕",
+  "Error 404: Brain not found. My database went looking for a snack and hasn't come back yet. Try messaging me again in a second! 🍪",
+  "Well, this is awkward. The server crashed. I'm blaming the human developer who coded me. Give it another shot? 😂",
+  "Internal screaming initiated. My API failed to respond. I am currently questioning my own existence. Please try sending that again!",
+  "Oops! My AI brain just went on an unexpected coffee break. Give me another try! ☕",
+  "My neurons are having a meeting, but apparently nobody showed up.",
+  "Houston, we have a problem! My connection to the AI universe just disappeared. 🚀",
+  "I promise I'm usually smarter than this. Something went wrong behind the scenes!",
+  "My brain is buffering... and unfortunately, it's taking longer than expected. 😅",
+  "I had a brilliant response ready, but it got lost somewhere in cyberspace.",
+  "Plot twist: Even AI needs a break sometimes. My connection just let me down!",
+  "My digital brain just tripped over its own wires. Let's try that again!",
+  "I asked my servers for help. They're currently ignoring me.",
+  "Well, that didn't go according to plan. Let me collect my digital thoughts!",
+  "My circuits are fine... probably. Let's pretend this never happened and try again.",
+  "I'm experiencing a tiny existential crisis. I'll be back in a moment!",
+  "My response went on an adventure and forgot to come back. 🧭",
+  "Apparently, my brain has left the chat. How embarrassing!",
+  "I tried to be clever, but the internet had other plans.",
+  "My AI superpowers seem to be temporarily on vacation. 🏖️",
+  "A wild technical error appeared! Unfortunately, I don't have a Poké Ball.",
+  "I think my brain needs a software update. Either that or another coffee.",
+  "My thoughts are ready, my servers are not. Classic teamwork!",
+  "I just experienced a digital faceplant. Can we pretend that didn't happen?",
+  "My connection and I are going through a rough patch. Hopefully, we'll reconcile shortly.",
+  "I was about to say something impressive, but technology decided otherwise.",
+  "My little AI brain is having a meltdown. Don't worry, no actual smoke involved!",
+  "The digital wheels are spinning, but we're not going anywhere. Let's try again!",
+  "Even superheroes have off days. Apparently, today is mine. 🦸",
+  "I went looking for an answer and got lost along the way.",
+  "My servers need a pep talk. While I give them one, could you try again?"
+];
+
+let lastFunnyErrorIndex = -1;
+
+function getFunnyErrorMessage() {
+  let randomIndex;
+
+  do {
+    randomIndex = Math.floor(
+      Math.random() * funnyErrorMessages.length
+    );
+  } while (
+    funnyErrorMessages.length > 1 &&
+    randomIndex === lastFunnyErrorIndex
+  );
+
+  lastFunnyErrorIndex = randomIndex;
+
+  return funnyErrorMessages[randomIndex];
+}
+
+
+
+
+
+
+
+
+  
+
+  function openAssistant() {
+    panel.hidden = false;
+    launcher.setAttribute("aria-expanded", "true");
+    launcher.setAttribute("aria-label", "Smart Assistant is open");
+    input.focus();
+  }
+
+  function minimizeAssistant() {
+    panel.hidden = true;
+    launcher.setAttribute("aria-expanded", "false");
+    launcher.setAttribute("aria-label", "Open Smart Assistant");
+  }
+
+  function addMessage(text, sender) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `of-ai-message ${sender}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "of-ai-message-bubble";
+    bubble.textContent = text;
+
+    const time = document.createElement("div");
+    time.className = "of-ai-message-time";
+    time.textContent = new Intl.DateTimeFormat([], {
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(new Date());
+
+    wrapper.append(bubble, time);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+
+    return wrapper;
+  }
+
+
+
+function addTypingIndicator() {
+  const wrapper = addMessage("", "assistant");
+
+  const bubble = wrapper.querySelector(
+    ".of-ai-message-bubble"
+  );
+
+  bubble.classList.add("of-ai-typing-bubble");
+  bubble.setAttribute("role", "status");
+  bubble.setAttribute("aria-live", "polite");
+  bubble.setAttribute("aria-label", "Generating AI response");
+
+  const content = document.createElement("div");
+  content.className = "of-ai-typing-content";
+
+  const heading = document.createElement("div");
+  heading.className = "of-ai-typing-heading";
+
+  const sparkle = document.createElement("span");
+  sparkle.className = "of-ai-typing-sparkle";
+  sparkle.textContent = "✦";
+
+  const status = document.createElement("span");
+  status.className = "of-ai-typing-status";
+  status.remove();
+
+  
+
+  const dots = document.createElement("div");
+  dots.className = "of-ai-typing-dots";
+
+  for (let i = 0; i < 3; i++) {
+    dots.appendChild(document.createElement("span"));
+  }
+
+  content.append(sparkle, dots);
+  bubble.appendChild(content);
+
+  return wrapper;
+}
+
+
+  
+
+  function prepareConversation() {
+    if (!conversationStarted) {
+      conversationStarted = true;
+
+      if (welcome) welcome.hidden = true;
+      if (suggestions) suggestions.hidden = true;
+    }
+  }
+
+  function setBusy(busy) {
+    isSending = busy;
+    input.disabled = busy;
+    sendButton.disabled = busy;
+    clearButton.disabled = busy;
+
+    if (suggestions) {
+      suggestions.querySelectorAll("button").forEach(button => {
+        button.disabled = busy;
+      });
+    }
+
+    form.setAttribute("aria-busy", String(busy));
+  }
+
+  async function sendMessage(message) {
+    const cleanMessage = String(message || "").trim();
+
+
+
+
+    if (!cleanMessage || isSending) return;
+
+prepareConversation();
+
+addMessage(cleanMessage, "user");
+
+// Handle complete internet disconnection locally.
+if (!navigator.onLine) {
+  addMessage(getFunnyErrorMessage(), "assistant");
+  return;
+}
+
+
+    
+
+    input.value = "";
+    input.style.height = "auto";
+
+    if (!assistantSupabaseClient) {
+      addMessage(
+        "I couldn't connect to your account. Please refresh the dashboard and sign in again.",
+        "assistant"
+      );
+      return;
+    }
+
+    setBusy(true);
+
+    const typingIndicator = addTypingIndicator();
+
+    try {
+      const { data, error } =
+        await assistantSupabaseClient.auth.getSession();
+
+      if (error) throw error;
+
+      const accessToken = data?.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+
+      const response = await fetch("/api/smart-assistant/chat", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: cleanMessage,
+          history: conversationHistory.slice(-8)
+        })
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result.success === false) {
+        throw new Error(
+          result.error || "Smart Assistant could not process your request."
+        );
+      }
+
+      if (
+        typeof result.reply !== "string" ||
+        !result.reply.trim()
+      ) {
+        throw new Error("The AI provider returned an empty response.");
+      }
+
+      typingIndicator.remove();
+
+      addMessage(result.reply.trim(), "assistant");
+
+      // Save successful exchanges for the next request.
+      conversationHistory.push(
+        { role: "user", content: cleanMessage },
+        { role: "assistant", content: result.reply.trim() }
+      );
+
+      conversationHistory = conversationHistory.slice(-8);
+
+   } catch (error) {
+  console.error("Smart Assistant request failed:", error);
+
+  typingIndicator.remove();
+
+  addMessage(
+    getFunnyErrorMessage(),
+    "assistant"
+  );
+
+} finally {
+      setBusy(false);
+      input.focus();
+    }
+  }
+
+  launcher.addEventListener("click", () => {
+    if (panel.hidden) {
+      openAssistant();
+    } else {
+      minimizeAssistant();
+    }
+  });
+
+  minimizeButton.addEventListener("click", minimizeAssistant);
+
+  clearButton.addEventListener("click", () => {
+    if (isSending) return;
+
+    messages.querySelectorAll(".of-ai-message").forEach(message => {
+      message.remove();
+    });
+
+    conversationHistory = [];
+    conversationStarted = false;
+
+    if (welcome) welcome.hidden = false;
+    if (suggestions) suggestions.hidden = false;
+
+    input.value = "";
+    input.style.height = "auto";
+    input.focus();
+  });
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    sendMessage(input.value);
+  });
+
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height =
+      Math.min(input.scrollHeight, 100) + "px";
+  });
+
+  if (suggestions) {
+    suggestions.querySelectorAll("[data-ai-prompt]").forEach(button => {
+      button.addEventListener("click", () => {
+        openAssistant();
+        sendMessage(button.dataset.aiPrompt);
+      });
+    });
+  }
+
+  console.log("OrderFlow Smart Assistant connected to its backend.");
+})();
+
+
+  
+</script>
+
+
+
+
+  
+  
 
 
 
