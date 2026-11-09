@@ -1357,20 +1357,20 @@ if (existingCustomer) {
 
     
     // Reuse a customer only when all four details match.
-    const existingCustomer = (customers || []).find(customer =>
-      normalizeText(customer.name) === target.name &&
-      normalizePhone(customer.phone) === target.phone &&
-      normalizeText(customer.email) === target.email &&
-      normalizeText(customer.address) === target.address
-    );
+    // const existingCustomer = (customers || []).find(customer =>
+    //   normalizeText(customer.name) === target.name &&
+    //   normalizePhone(customer.phone) === target.phone &&
+    //   normalizeText(customer.email) === target.email &&
+    //   normalizeText(customer.address) === target.address
+    // );
 
-    if (existingCustomer) {
-      return res.status(200).json({
-        message: "Existing customer matched. No duplicate was created.",
-        reused: true,
-        customer: existingCustomer
-      });
-    }
+    // if (existingCustomer) {
+    //   return res.status(200).json({
+    //     message: "Existing customer matched. No duplicate was created.",
+    //     reused: true,
+    //     customer: existingCustomer
+    //   });
+    // }
 
     // No complete match: create a new customer record.
     const { data, error } = await supabase
