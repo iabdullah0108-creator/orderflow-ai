@@ -6401,6 +6401,19 @@ body.dark .of-confirm-cancel {
 </div>
 
 
+      <div class="form-group">
+  <label for="new-order-currency">Currency</label>
+  <select id="new-order-currency" required>
+    <option value="PKR" selected>PKR — Pakistani Rupee</option>
+    <option value="USD">USD — US Dollar</option>
+    <option value="GBP">GBP — British Pound</option>
+    <option value="EUR">EUR — Euro</option>
+    <option value="AED">AED — UAE Dirham</option>
+    <option value="CAD">CAD — Canadian Dollar</option>
+    <option value="AUD">AUD — Australian Dollar</option>
+  </select>
+</div>
+
       <div class="modal-items-heading">
         <h3>Order items</h3>
         <button type="button" class="btn btn-secondary" id="add-order-item">＋ Add item</button>
@@ -10395,6 +10408,7 @@ $("add-order-btn").addEventListener("click", async () => {
 
   $("order-item-list").replaceChildren();
 $("new-order-total").textContent = "PKR 0.00";
+  $("new-order-currency").value = "PKR";
 addOrderItemRow();
 
 
@@ -10771,10 +10785,11 @@ const response = await fetch("/api/orders", {
     Authorization: `Bearer ${orderSession.session.access_token}`
   },
   body: JSON.stringify({
-    customer_id: customerId,
-    shipping_address: shippingAddress,
-    items
-  })
+  customer_id: customerId,
+  shipping_address: shippingAddress,
+  currency: $("new-order-currency").value,
+  items
+})
 });
 
 
