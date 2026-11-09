@@ -9908,7 +9908,7 @@ $("draft-btn").addEventListener("click", async () => {
 
 
 
-function renderOrderReviewForm(draft) {
+function renderOrderReviewForm(draft, selectedCurrency = "PKR") {
   const form = $("extracted-order-form");
   form.replaceChildren();
 
@@ -9943,9 +9943,14 @@ function renderOrderReviewForm(draft) {
   addField("Email", "email", draft.email, "email");
   addField("Shipping address", "shipping_address", draft.shipping_address);
 
-  const currency = addField("Currency (e.g. USD)", "currency", draft.currency);
-  currency.maxLength = 3;
-  currency.value = (currency.value || "USD").toUpperCase();
+  const currency = addField(
+  "Currency",
+  "currency",
+  selectedCurrency
+);
+
+currency.maxLength = 3;
+currency.value = selectedCurrency.trim().toUpperCase();
 
   const totalDisplay = document.createElement("h3");
   totalDisplay.id = "order-review-total";
@@ -10257,7 +10262,7 @@ $("extract-order-btn").addEventListener("click", async () => {
     }
 
     orderForm.innerHTML = "";
-    renderOrderReviewForm(data.draft);
+    renderOrderReviewForm(data.draft, currency);
     resultBox.hidden = false;
 
     notify("Order draft extracted. Review the details before saving.");
