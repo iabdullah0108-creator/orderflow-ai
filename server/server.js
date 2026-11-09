@@ -1295,40 +1295,67 @@ app.post("/api/customers", authenticateUser, async (req, res) => {
     }
 
     // Normalize values for comparison without changing stored customer details.
-    const normalizeText = value =>
-      typeof value === "string"
-        ? value.trim().replace(/\s+/g, " ").toLowerCase()
-        : "";
+   // Normalize values for comparison without changing stored customer details.
+const normalizeText = value =>
+  typeof value === "string"
+    ? value.trim().replace(/\s+/g, " ").toLowerCase()
+    : "";
 
-    const normalizePhone = value =>
-      typeof value === "string"
-        ? value.replace(/\D/g, "")
-        : "";
+const normalizePhone = value => {
+  if (typeof value !== "string") return "";
 
-    const target = {
-      name: normalizeText(cleanName),
-      phone: normalizePhone(cleanPhone),
-      email: normalizeText(cleanEmail),
-      address: normalizeText(cleanAddress)
-    };
+  let digits = value.replace(/\D/g, "");
 
-    // Search only within this authenticated user's workspace.
-    const { data: customers, error: searchError } = await supabase
-      .from("customers")
-      .select("id, name, phone, email, address, workspace_id")
-      .eq("workspace_id", workspace.id);
+  // Treat international 00 prefix and + prefix as equivalent.
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
 
-    if (searchError) {
-      console.error(
-        "Existing customer search failed:",
-        searchError.message
-      );
+  return digits;
+};
 
-      return res.status(503).json({
-        error: "Could not check for an existing customer."
-      });
-    }
+const target = {
+  name: normalizeText(cleanName),
+  phone: normalizePhone(cleanPhone),
+  address: normalizeText(cleanAddress)
+};
 
+// Search only within this authenticated user's workspace.
+const { data: customers, error: searchError } = await supabase
+  .from("customers")
+  .select("id, name, phone, email, address, workspace_id")
+  .eq("workspace_id", workspace.id);
+
+if (searchError) {
+  console.error(
+    "Existing customer search failed:",
+    searchError.message
+  );
+
+  return res.status(503).json({
+    error: "Could not check for an existing customer."
+  });
+}
+
+// Reuse ONLY when name, phone, AND address all match.
+// Email is deliberately excluded from customer identity matching.
+const existingCustomer = (customers || []).find(customer =>
+  normalizeText(customer.name) === target.name &&
+  normalizePhone(customer.phone) === target.phone &&
+  normalizeText(customer.address) === target.address
+);
+
+if (existingCustomer) {
+  return res.status(200).json({
+    message: "Existing customer matched. No duplicate was created.",
+    reused: true,
+    customer: existingCustomer
+  });
+}
+
+// If even one of the three details differs, create a new record.
+
+    
     // Reuse a customer only when all four details match.
     const existingCustomer = (customers || []).find(customer =>
       normalizeText(customer.name) === target.name &&
