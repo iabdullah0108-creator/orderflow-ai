@@ -6525,28 +6525,38 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
    ORDERFLOW AI — SUBSCRIPTION POPUPS
 ========================================================= */
 
-#view-subscriptions {
-  --sub-modal-bg: var(--panel, #ffffff);
-  --sub-modal-text: var(--text, #172033);
-  --sub-modal-muted: var(--muted, #84909f);
-  --sub-modal-border: var(--border, rgba(128, 145, 165, .18));
-  --sub-modal-surface: var(--surface-2, #f5f7fa);
-  --sub-modal-accent: var(--cyan, #61f5ed);
-}
+/* =========================================================
+   ORDERFLOW AI — SUBSCRIPTION POPUPS
+   Fixed light/dark theme inheritance and modal layering
+========================================================= */
 
-/* Modal backdrop */
+/* Theme variables must be available to the popups themselves */
 
 .subscription-modal-backdrop {
+  --sub-modal-bg: #ffffff;
+  --sub-modal-text: #172033;
+  --sub-modal-muted: #84909f;
+  --sub-modal-border: #e5eaf0;
+  --sub-modal-surface: #f5f7fa;
+  --sub-modal-accent: #61cfc9;
+
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 99999;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 22px;
-  background: rgba(8, 13, 25, .62);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+
+  background: rgba(15, 23, 42, .48);
+
+  /* Prevent the washed-out modal appearance */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  isolation: isolate;
   animation: subscriptionBackdropIn .2s ease;
 }
 
@@ -6557,16 +6567,26 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 /* Main modal */
 
 .subscription-modal {
+  position: relative;
+  z-index: 1;
+
   width: 100%;
   max-width: 510px;
   max-height: min(88vh, 780px);
   overflow-y: auto;
+
   padding: 27px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 19px;
+
   background: var(--sub-modal-bg);
   color: var(--sub-modal-text);
-  box-shadow: 0 24px 90px rgba(0, 0, 0, .25);
+
+  box-shadow:
+    0 24px 80px rgba(15, 23, 42, .20),
+    0 4px 14px rgba(15, 23, 42, .07);
+
   animation: subscriptionModalIn .24s ease;
 }
 
@@ -6613,18 +6633,23 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 }
 
 .subscription-modal-close {
-  flex-shrink: 0;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+
   width: 34px;
   height: 34px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 10px;
+
   background: var(--sub-modal-surface);
   color: var(--sub-modal-muted);
+
   font-size: 23px;
   line-height: 1;
   cursor: pointer;
+
   transition: .2s ease;
 }
 
@@ -6634,17 +6659,20 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   transform: rotate(90deg);
 }
 
-/* Current plan summary */
+/* Current plan */
 
 .subscription-modal-current {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   padding: 17px;
   margin-bottom: 18px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 13px;
+
   background: var(--sub-modal-surface);
 }
 
@@ -6664,7 +6692,7 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   font-size: 17px;
 }
 
-/* Manage subscription action rows */
+/* Manage subscription actions */
 
 .subscription-modal-actions {
   display: flex;
@@ -6676,17 +6704,24 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   display: flex;
   align-items: center;
   gap: 14px;
+
   width: 100%;
   min-height: 76px;
   padding: 13px 15px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 13px;
+
   background: var(--sub-modal-bg);
   color: var(--sub-modal-text);
+
   text-align: left;
   cursor: pointer;
-  transition: background .2s ease, border-color .2s ease,
-              transform .2s ease;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
 }
 
 .subscription-action-item:hover {
@@ -6699,11 +6734,15 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+
   width: 41px;
   height: 41px;
+
   border-radius: 12px;
-  background: rgba(97, 245, 237, .10);
+
+  background: rgba(97, 207, 201, .12);
   color: var(--sub-modal-accent);
+
   font-size: 20px;
 }
 
@@ -6756,10 +6795,13 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-plan-current-note {
   padding: 12px 15px;
   margin-bottom: 19px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 10px;
+
   background: var(--sub-modal-surface);
   color: var(--sub-modal-muted);
+
   font-size: 12px;
 }
 
@@ -6777,12 +6819,16 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-plan-card {
   display: flex;
   flex-direction: column;
-  padding: 19px;
+
   min-width: 0;
+  padding: 19px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 15px;
+
   background: var(--sub-modal-bg);
   color: var(--sub-modal-text);
+
   transition: .2s ease;
 }
 
@@ -6793,7 +6839,7 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 
 .subscription-plan-card.current {
   border-color: var(--sub-modal-accent);
-  background: rgba(97, 245, 237, .045);
+  background: rgba(97, 207, 201, .06);
 }
 
 .subscription-plan-card h3 {
@@ -6826,8 +6872,10 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   display: flex;
   flex-direction: column;
   gap: 9px;
+
   padding: 0;
   margin: 0 0 19px;
+
   list-style: none;
 }
 
@@ -6857,26 +6905,33 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-plan-card .plan-current-label {
   display: inline-flex;
   align-self: flex-start;
+
   padding: 5px 9px;
   margin-bottom: 12px;
+
   border-radius: 20px;
-  background: rgba(97, 245, 237, .12);
+
+  background: rgba(97, 207, 201, .12);
   color: var(--sub-modal-accent);
+
   font-size: 10px;
   font-weight: 750;
 }
 
-/* Payment method empty state and saved methods */
+/* Payment methods */
 
 .subscription-modal-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   min-height: 185px;
   padding: 25px;
+
   border: 1px dashed var(--sub-modal-border);
   border-radius: 14px;
+
   background: var(--sub-modal-surface);
   text-align: center;
 }
@@ -6884,12 +6939,16 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-empty-icon {
   display: grid;
   place-items: center;
+
   width: 48px;
   height: 48px;
   margin-bottom: 13px;
+
   border-radius: 14px;
-  background: rgba(97, 245, 237, .10);
+
+  background: rgba(97, 207, 201, .12);
   color: var(--sub-modal-accent);
+
   font-size: 23px;
 }
 
@@ -6909,9 +6968,12 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   display: flex;
   align-items: center;
   gap: 13px;
+
   padding: 16px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 13px;
+
   background: var(--sub-modal-surface);
 }
 
@@ -6933,10 +6995,13 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-cancel-notice {
   display: flex;
   gap: 13px;
+
   padding: 16px;
   margin-bottom: 18px;
+
   border: 1px solid rgba(230, 166, 72, .28);
   border-radius: 13px;
+
   background: rgba(230, 166, 72, .075);
 }
 
@@ -6944,11 +7009,15 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+
   width: 30px;
   height: 30px;
+
   border-radius: 50%;
+
   background: rgba(230, 166, 72, .15);
   color: #d99a38;
+
   font-size: 15px;
   font-weight: 800;
 }
@@ -6970,10 +7039,12 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .subscription-cancel-details {
   display: flex;
   flex-direction: column;
-  gap: 0;
+
   padding: 0 15px;
+
   border: 1px solid var(--sub-modal-border);
   border-radius: 12px;
+
   background: var(--sub-modal-surface);
 }
 
@@ -6982,6 +7053,7 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   padding: 14px 0;
 }
 
@@ -7007,15 +7079,17 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   line-height: 1.6;
 }
 
-/* Modal footer */
+/* Footer */
 
 .subscription-modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   margin-top: 22px;
   padding-top: 17px;
+
   border-top: 1px solid var(--sub-modal-border);
 }
 
@@ -7038,66 +7112,63 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   background: #c93f53;
 }
 
-/* Explicit dark theme support */
+/* =========================================================
+   DARK THEME
+========================================================= */
 
-[data-theme="dark"] #view-subscriptions {
+[data-theme="dark"] .subscription-modal-backdrop {
   --sub-modal-bg: #151c29;
   --sub-modal-text: #edf2fa;
   --sub-modal-muted: #9aa7b8;
   --sub-modal-border: rgba(160, 178, 202, .16);
   --sub-modal-surface: #1c2635;
+  --sub-modal-accent: #61f5ed;
+
+  background: rgba(3, 7, 15, .70);
 }
 
 [data-theme="dark"] .subscription-modal {
-  box-shadow: 0 24px 90px rgba(0, 0, 0, .48);
-}
-
-[data-theme="dark"] .subscription-modal-current,
-[data-theme="dark"] .subscription-plan-current-note,
-[data-theme="dark"] .subscription-payment-method-card {
-  background: #1c2635;
-}
-
-[data-theme="dark"] .subscription-action-item {
-  background: #151c29;
-}
-
-[data-theme="dark"] .subscription-action-item:hover {
-  background: #1c2635;
-}
-
-[data-theme="dark"] .subscription-modal-empty {
-  background: #1c2635;
+  box-shadow:
+    0 25px 85px rgba(0, 0, 0, .50),
+    0 4px 14px rgba(0, 0, 0, .2);
 }
 
 [data-theme="dark"] .subscription-plan-card.current {
   background: rgba(97, 245, 237, .07);
 }
 
-/* Animation */
+/* =========================================================
+   LIGHT THEME
+========================================================= */
 
-@keyframes subscriptionBackdropIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+[data-theme="light"] .subscription-modal-backdrop {
+  --sub-modal-bg: #ffffff;
+  --sub-modal-text: #172033;
+  --sub-modal-muted: #788596;
+  --sub-modal-border: #e5eaf0;
+  --sub-modal-surface: #f5f7fa;
+  --sub-modal-accent: #269e9a;
+
+  background: rgba(20, 30, 48, .42);
 }
 
-@keyframes subscriptionModalIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+[data-theme="light"] .subscription-modal {
+  box-shadow:
+    0 25px 80px rgba(20, 30, 48, .20),
+    0 4px 14px rgba(20, 30, 48, .07);
 }
 
-/* Responsive */
+[data-theme="light"] .subscription-plan-card.current {
+  background: rgba(38, 158, 154, .045);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
 @media (max-width: 620px) {
   .subscription-modal-backdrop {
     padding: 12px;
-    align-items: center;
   }
 
   .subscription-modal {
@@ -7123,6 +7194,8 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   }
 }
 
+/* Reduced motion */
+
 @media (prefers-reduced-motion: reduce) {
   .subscription-modal-backdrop,
   .subscription-modal {
@@ -7136,7 +7209,6 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
     transition: none !important;
   }
 }
-
 
 
   
