@@ -179,61 +179,50 @@ const supabase =
 
 
 
-
 async function getUserWorkspace(userId) {
-
   if (!supabase || !userId) {
-
     return { workspace: null, error: "not_configured" };
-
   }
-
-
 
   const { data, error } = await supabase
-
     .from("workspace_members")
-
     .select("workspace_id, role")
-
     .eq("user_id", userId)
-
     .limit(2);
 
-
-
   if (error) {
-
     console.error("Workspace membership lookup failed:", error.message);
-
     return { workspace: null, error: "lookup_failed" };
-
   }
-
-
 
   if (!data || data.length !== 1) {
-
     return { workspace: null, error: "workspace_missing_or_ambiguous" };
-
   }
 
+  // Retrieve the actual workspace details, including currency.
+  const { data: workspaceData, error: workspaceLookupError } =
+    await supabase
+      .from("workspaces")
+      .select("id, name, currency")
+      .eq("id", data[0].workspace_id)
+      .single();
 
+  if (workspaceLookupError || !workspaceData) {
+    console.error(
+      "Workspace details lookup failed:",
+      workspaceLookupError?.message
+    );
+
+    return { workspace: null, error: "workspace_lookup_failed" };
+  }
 
   return {
-
     workspace: {
-
-      id: data[0].workspace_id,
-
+      ...workspaceData,
       role: data[0].role
-
     },
-
     error: null
-
   };
-
 }
 
 
