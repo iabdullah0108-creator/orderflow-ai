@@ -10545,7 +10545,8 @@ function addOrderItemRow() {
 
   const priceField = document.createElement("div");
   const priceLabel = document.createElement("label");
-  priceLabel.textContent = "Unit price (PKR)";
+  priceLabel.textContent =
+  `Unit price (${$("new-order-currency").value})`;
   const priceInput = document.createElement("input");
   priceInput.type = "number";
   priceInput.name = "unit_price";
@@ -10582,12 +10583,42 @@ function addOrderItemRow() {
   updateNewOrderTotal();
 }
 
-function updateNewOrderTotal() {
+// function updateNewOrderTotal() {
+//   let total = 0;
+
+//   document.querySelectorAll(".order-item-row").forEach(row => {
+//     const quantity = Number(row.querySelector('[name="quantity"]').value);
+//     const price = Number(row.querySelector('[name="unit_price"]').value);
+
+//     if (
+//       Number.isSafeInteger(quantity) &&
+//       quantity > 0 &&
+//       Number.isFinite(price) &&
+//       price >= 0
+//     ) {
+//       total += quantity * price;
+//     }
+//   });
+
+//   $("new-order-total").textContent =
+//     "PKR " + total.toLocaleString("en-PK", {
+//       minimumFractionDigits: 2,
+//       maximumFractionDigits: 2
+//     });
+// }
+
+
+  function updateNewOrderTotal() {
   let total = 0;
 
   document.querySelectorAll(".order-item-row").forEach(row => {
-    const quantity = Number(row.querySelector('[name="quantity"]').value);
-    const price = Number(row.querySelector('[name="unit_price"]').value);
+    const quantity = Number(
+      row.querySelector('[name="quantity"]').value
+    );
+
+    const price = Number(
+      row.querySelector('[name="unit_price"]').value
+    );
 
     if (
       Number.isSafeInteger(quantity) &&
@@ -10599,15 +10630,31 @@ function updateNewOrderTotal() {
     }
   });
 
+  const currency = $("new-order-currency").value;
+
   $("new-order-total").textContent =
-    "PKR " + total.toLocaleString("en-PK", {
+    currency + " " + total.toLocaleString("en-PK", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-}
 
+  // Update every item's unit price label.
+  document.querySelectorAll(".order-item-row").forEach(row => {
+    const label = row.querySelector(
+      '[name="unit_price"]'
+    ).previousElementSibling;
+
+    label.textContent = `Unit price (${currency})`;
+  });
+}
+  
+
+  
 $("add-order-item").addEventListener("click", addOrderItemRow);
 
+  $("new-order-currency").addEventListener("change", () => {
+  updateNewOrderTotal();
+});
 
 
 
