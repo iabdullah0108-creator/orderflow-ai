@@ -6384,6 +6384,139 @@ body.dark .of-confirm-cancel {
 
 
 
+/* =========================================================
+   SUBSCRIPTIONS — DARK THEME FIX
+   ========================================================= */
+
+html[data-theme="dark"] #view-subscriptions {
+  --sub-card-bg: #171d29;
+  --sub-card-bg-hover: #1c2432;
+  --sub-card-border: rgba(255, 255, 255, 0.09);
+  --sub-card-text: #edf2fa;
+  --sub-card-muted: #9ba8ba;
+}
+
+/* Current plan box */
+html[data-theme="dark"] #view-subscriptions .subscription-hero {
+  background: linear-gradient(
+    125deg,
+    #192638 0%,
+    #20243b 55%,
+    #28213b 100%
+  );
+  border: 1px solid rgba(140, 160, 200, 0.17);
+  color: #edf2fa;
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-hero h2,
+html[data-theme="dark"] #view-subscriptions .subscription-hero strong {
+  color: #f3f6fc;
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-hero p,
+html[data-theme="dark"] #view-subscriptions .subscription-hero span {
+  color: #aebbd0;
+}
+
+/* Billing overview boxes */
+html[data-theme="dark"] #view-subscriptions .subscription-info-card {
+  background: var(--sub-card-bg);
+  border: 1px solid var(--sub-card-border);
+  color: var(--sub-card-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-info-card:hover {
+  background: var(--sub-card-bg-hover);
+  border-color: rgba(97, 245, 237, 0.2);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-info-card > span {
+  color: var(--sub-card-muted);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-info-card strong {
+  color: var(--sub-card-text);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-info-card small {
+  color: var(--sub-card-muted);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-info-icon {
+  background: rgba(97, 245, 237, 0.09);
+  color: #72e9e2;
+}
+
+/* Plan usage boxes */
+html[data-theme="dark"] #view-subscriptions .subscription-usage-card {
+  background: var(--sub-card-bg);
+  border: 1px solid var(--sub-card-border);
+  color: var(--sub-card-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-card:hover {
+  background: var(--sub-card-bg-hover);
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-top > span:first-child {
+  color: var(--sub-card-muted);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-card strong {
+  color: var(--sub-card-text);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-card strong small {
+  color: var(--sub-card-muted);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-card > span:last-child {
+  color: var(--sub-card-muted);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-usage-symbol {
+  color: #a99aff;
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-progress {
+  background: #303a4b;
+}
+
+/* Section headings and supporting text */
+html[data-theme="dark"] #view-subscriptions .subscription-section-heading h2,
+html[data-theme="dark"] #view-subscriptions .subscription-history-header h3 {
+  color: #edf2fa;
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-section-heading p,
+html[data-theme="dark"] #view-subscriptions .subscription-history-header p {
+  color: #9ba8ba;
+}
+
+/* Billing history box */
+html[data-theme="dark"] #view-subscriptions .subscription-history-panel {
+  background: var(--sub-card-bg);
+  border: 1px solid var(--sub-card-border);
+  color: var(--sub-card-text);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-history-table th {
+  color: #aab6c8;
+  border-color: var(--sub-card-border);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-history-table td {
+  color: #dce4ef;
+  border-color: var(--sub-card-border);
+}
+
+html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
+  color: #9ba8ba;
+}
+
 
 
 
