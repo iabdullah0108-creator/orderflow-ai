@@ -5775,6 +5775,622 @@ body.dark .of-confirm-cancel {
 
 
   
+
+
+
+
+
+
+
+  
+/* =========================================================
+   ORDERFLOW AI — SUBSCRIPTIONS
+========================================================= */
+
+#view-subscriptions {
+  --sub-accent: var(--cyan, #61f5ed);
+  --sub-violet: var(--violet, #a78bfa);
+  --sub-border: var(--border, rgba(128, 145, 165, .17));
+  --sub-muted: var(--muted, #84909f);
+
+  animation: subscriptionPageIn .35s ease both;
+}
+
+@keyframes subscriptionPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#view-subscriptions .page-heading {
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+#view-subscriptions .page-heading h1 {
+  letter-spacing: -.8px;
+}
+
+#view-subscriptions .page-heading .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* Current plan hero */
+
+.subscription-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(190px, .7fr);
+  align-items: center;
+  min-height: 260px;
+  padding: 32px 38px;
+  margin-bottom: 36px;
+  overflow: hidden;
+  isolation: isolate;
+
+  border: 1px solid rgba(97, 245, 237, .2);
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      ellipse at 85% 20%,
+      rgba(167, 139, 250, .15),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 10% 100%,
+      rgba(97, 245, 237, .10),
+      transparent 45%
+    ),
+    var(--panel, #fff);
+
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .035);
+}
+
+.subscription-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 310px;
+  height: 310px;
+  right: 10%;
+  top: -180px;
+  border-radius: 50%;
+  border: 1px solid rgba(97, 245, 237, .12);
+  box-shadow:
+    0 0 0 35px rgba(97, 245, 237, .025),
+    0 0 0 70px rgba(167, 139, 250, .025);
+}
+
+.subscription-hero-main {
+  position: relative;
+  z-index: 2;
+}
+
+.subscription-plan-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--sub-muted);
+}
+
+.subscription-plan-icon {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 9px;
+  color: #13aaa5;
+  background: rgba(97, 245, 237, .13);
+  font-size: 16px;
+}
+
+.subscription-plan-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin-top: 17px;
+}
+
+.subscription-plan-title h2 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 800;
+  letter-spacing: -1.4px;
+  color: var(--text);
+}
+
+.subscription-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.subscription-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.subscription-status.active {
+  color: #159b67;
+  background: rgba(22, 163, 105, .11);
+}
+
+.subscription-status.cancelled {
+  color: #d18a32;
+  background: rgba(209, 138, 50, .12);
+}
+
+.subscription-status.expired {
+  color: #dc6666;
+  background: rgba(220, 102, 102, .11);
+}
+
+.subscription-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.subscription-price strong {
+  color: var(--text);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -.9px;
+}
+
+.subscription-price span {
+  color: var(--sub-muted);
+  font-size: 13px;
+}
+
+.subscription-description {
+  margin: 9px 0 20px;
+  color: var(--sub-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.subscription-hero .btn {
+  min-height: 42px;
+  padding: 0 19px;
+  border-radius: 10px;
+}
+
+/* Decorative plan artwork */
+
+.subscription-hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+}
+
+.subscription-orbit {
+  width: 145px;
+  height: 145px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(97, 245, 237, .3);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 12px rgba(97, 245, 237, .035),
+    0 0 0 24px rgba(167, 139, 250, .035),
+    0 0 35px rgba(97, 245, 237, .08);
+  animation: subscriptionOrbit 8s linear infinite;
+}
+
+.subscription-orbit-inner {
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 1px solid rgba(167, 139, 250, .35);
+  background: linear-gradient(
+    145deg,
+    rgba(97, 245, 237, .15),
+    rgba(167, 139, 250, .18)
+  );
+  box-shadow: inset 0 0 25px rgba(97, 245, 237, .08);
+}
+
+.subscription-orbit-inner span {
+  font-size: 38px;
+  color: var(--sub-accent);
+  text-shadow: 0 0 25px rgba(97, 245, 237, .5);
+  animation: subscriptionGlow 3s ease-in-out infinite;
+}
+
+@keyframes subscriptionOrbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes subscriptionGlow {
+  50% {
+    opacity: .65;
+    transform: scale(.92);
+  }
+}
+
+.subscription-side-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.subscription-side-caption strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.subscription-side-caption span {
+  color: var(--sub-muted);
+  font-size: 10px;
+}
+
+/* Section headings */
+
+.subscription-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 34px 0 17px;
+}
+
+.subscription-section-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 780;
+  letter-spacing: -.3px;
+  color: var(--text);
+}
+
+.subscription-section-heading p {
+  margin: 5px 0 0;
+  color: var(--sub-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Billing cards */
+
+.subscription-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.subscription-info-card {
+  min-width: 0;
+  padding: 19px;
+  border: 1px solid var(--sub-border);
+  border-radius: 14px;
+  background: var(--panel, #fff);
+  transition: transform .2s ease, border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.subscription-info-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(97, 245, 237, .4);
+  box-shadow: 0 9px 24px rgba(0, 0, 0, .045);
+}
+
+.subscription-info-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  color: #159e9b;
+  background: rgba(97, 245, 237, .12);
+  font-size: 17px;
+}
+
+.subscription-info-card > span {
+  display: block;
+  color: var(--sub-muted);
+  font-size: 11px;
+  margin-bottom: 7px;
+}
+
+.subscription-info-card > strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.subscription-info-card > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--sub-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* Usage */
+
+.subscription-period-badge {
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: rgba(97, 245, 237, .10);
+  color: #159e9b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.subscription-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.subscription-usage-card {
+  min-width: 0;
+  padding: 21px;
+  border: 1px solid var(--sub-border);
+  border-radius: 14px;
+  background: var(--panel, #fff);
+  transition: border-color .2s ease, transform .2s ease;
+}
+
+.subscription-usage-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(97, 245, 237, .35);
+}
+
+.subscription-usage-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--sub-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.subscription-usage-symbol {
+  color: var(--sub-violet);
+  font-size: 18px;
+}
+
+.subscription-usage-card > strong {
+  display: block;
+  margin: 17px 0 15px;
+  color: var(--text);
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -.7px;
+}
+
+.subscription-usage-card > strong small {
+  color: var(--sub-muted);
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+.subscription-progress {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--surface-2, rgba(128, 145, 165, .14));
+}
+
+.subscription-progress > div {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #61dcd6, #a78bfa);
+  transition: width .5s ease;
+}
+
+.subscription-usage-card > span:last-child {
+  display: block;
+  margin-top: 11px;
+  color: var(--sub-muted);
+  font-size: 10px;
+}
+
+/* Billing history */
+
+.subscription-history-panel {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.subscription-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 21px 22px;
+  border-bottom: 1px solid var(--sub-border);
+}
+
+.subscription-history-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.subscription-history-header p {
+  margin: 5px 0 0;
+  color: var(--sub-muted);
+  font-size: 11px;
+}
+
+.subscription-text-btn {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 8px;
+  color: #159e9b;
+  background: rgba(97, 245, 237, .10);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.subscription-text-btn:hover {
+  background: rgba(97, 245, 237, .2);
+}
+
+.subscription-history-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.subscription-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.subscription-history-table th {
+  padding: 13px 20px;
+  color: var(--sub-muted);
+  background: var(--surface-2, rgba(128, 145, 165, .06));
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+}
+
+.subscription-history-table td {
+  padding: 15px 20px;
+  border-top: 1px solid var(--sub-border);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.subscription-history-empty {
+  padding: 30px 20px !important;
+  color: var(--sub-muted) !important;
+  text-align: center;
+}
+
+/* Responsive layout */
+
+@media (max-width: 1050px) {
+  .subscription-billing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  #view-subscriptions .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .subscription-hero {
+    grid-template-columns: 1fr;
+    padding: 25px;
+  }
+
+  .subscription-hero-side {
+    display: none;
+  }
+
+  .subscription-billing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .subscription-info-card {
+    padding: 15px;
+  }
+
+  .subscription-usage-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .subscription-usage-card {
+    padding: 17px;
+  }
+
+  .subscription-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subscription-period-badge {
+    align-self: flex-start;
+  }
+
+  .subscription-history-header {
+    padding: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+  .subscription-billing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subscription-hero {
+    padding: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #view-subscriptions,
+  .subscription-orbit,
+  .subscription-orbit-inner span {
+    animation: none !important;
+  }
+
+  .subscription-info-card,
+  .subscription-usage-card,
+  .subscription-progress > div {
+    transition: none !important;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 
 
@@ -6074,8 +6690,21 @@ body.dark .of-confirm-cancel {
       <div class="nav">
         <button data-view="approvals"><span class="nav-icon">◉</span>Approval Queue <span class="nav-count" id="approval-count">2</span></button>
         <button data-view="analytics"><span class="nav-icon">▥</span>Analytics</button>
-        <button data-view="knowledge"><span class="nav-icon">✧</span>Business Knowledge</button>
-        <button data-view="settings"><span class="nav-icon">⚙</span>Settings</button>
+
+
+        <button data-view="knowledge">
+  <span class="nav-icon">✧</span>Business Knowledge
+</button>
+
+<button data-view="subscriptions">
+  <span class="nav-icon">◇</span>Subscriptions
+</button>
+
+<button data-view="settings">
+  <span class="nav-icon">⚙</span>Settings
+</button>
+
+        
       </div>
     </nav>
     <div class="sidebar-bottom">
@@ -6589,6 +7218,217 @@ body.dark .of-confirm-cancel {
 
 
 
+      
+<section class="view" id="view-subscriptions">
+
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">BILLING & ACCOUNT</div>
+      <h1>Subscriptions</h1>
+      <p class="subtitle">
+        Manage your plan, monitor usage and keep track of your billing.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" id="subscription-manage-btn">
+      ⚙ Manage subscription
+    </button>
+  </div>
+
+  <!-- CURRENT PLAN -->
+  <div class="subscription-hero">
+
+    <div class="subscription-hero-main">
+      <div class="subscription-plan-label">
+        <span class="subscription-plan-icon">✧</span>
+        CURRENT PLAN
+      </div>
+
+      <div class="subscription-plan-title">
+        <h2 id="subscription-plan-name">Free</h2>
+        <span class="subscription-status active" id="subscription-status">
+          Active
+        </span>
+      </div>
+
+      <div class="subscription-price">
+        <strong id="subscription-price">$0.00</strong>
+        <span>/ month</span>
+      </div>
+
+      <p class="subscription-description" id="subscription-plan-description">
+        Your current OrderFlow AI subscription.
+      </p>
+
+      <button class="btn btn-primary" id="subscription-change-plan-btn">
+        Explore plans <span>→</span>
+      </button>
+    </div>
+
+    <div class="subscription-hero-side">
+      <div class="subscription-orbit">
+        <div class="subscription-orbit-inner">
+          <span>✧</span>
+        </div>
+      </div>
+      <div class="subscription-side-caption">
+        <strong>OrderFlow AI</strong>
+        <span>Business operations</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BILLING INFORMATION -->
+  <div class="subscription-section-heading">
+    <div>
+      <h2>Billing overview</h2>
+      <p>Your current subscription and payment information.</p>
+    </div>
+  </div>
+
+  <div class="subscription-billing-grid">
+
+    <div class="subscription-info-card">
+      <div class="subscription-info-icon">↻</div>
+      <span>Next billing date</span>
+      <strong id="subscription-next-billing">Not scheduled</strong>
+      <small id="subscription-billing-caption">
+        No upcoming payment
+      </small>
+    </div>
+
+    <div class="subscription-info-card">
+      <div class="subscription-info-icon">◷</div>
+      <span>Billing period</span>
+      <strong id="subscription-period">Monthly</strong>
+      <small id="subscription-period-caption">
+        Monthly billing
+      </small>
+    </div>
+
+    <div class="subscription-info-card">
+      <div class="subscription-info-icon">⌛</div>
+      <span>Access expires</span>
+      <strong id="subscription-expiry">No expiration</strong>
+      <small id="subscription-expiry-caption">
+        Your current access status
+      </small>
+    </div>
+
+    <div class="subscription-info-card">
+      <div class="subscription-info-icon">◇</div>
+      <span>Payment method</span>
+      <strong id="subscription-payment-method">Not added</strong>
+      <small id="subscription-payment-caption">
+        No payment method saved
+      </small>
+    </div>
+
+  </div>
+
+  <!-- USAGE -->
+  <div class="subscription-section-heading">
+    <div>
+      <h2>Plan usage</h2>
+      <p>Monitor your usage against your monthly plan allowances.</p>
+    </div>
+
+    <span class="subscription-period-badge" id="usage-period-label">
+      Current billing period
+    </span>
+  </div>
+
+  <div class="subscription-usage-grid">
+
+    <div class="subscription-usage-card">
+      <div class="subscription-usage-top">
+        <span>AI messages</span>
+        <span class="subscription-usage-symbol">✧</span>
+      </div>
+      <strong id="usage-messages">0 <small>/ 100</small></strong>
+      <div class="subscription-progress">
+        <div id="usage-messages-bar" style="width:0%"></div>
+      </div>
+      <span id="usage-messages-caption">100 remaining</span>
+    </div>
+
+    <div class="subscription-usage-card">
+      <div class="subscription-usage-top">
+        <span>Orders</span>
+        <span class="subscription-usage-symbol">▤</span>
+      </div>
+      <strong id="usage-orders">0 <small>/ 100</small></strong>
+      <div class="subscription-progress">
+        <div id="usage-orders-bar" style="width:0%"></div>
+      </div>
+      <span id="usage-orders-caption">100 remaining</span>
+    </div>
+
+    <div class="subscription-usage-card">
+      <div class="subscription-usage-top">
+        <span>Automations</span>
+        <span class="subscription-usage-symbol">⟳</span>
+      </div>
+      <strong id="usage-automations">0 <small>/ 1</small></strong>
+      <div class="subscription-progress">
+        <div id="usage-automations-bar" style="width:0%"></div>
+      </div>
+      <span id="usage-automations-caption">1 remaining</span>
+    </div>
+
+  </div>
+
+  <!-- BILLING HISTORY -->
+  <div class="subscription-section-heading">
+    <div>
+      <h2>Billing history</h2>
+      <p>View your previous payments and invoices.</p>
+    </div>
+  </div>
+
+  <div class="panel subscription-history-panel">
+
+    <div class="subscription-history-header">
+      <div>
+        <h3>Recent transactions</h3>
+        <p>Your subscription payment records.</p>
+      </div>
+
+      <button class="subscription-text-btn" id="subscription-view-history">
+        View all →
+      </button>
+    </div>
+
+    <div class="subscription-history-table-wrap">
+      <table class="subscription-history-table">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Invoice</th>
+          </tr>
+        </thead>
+
+        <tbody id="subscription-history-body">
+          <tr>
+            <td colspan="5" class="subscription-history-empty">
+              No payment history available yet.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</section>
+
+
+
+      
 
 
 
