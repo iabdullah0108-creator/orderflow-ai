@@ -3958,6 +3958,48 @@ app.get("/api/subscription", authenticateUser, async (req, res) => {
       });
     }
 
+
+
+
+
+    
+    // Retrieve all active plans for the plan selector.
+    const { data: availablePlans, error: plansError } =
+      await supabase
+        .from("subscription_plans")
+        .select(`
+          id,
+          name,
+          price_monthly,
+          currency,
+          monthly_ai_replies,
+          monthly_orders,
+          active_automations,
+          connected_channels,
+          team_members
+        `)
+        .eq("is_active", true)
+        .order("price_monthly", { ascending: true });
+
+    if (plansError) {
+      console.error("Available plans lookup failed:", plansError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load available subscription plans."
+      });
+    }
+
+
+    
+
+    
+
+    
+
+
+    
+
     // Retrieve usage for this subscription's current billing period.
     const { data: usageRows, error: usageError } =
       await supabase
@@ -3986,12 +4028,13 @@ app.get("/api/subscription", authenticateUser, async (req, res) => {
       }
     }
 
-    return res.json({
-      success: true,
-      subscription,
-      plan,
-      usage
-    });
+   return res.json({
+  success: true,
+  subscription,
+  plan,
+  usage,
+  availablePlans: availablePlans || []
+});
 
   } catch (error) {
     console.error("Subscription API error:", error);
