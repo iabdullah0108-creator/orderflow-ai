@@ -6521,6 +6521,628 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 
 
 
+/* =========================================================
+   ORDERFLOW AI — SUBSCRIPTION POPUPS
+========================================================= */
+
+#view-subscriptions {
+  --sub-modal-bg: var(--panel, #ffffff);
+  --sub-modal-text: var(--text, #172033);
+  --sub-modal-muted: var(--muted, #84909f);
+  --sub-modal-border: var(--border, rgba(128, 145, 165, .18));
+  --sub-modal-surface: var(--surface-2, #f5f7fa);
+  --sub-modal-accent: var(--cyan, #61f5ed);
+}
+
+/* Modal backdrop */
+
+.subscription-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(8, 13, 25, .62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: subscriptionBackdropIn .2s ease;
+}
+
+.subscription-modal-backdrop[hidden] {
+  display: none !important;
+}
+
+/* Main modal */
+
+.subscription-modal {
+  width: 100%;
+  max-width: 510px;
+  max-height: min(88vh, 780px);
+  overflow-y: auto;
+  padding: 27px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 19px;
+  background: var(--sub-modal-bg);
+  color: var(--sub-modal-text);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .25);
+  animation: subscriptionModalIn .24s ease;
+}
+
+.subscription-modal-wide {
+  max-width: 850px;
+}
+
+.subscription-cancel-modal {
+  max-width: 530px;
+}
+
+/* Header */
+
+.subscription-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 23px;
+}
+
+.subscription-modal-header .eyebrow {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--sub-modal-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.subscription-modal-header h2 {
+  margin: 0;
+  color: var(--sub-modal-text);
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -.6px;
+}
+
+.subscription-modal-header p {
+  margin: 7px 0 0;
+  color: var(--sub-modal-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.subscription-modal-close {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 10px;
+  background: var(--sub-modal-surface);
+  color: var(--sub-modal-muted);
+  font-size: 23px;
+  line-height: 1;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.subscription-modal-close:hover {
+  color: var(--sub-modal-text);
+  border-color: var(--sub-modal-accent);
+  transform: rotate(90deg);
+}
+
+/* Current plan summary */
+
+.subscription-modal-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 17px;
+  margin-bottom: 18px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 13px;
+  background: var(--sub-modal-surface);
+}
+
+.subscription-modal-current > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.subscription-modal-current > div > span {
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+}
+
+.subscription-modal-current strong {
+  color: var(--sub-modal-text);
+  font-size: 17px;
+}
+
+/* Manage subscription action rows */
+
+.subscription-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.subscription-action-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 76px;
+  padding: 13px 15px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 13px;
+  background: var(--sub-modal-bg);
+  color: var(--sub-modal-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease,
+              transform .2s ease;
+}
+
+.subscription-action-item:hover {
+  background: var(--sub-modal-surface);
+  border-color: var(--sub-modal-accent);
+  transform: translateY(-1px);
+}
+
+.subscription-action-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 41px;
+  height: 41px;
+  border-radius: 12px;
+  background: rgba(97, 245, 237, .10);
+  color: var(--sub-modal-accent);
+  font-size: 20px;
+}
+
+.subscription-action-item > span:nth-child(2) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.subscription-action-item strong {
+  color: var(--sub-modal-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.subscription-action-item small {
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.subscription-action-arrow {
+  color: var(--sub-modal-muted);
+  font-size: 18px;
+  transition: .2s ease;
+}
+
+.subscription-action-item:hover .subscription-action-arrow {
+  color: var(--sub-modal-accent);
+  transform: translateX(3px);
+}
+
+.subscription-action-item.danger .subscription-action-icon {
+  background: rgba(239, 91, 105, .10);
+  color: #ed6978;
+}
+
+.subscription-action-item.danger:hover {
+  border-color: rgba(239, 91, 105, .45);
+}
+
+.subscription-action-item.danger:hover .subscription-action-arrow {
+  color: #ed6978;
+}
+
+/* Change plan */
+
+.subscription-plan-current-note {
+  padding: 12px 15px;
+  margin-bottom: 19px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 10px;
+  background: var(--sub-modal-surface);
+  color: var(--sub-modal-muted);
+  font-size: 12px;
+}
+
+.subscription-plan-current-note strong {
+  margin-left: 5px;
+  color: var(--sub-modal-text);
+}
+
+#subscription-plan-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.subscription-plan-card {
+  display: flex;
+  flex-direction: column;
+  padding: 19px;
+  min-width: 0;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 15px;
+  background: var(--sub-modal-bg);
+  color: var(--sub-modal-text);
+  transition: .2s ease;
+}
+
+.subscription-plan-card:hover {
+  border-color: var(--sub-modal-accent);
+  transform: translateY(-2px);
+}
+
+.subscription-plan-card.current {
+  border-color: var(--sub-modal-accent);
+  background: rgba(97, 245, 237, .045);
+}
+
+.subscription-plan-card h3 {
+  margin: 0 0 8px;
+  color: var(--sub-modal-text);
+  font-size: 17px;
+}
+
+.subscription-plan-card .plan-price {
+  margin-bottom: 14px;
+  color: var(--sub-modal-text);
+  font-size: 25px;
+  font-weight: 750;
+}
+
+.subscription-plan-card .plan-price small {
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  font-weight: 450;
+}
+
+.subscription-plan-card p {
+  margin: 0 0 14px;
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.subscription-plan-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 0;
+  margin: 0 0 19px;
+  list-style: none;
+}
+
+.subscription-plan-card li {
+  color: var(--sub-modal-text);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.subscription-plan-card li::before {
+  content: "✓";
+  margin-right: 8px;
+  color: var(--sub-modal-accent);
+  font-weight: 800;
+}
+
+.subscription-plan-card button {
+  width: 100%;
+  margin-top: auto;
+}
+
+.subscription-plan-card button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.subscription-plan-card .plan-current-label {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 5px 9px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  background: rgba(97, 245, 237, .12);
+  color: var(--sub-modal-accent);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+/* Payment method empty state and saved methods */
+
+.subscription-modal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 185px;
+  padding: 25px;
+  border: 1px dashed var(--sub-modal-border);
+  border-radius: 14px;
+  background: var(--sub-modal-surface);
+  text-align: center;
+}
+
+.subscription-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 13px;
+  border-radius: 14px;
+  background: rgba(97, 245, 237, .10);
+  color: var(--sub-modal-accent);
+  font-size: 23px;
+}
+
+.subscription-modal-empty strong {
+  color: var(--sub-modal-text);
+  font-size: 13px;
+}
+
+.subscription-modal-empty p {
+  margin: 7px 0 0;
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.subscription-payment-method-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 13px;
+  background: var(--sub-modal-surface);
+}
+
+.subscription-payment-method-card strong {
+  display: block;
+  color: var(--sub-modal-text);
+  font-size: 13px;
+}
+
+.subscription-payment-method-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+}
+
+/* Cancellation notice */
+
+.subscription-cancel-notice {
+  display: flex;
+  gap: 13px;
+  padding: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(230, 166, 72, .28);
+  border-radius: 13px;
+  background: rgba(230, 166, 72, .075);
+}
+
+.subscription-cancel-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(230, 166, 72, .15);
+  color: #d99a38;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.subscription-cancel-notice strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--sub-modal-text);
+  font-size: 12px;
+}
+
+.subscription-cancel-notice p {
+  margin: 0;
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.subscription-cancel-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 15px;
+  border: 1px solid var(--sub-modal-border);
+  border-radius: 12px;
+  background: var(--sub-modal-surface);
+}
+
+.subscription-cancel-details > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+}
+
+.subscription-cancel-details > div + div {
+  border-top: 1px solid var(--sub-modal-border);
+}
+
+.subscription-cancel-details span {
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+}
+
+.subscription-cancel-details strong {
+  color: var(--sub-modal-text);
+  font-size: 12px;
+  text-align: right;
+}
+
+.subscription-cancel-footnote {
+  margin: 13px 0 0;
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* Modal footer */
+
+.subscription-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid var(--sub-modal-border);
+}
+
+.subscription-modal-footer > span {
+  color: var(--sub-modal-muted);
+  font-size: 11px;
+}
+
+.subscription-modal-footer button {
+  flex-shrink: 0;
+}
+
+.btn-danger {
+  border: 1px solid rgba(239, 91, 105, .35);
+  background: #d94d60;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #c93f53;
+}
+
+/* Explicit dark theme support */
+
+[data-theme="dark"] #view-subscriptions {
+  --sub-modal-bg: #151c29;
+  --sub-modal-text: #edf2fa;
+  --sub-modal-muted: #9aa7b8;
+  --sub-modal-border: rgba(160, 178, 202, .16);
+  --sub-modal-surface: #1c2635;
+}
+
+[data-theme="dark"] .subscription-modal {
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .48);
+}
+
+[data-theme="dark"] .subscription-modal-current,
+[data-theme="dark"] .subscription-plan-current-note,
+[data-theme="dark"] .subscription-payment-method-card {
+  background: #1c2635;
+}
+
+[data-theme="dark"] .subscription-action-item {
+  background: #151c29;
+}
+
+[data-theme="dark"] .subscription-action-item:hover {
+  background: #1c2635;
+}
+
+[data-theme="dark"] .subscription-modal-empty {
+  background: #1c2635;
+}
+
+[data-theme="dark"] .subscription-plan-card.current {
+  background: rgba(97, 245, 237, .07);
+}
+
+/* Animation */
+
+@keyframes subscriptionBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes subscriptionModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 620px) {
+  .subscription-modal-backdrop {
+    padding: 12px;
+    align-items: center;
+  }
+
+  .subscription-modal {
+    max-height: 92vh;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .subscription-modal-header h2 {
+    font-size: 19px;
+  }
+
+  #subscription-plan-options {
+    grid-template-columns: 1fr;
+  }
+
+  .subscription-modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .subscription-modal-footer > span {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subscription-modal-backdrop,
+  .subscription-modal {
+    animation: none !important;
+  }
+
+  .subscription-action-item,
+  .subscription-modal-close,
+  .subscription-action-arrow,
+  .subscription-plan-card {
+    transition: none !important;
+  }
+}
+
+
+
+  
+
+
+
 
 
 
@@ -7559,6 +8181,209 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 
 </section>
 
+
+      
+<!-- =====================================================
+     SUBSCRIPTION POPUPS
+===================================================== -->
+
+<!-- MANAGE SUBSCRIPTION -->
+<div class="subscription-modal-backdrop" id="manage-subscription-modal" hidden>
+  <div class="subscription-modal" role="dialog" aria-modal="true"
+       aria-labelledby="manage-subscription-title">
+
+    <div class="subscription-modal-header">
+      <div>
+        <span class="eyebrow">ACCOUNT BILLING</span>
+        <h2 id="manage-subscription-title">Manage subscription</h2>
+        <p>Manage your plan, payments and subscription settings.</p>
+      </div>
+      <button class="subscription-modal-close" data-subscription-modal-close
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div class="subscription-modal-current">
+      <div>
+        <span>Current plan</span>
+        <strong id="manage-modal-plan-name">Free</strong>
+      </div>
+      <span class="subscription-status active" id="manage-modal-plan-status">
+        Active
+      </span>
+    </div>
+
+    <div class="subscription-modal-actions">
+
+      <button class="subscription-action-item" id="manage-change-plan">
+        <span class="subscription-action-icon">✧</span>
+        <span>
+          <strong>Change plan</strong>
+          <small>Explore plans and change your subscription.</small>
+        </span>
+        <span class="subscription-action-arrow">→</span>
+      </button>
+
+      <button class="subscription-action-item" id="manage-payment-methods">
+        <span class="subscription-action-icon">◇</span>
+        <span>
+          <strong>Payment methods</strong>
+          <small>Manage your saved payment methods.</small>
+        </span>
+        <span class="subscription-action-arrow">→</span>
+      </button>
+
+      <button class="subscription-action-item" id="manage-billing-history">
+        <span class="subscription-action-icon">▤</span>
+        <span>
+          <strong>Billing history</strong>
+          <small>View previous payments and invoices.</small>
+        </span>
+        <span class="subscription-action-arrow">→</span>
+      </button>
+
+      <button class="subscription-action-item danger" id="manage-cancel-plan">
+        <span class="subscription-action-icon">⌁</span>
+        <span>
+          <strong>Cancel subscription</strong>
+          <small>Review your cancellation options.</small>
+        </span>
+        <span class="subscription-action-arrow">→</span>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- CHANGE PLAN -->
+<div class="subscription-modal-backdrop" id="change-plan-modal" hidden>
+  <div class="subscription-modal subscription-modal-wide" role="dialog"
+       aria-modal="true" aria-labelledby="change-plan-title">
+
+    <div class="subscription-modal-header">
+      <div>
+        <span class="eyebrow">SUBSCRIPTION OPTIONS</span>
+        <h2 id="change-plan-title">Choose your plan</h2>
+        <p>Find the right plan for your business.</p>
+      </div>
+      <button class="subscription-modal-close" data-subscription-modal-close
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div class="subscription-plan-current-note">
+      Your current plan:
+      <strong id="change-plan-current-name">Free</strong>
+    </div>
+
+    <div id="subscription-plan-options">
+      <div class="subscription-modal-empty">
+        Available plans will appear here once plan configuration is connected.
+      </div>
+    </div>
+
+    <div class="subscription-modal-footer">
+      <span>All plans are billed monthly.</span>
+      <button class="btn btn-secondary" data-subscription-modal-close>
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- PAYMENT METHODS -->
+<div class="subscription-modal-backdrop" id="payment-methods-modal" hidden>
+  <div class="subscription-modal" role="dialog" aria-modal="true"
+       aria-labelledby="payment-methods-title">
+
+    <div class="subscription-modal-header">
+      <div>
+        <span class="eyebrow">PAYMENT SETTINGS</span>
+        <h2 id="payment-methods-title">Payment methods</h2>
+        <p>Manage the payment method used for your subscription.</p>
+      </div>
+      <button class="subscription-modal-close" data-subscription-modal-close
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div id="subscription-payment-method-list">
+      <div class="subscription-modal-empty">
+        <span class="subscription-empty-icon">◇</span>
+        <strong>No payment method added</strong>
+        <p>You haven't added a payment method yet.</p>
+      </div>
+    </div>
+
+    <div class="subscription-modal-footer">
+      <button class="btn btn-secondary" data-subscription-modal-close>
+        Close
+      </button>
+      <button class="btn btn-primary" id="subscription-add-payment-method">
+        + Add payment method
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- CANCEL SUBSCRIPTION -->
+<div class="subscription-modal-backdrop" id="cancel-subscription-modal" hidden>
+  <div class="subscription-modal subscription-cancel-modal" role="dialog"
+       aria-modal="true" aria-labelledby="cancel-subscription-title">
+
+    <div class="subscription-modal-header">
+      <div>
+        <span class="eyebrow">SUBSCRIPTION SETTINGS</span>
+        <h2 id="cancel-subscription-title">Cancel subscription?</h2>
+        <p>Before you go, here's what happens when you cancel.</p>
+      </div>
+      <button class="subscription-modal-close" data-subscription-modal-close
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div class="subscription-cancel-notice">
+      <span class="subscription-cancel-icon">!</span>
+      <div>
+        <strong>Your access won't end immediately.</strong>
+        <p>If you cancel a paid subscription, your access will normally
+           continue until the end of your current paid billing period.</p>
+      </div>
+    </div>
+
+    <div class="subscription-cancel-details">
+      <div>
+        <span>Current plan</span>
+        <strong id="cancel-modal-plan-name">Free</strong>
+      </div>
+      <div>
+        <span>Access until</span>
+        <strong id="cancel-modal-access-date">Not applicable</strong>
+      </div>
+    </div>
+
+    <p class="subscription-cancel-footnote">
+      You can close this window if you don't want to cancel.
+    </p>
+
+    <div class="subscription-modal-footer">
+      <button class="btn btn-secondary" data-subscription-modal-close>
+        Keep subscription
+      </button>
+      <button class="btn btn-danger" id="confirm-cancel-subscription">
+        Confirm cancellation
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+      
 
 
       
