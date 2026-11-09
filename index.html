@@ -10070,6 +10070,9 @@ currency.value = selectedCurrency.trim().toUpperCase();
     const address = form.querySelector('[name="shipping_address"]').value.trim();
     const currencyCode = currency.value.trim().toUpperCase();
 
+    console.log("Review form currency:", currency.value);
+console.log("Currency being saved:", currencyCode);
+
     if (!customerName || !phone || !address) {
       notify("Customer name, phone, and address are required.");
       return;
