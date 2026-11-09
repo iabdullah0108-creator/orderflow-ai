@@ -16278,105 +16278,87 @@ if (!navigator.onLine) {
    ORDERFLOW AI — SUBSCRIPTION PLAN CONFIGURATION
 ========================================================= */
 
-const subscriptionPlans = [
-  {
-    id: "free",
-    name: "Free",
-    price: 0,
-    replies: 100,
-    orders: 100,
-    automations: 1,
-    channels: 1,
-    members: 1,
-    description: "Explore OrderFlow AI and manage your business.",
-    features: [
-      "100 AI replies per month",
-      "100 orders per month",
-      "1 active automation",
-      "1 connected channel",
-      "1 team member",
-      "Customers and invoices",
-      "Basic analytics"
-    ]
-  },
-  {
-    id: "starter",
-    name: "Starter",
-    price: 2499,
-    replies: 500,
-    orders: 500,
-    automations: 3,
-    channels: 2,
-    members: 1,
-    description: "Everything you need to manage a growing shop.",
-    features: [
-      "500 AI replies per month",
-      "500 orders per month",
-      "3 active automations",
-      "2 connected channels",
-      "1 team member",
-      "Full order and invoice management",
-      "Business Knowledge and Smart Inbox"
-    ]
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    price: 6999,
-    replies: 2000,
-    orders: 2000,
-    automations: 10,
-    channels: 3,
-    members: 3,
-    description: "More automation and control for growing businesses.",
-    features: [
-      "2,000 AI replies per month",
-      "2,000 orders per month",
-      "10 active automations",
-      "All 3 connected channels",
-      "3 team members",
-      "Advanced analytics",
-      "Priority support"
-    ]
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: 14999,
-    replies: 6000,
-    orders: 6000,
-    automations: 30,
-    channels: 3,
-    members: 5,
-    description: "More capacity for businesses operating at scale.",
-    features: [
-      "6,000 AI replies per month",
-      "6,000 orders per month",
-      "30 active automations",
-      "All 3 connected channels",
-      "5 team members",
-      "Advanced analytics and reporting",
-      "Priority support",
-      "Higher API and automation limits"
-    ]
-  }
-];
+/* =========================================================
+   ORDERFLOW AI — DATABASE-DRIVEN SUBSCRIPTION PLANS
+========================================================= */
 
-
-/* Current plan placeholder.
-   Later this will come from the subscription database. */
-
-let currentSubscriptionPlan = "free";
-
+let subscriptionPlans = [];
+let currentSubscriptionPlan = null;
+let currentSubscriptionData = null;
 
 /* Currency formatting */
 
-function formatSubscriptionPrice(price) {
-  return "Rs. " + Number(price).toLocaleString("en-PK");
+function formatSubscriptionPrice(price, currency = "PKR") {
+  const formatted = Number(price).toLocaleString("en-PK");
+
+  if (currency === "PKR") return "Rs. " + formatted;
+
+  return currency + " " + formatted;
 }
 
+/* Load subscription data from the backend */
 
-/* Render plan cards */
+async function loadSubscriptionPlans() {
+  const container = document.getElementById(
+    "subscription-plan-options"
+  );
+
+  try {
+    const authKey = Object.keys(localStorage).find(
+      key => key.startsWith("sb-") &&
+             key.endsWith("-auth-token")
+    );
+
+    const authData = authKey
+      ? JSON.parse(localStorage.getItem(authKey))
+      : null;
+
+    const accessToken = authData?.access_token;
+
+    if (!accessToken) {
+      throw new Error("Your login session could not be found.");
+    }
+
+    const response = await fetch("/api/subscription", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Unable to load subscription plans."
+      );
+    }
+
+    currentSubscriptionData = result;
+    currentSubscriptionPlan = result.subscription.plan_id;
+
+    subscriptionPlans = result.availablePlans || [];
+
+    renderSubscriptionPlans();
+
+    if (typeof renderCurrentSubscription === "function") {
+      renderCurrentSubscription(result);
+    }
+
+  } catch (error) {
+    console.error("Subscription loading failed:", error);
+
+    if (container) {
+      container.innerHTML = `
+        <p class="text-muted">
+          Unable to load subscription plans.
+          Please refresh the page and try again.
+        </p>
+      `;
+    }
+  }
+}
+
+/* Render database-driven plan cards */
 
 function renderSubscriptionPlans() {
   const container = document.getElementById(
@@ -16396,6 +16378,16 @@ function renderSubscriptionPlans() {
       "subscription-plan-card" +
       (isCurrent ? " current" : "");
 
+    const features = [
+      `${Number(plan.monthly_ai_replies).toLocaleString("en-PK")} AI replies per month`,
+      `${Number(plan.monthly_orders).toLocaleString("en-PK")} orders per month`,
+      `${plan.active_automations} active automations`,
+      `${plan.connected_channels} connected channels`,
+      `${plan.team_members} team members`,
+      "Customers and invoice management",
+      "Business Knowledge and Smart Inbox"
+    ];
+
     card.innerHTML = `
       ${isCurrent
         ? `<span class="plan-current-label">CURRENT PLAN</span>`
@@ -16405,14 +16397,15 @@ function renderSubscriptionPlans() {
       <h3>${plan.name}</h3>
 
       <div class="plan-price">
-        ${formatSubscriptionPrice(plan.price)}
+        ${formatSubscriptionPrice(
+          plan.price_monthly,
+          plan.currency
+        )}
         <small>/ month</small>
       </div>
 
-      <p>${plan.description}</p>
-
       <ul>
-        ${plan.features.map(feature =>
+        ${features.map(feature =>
           `<li>${feature}</li>`
         ).join("")}
       </ul>
@@ -16446,8 +16439,7 @@ function renderSubscriptionPlans() {
     if (manageName) manageName.textContent = currentPlan.name;
   }
 
-  // Temporary selection feedback.
-  // Actual plan changes require checkout and backend verification.
+  // Plan selection is informational until checkout is connected.
 
   container.querySelectorAll("[data-select-plan]").forEach(button => {
     button.addEventListener("click", () => {
@@ -16458,22 +16450,201 @@ function renderSubscriptionPlans() {
       if (!selectedPlan) return;
 
       alert(
-        `${selectedPlan.name} — ${formatSubscriptionPrice(selectedPlan.price)} / month\n\n` +
-        "Your plan has not been changed. Payment and checkout integration will be connected next."
+        `${selectedPlan.name} — ${
+          formatSubscriptionPrice(
+            selectedPlan.price_monthly,
+            selectedPlan.currency
+          )
+        } / month\n\n` +
+        "Your plan has not been changed. Checkout integration is required."
       );
     });
   });
 }
 
 
-/* Populate the plans when the page loads */
-
-renderSubscriptionPlans();
 
 
     
+/* Render current subscription details */
+
+function renderCurrentSubscription(result) {
+  const subscription = result.subscription;
+  const plan = result.plan;
+  const usage = result.usage || {};
+
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  };
+
+  const setUsage = (valueId, barId, captionId, used, limit) => {
+    const valueElement = document.getElementById(valueId);
+    const barElement = document.getElementById(barId);
+    const captionElement = document.getElementById(captionId);
+
+    if (subscription.is_unlimited) {
+      if (valueElement) valueElement.innerHTML = "Unlimited";
+      if (barElement) barElement.style.width = "0%";
+      if (captionElement) captionElement.textContent =
+        "Unlimited usage included in your subscription";
+      return;
+    }
+
+    const safeUsed = Number(used) || 0;
+    const safeLimit = Number(limit) || 0;
+    const percentage = safeLimit > 0
+      ? Math.min((safeUsed / safeLimit) * 100, 100)
+      : 0;
+
+    if (valueElement) {
+      valueElement.innerHTML =
+        `${safeUsed.toLocaleString("en-PK")} <small>/ ${safeLimit.toLocaleString("en-PK")}</small>`;
+    }
+
+    if (barElement) {
+      barElement.style.width = `${percentage}%`;
+    }
+
+    if (captionElement) {
+      captionElement.textContent =
+        `${Math.max(safeLimit - safeUsed, 0).toLocaleString("en-PK")} remaining this billing period`;
+    }
+  };
+
+  // Current plan
+  setText("subscription-plan-name", plan.name);
+  setText(
+    "subscription-status",
+    subscription.status.charAt(0).toUpperCase() +
+      subscription.status.slice(1)
+  );
+
+  setText(
+    "subscription-price",
+    formatSubscriptionPrice(
+      plan.price_monthly,
+      plan.currency
+    )
+  );
+
+  // Billing period
+  const periodEnd = subscription.current_period_end
+    ? new Date(subscription.current_period_end)
+    : null;
+
+  const periodStart = subscription.current_period_start
+    ? new Date(subscription.current_period_start)
+    : null;
+
+  const formatDate = date =>
+    date && !Number.isNaN(date.getTime())
+      ? date.toLocaleDateString("en-PK", {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        })
+      : "Not scheduled";
+
+  setText(
+    "subscription-next-billing",
+    subscription.cancel_at_period_end
+      ? "Cancellation scheduled"
+      : formatDate(periodEnd)
+  );
+
+  setText(
+    "subscription-billing-caption",
+    subscription.cancel_at_period_end
+      ? "Your subscription will end at the current period end"
+      : "Next billing date"
+  );
+
+  const billingPeriod =
+    subscription.billing_period || "monthly";
+
+  setText(
+    "subscription-period",
+    billingPeriod.charAt(0).toUpperCase() +
+      billingPeriod.slice(1)
+  );
+
+  setText(
+    "subscription-period-caption",
+    periodStart && periodEnd
+      ? `${formatDate(periodStart)} – ${formatDate(periodEnd)}`
+      : "Billing period"
+  );
+
+  setText(
+    "subscription-expiry",
+    subscription.cancel_at_period_end
+      ? formatDate(periodEnd)
+      : "No scheduled expiry"
+  );
+
+  setText(
+    "subscription-expiry-caption",
+    subscription.cancel_at_period_end
+      ? "Access remains available until this date"
+      : "Your subscription is currently active"
+  );
+
+  // Payment method remains unconfigured until payment integration.
+  setText("subscription-payment-method", "Not added");
+  setText(
+    "subscription-payment-caption",
+    "Payment integration not connected"
+  );
+
+  // Usage
+  setText(
+    "usage-period-label",
+    periodStart && periodEnd
+      ? `${formatDate(periodStart)} – ${formatDate(periodEnd)}`
+      : "Current billing period"
+  );
+
+  setUsage(
+    "usage-messages",
+    "usage-messages-bar",
+    "usage-messages-caption",
+    usage.ai_replies,
+    plan.monthly_ai_replies
+  );
+
+  setUsage(
+    "usage-orders",
+    "usage-orders-bar",
+    "usage-orders-caption",
+    usage.orders,
+    plan.monthly_orders
+  );
+
+  // Automation limit is available from the plan.
+  setText(
+    "usage-automations",
+    subscription.is_unlimited
+      ? "Unlimited"
+      : `${plan.active_automations} available`
+  );
+
+  setText(
+    "usage-automations-caption",
+    "Maximum active automations allowed by your plan"
+  );
+
+  // Update modal plan details.
+  setText("manage-modal-plan-status", subscription.status);
+}
+
+/* Load subscription data */
+
+loadSubscriptionPlans();
 
 
+
+    
     
     
   </script>
