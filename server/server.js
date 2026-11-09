@@ -1758,13 +1758,44 @@ if (!supportedCurrencies.includes(orderCurrency)) {
       }
     );
 
-    if (error) {
-      console.error("Order and invoice creation failed:", error);
 
-      return res.status(503).json({
-        error: "Could not create the order and invoice. No order was saved."
-      });
-    }
+
+    if (error) {
+  const rpcError = error.message || "";
+
+  // Monthly order quota reached.
+  if (rpcError.includes("ORDER_LIMIT_REACHED")) {
+    return res.status(429).json({
+      code: "ORDER_LIMIT_REACHED",
+      error: "You've reached your monthly order limit. Upgrade your plan or wait for your next billing period."
+    });
+  }
+
+  // Subscription is inactive or expired.
+  if (rpcError.includes("SUBSCRIPTION_INACTIVE_OR_EXPIRED")) {
+    return res.status(403).json({
+      code: "SUBSCRIPTION_INACTIVE_OR_EXPIRED",
+      error: "Your subscription is inactive or expired. Please activate an eligible plan to create orders."
+    });
+  }
+
+  // No subscription exists for this workspace.
+  if (rpcError.includes("SUBSCRIPTION_NOT_FOUND")) {
+    return res.status(403).json({
+      code: "SUBSCRIPTION_NOT_FOUND",
+      error: "No subscription was found for this workspace."
+    });
+  }
+
+  console.error("Order and invoice creation failed:", error);
+
+  return res.status(503).json({
+    error: "Could not create the order and invoice. No order was saved."
+  });
+}
+
+
+    
 
     return res.status(201).json({
       message: "Order and invoice created successfully.",
