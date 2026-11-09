@@ -3860,6 +3860,155 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
 
 
 
+// =========================================
+// Subscription API — Current Workspace Plan
+// =========================================
+
+app.get("/api/subscription", authenticateUser, async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: "Subscription service is not configured."
+      });
+    }
+
+    // Always derive the workspace from the authenticated user.
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (!workspace) {
+      return res.status(403).json({
+        success: false,
+        message: "Unable to identify your workspace."
+      });
+    }
+
+    // Retrieve this workspace's subscription.
+    const { data: subscription, error: subscriptionError } =
+      await supabase
+        .from("workspace_subscriptions")
+        .select(`
+          id,
+          workspace_id,
+          plan_id,
+          status,
+          billing_period,
+          current_period_start,
+          current_period_end,
+          cancel_at_period_end,
+          cancelled_at,
+          payment_provider,
+          is_unlimited
+        `)
+        .eq("workspace_id", workspace.id)
+        .maybeSingle();
+
+    if (subscriptionError) {
+      console.error(
+        "Subscription lookup failed:",
+        subscriptionError
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load your subscription."
+      });
+    }
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "No subscription was found for this workspace."
+      });
+    }
+
+    // Retrieve plan details from the database.
+    const { data: plan, error: planError } =
+      await supabase
+        .from("subscription_plans")
+        .select(`
+          id,
+          name,
+          price_monthly,
+          currency,
+          monthly_ai_replies,
+          monthly_orders,
+          active_automations,
+          connected_channels,
+          team_members,
+          is_active
+        `)
+        .eq("id", subscription.plan_id)
+        .maybeSingle();
+
+    if (planError) {
+      console.error("Subscription plan lookup failed:", planError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load your subscription plan."
+      });
+    }
+
+    if (!plan) {
+      return res.status(409).json({
+        success: false,
+        message: "Your subscription plan could not be found."
+      });
+    }
+
+    // Retrieve usage for this subscription's current billing period.
+    const { data: usageRows, error: usageError } =
+      await supabase
+        .from("usage_counters")
+        .select("metric, used_count")
+        .eq("workspace_id", workspace.id)
+        .eq("period_start", subscription.current_period_start);
+
+    if (usageError) {
+      console.error("Usage lookup failed:", usageError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load subscription usage."
+      });
+    }
+
+    const usage = {
+      ai_replies: 0,
+      orders: 0
+    };
+
+    for (const row of usageRows || []) {
+      if (Object.prototype.hasOwnProperty.call(usage, row.metric)) {
+        usage[row.metric] = Number(row.used_count);
+      }
+    }
+
+    return res.json({
+      success: true,
+      subscription,
+      plan,
+      usage
+    });
+
+  } catch (error) {
+    console.error("Subscription API error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred while loading your subscription."
+    });
+  }
+});
+
+
+
+
+
+
+
 
 
 
