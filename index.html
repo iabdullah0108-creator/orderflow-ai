@@ -10805,6 +10805,7 @@ const response = await fetch("/api/orders", {
     $("create-order-form").reset();
     $("order-item-list").replaceChildren();
     $("new-order-total").textContent = "PKR 0.00";
+     $("new-order-currency").value = "PKR";
 
     await Promise.all([renderOrders(), renderInvoices()]);
 
