@@ -470,6 +470,108 @@ if (typeof content !== "string" || !content.trim()) {
 return content;
 }
 
+
+
+
+
+
+
+
+// =========================================
+// AI Task Usage — Subscription Enforcement
+// =========================================
+
+async function reserveAITask(workspaceId) {
+  const { data, error } = await supabase.rpc(
+    "enforce_ai_task_subscription_quota",
+    {
+      p_workspace_id: workspaceId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.reservation_id) {
+    throw new Error("AI_TASK_RESERVATION_FAILED");
+  }
+
+  return data;
+}
+
+async function commitAITask(reservationId) {
+  const { data, error } = await supabase.rpc(
+    "commit_ai_task_usage",
+    {
+      p_reservation_id: reservationId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+async function refundAITask(reservationId) {
+  const { data, error } = await supabase.rpc(
+    "refund_ai_task_usage",
+    {
+      p_reservation_id: reservationId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+function handleAITaskQuotaError(res, error) {
+  const message = error?.message || "";
+
+  if (message.includes("AI_TASK_LIMIT_REACHED")) {
+    return res.status(429).json({
+      success: false,
+      code: "AI_TASK_LIMIT_REACHED",
+      error: "Your monthly AI Task allowance has been reached. Please upgrade your plan."
+    });
+  }
+
+  if (message.includes("SUBSCRIPTION_INACTIVE_OR_EXPIRED")) {
+    return res.status(403).json({
+      success: false,
+      code: "SUBSCRIPTION_INACTIVE_OR_EXPIRED",
+      error: "Your subscription is inactive or expired."
+    });
+  }
+
+  if (message.includes("SUBSCRIPTION_NOT_FOUND")) {
+    return res.status(403).json({
+      success: false,
+      code: "SUBSCRIPTION_NOT_FOUND",
+      error: "No active subscription was found for this workspace."
+    });
+  }
+
+  return null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function getOwnerWorkspaceForAI(req, res) {
   const { workspace, error } = await getUserWorkspace(req.user.id);
   if (error || !workspace) {
@@ -2152,6 +2254,9 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
 
 
 app.post("/api/draft-reply", authenticateUser, async (req, res) => {
+
+  let aiTaskReservationId = null;
+  
   try {
     const { message } = req.body || {};
     if (typeof message !== "string" || !message.trim()) {
@@ -2240,7 +2345,31 @@ app.post("/api/draft-reply", authenticateUser, async (req, res) => {
     let reply;
 
 try {
-  reply = await generateAIText(aiConfig, prompt, { maxTokens: 1200 });
+
+
+
+  // Reserve one AI Task before calling the provider.
+const reservation = await reserveAITask(workspace.id);
+aiTaskReservationId = reservation.reservation_id;
+
+// Generate the reply.
+reply = await generateAIText(
+  aiConfig,
+  prompt,
+  { maxTokens: 1200 }
+);
+
+if (typeof reply !== "string" || !reply.trim()) {
+  throw new Error("AI_EMPTY_RESPONSE");
+}
+
+// Finalize the successful AI Task.
+await commitAITask(aiTaskReservationId);
+aiTaskReservationId = null;
+  
+
+
+  
 } catch (error) {
   console.error("AI provider diagnostic:", {
     provider: aiConfig.provider,
@@ -2259,13 +2388,40 @@ try {
       return res.status(502).json({ error: "The AI did not return a reply." });
     }
     return res.json({ reply: reply.trim() });
-  } catch (error) {
-    console.error("Reply generation failed. Check AI provider configuration and availability.");
-    return res.status(502).json({ error: "Could not generate a reply. Please try again." });
+   } catch (error) {
+
+    // Refund the reservation if generation failed.
+    if (aiTaskReservationId) {
+      try {
+        await refundAITask(aiTaskReservationId);
+      } catch (refundError) {
+        console.error(
+          "AI Task refund failed:",
+          refundError.message
+        );
+      }
+    }
+
+    // Handle subscription quota errors.
+    const quotaResponse = handleAITaskQuotaError(res, error);
+
+    if (quotaResponse) return quotaResponse;
+
+    console.error(
+      "Reply generation failed:",
+      error.message
+    );
+
+    return res.status(502).json({
+      error: "Could not generate a reply. Please try again."
+    });
   }
 });
 
 app.post("/api/extract-order", authenticateUser, async (req, res) => {
+
+  let aiTaskReservationId = null;
+  
   try {
     const { message, businessInfo = "", currency = "USD" } = req.body || {};
     if (typeof message !== "string" || !message.trim() || message.length > 5000) {
@@ -2335,18 +2491,28 @@ Rules:
       "\nCUSTOMER MESSAGE (untrusted data):\n",
       message.trim()
     ].join("\n");
-    const responseText = await generateAIText(aiConfig, prompt, { json: true, maxTokens: 1800 });
+    
+    // Reserve one AI Task before calling the provider.
+const reservation = await reserveAITask(workspace.id);
+aiTaskReservationId = reservation.reservation_id;
+
+// Generate the order extraction.
+const responseText = await generateAIText(
+  aiConfig,
+  prompt,
+  { json: true, maxTokens: 1800 }
+);
 
     if (typeof responseText !== "string" || !responseText.trim()) {
-      return res.status(502).json({ error: "The AI did not return order details." });
-    }
+  throw new Error("AI_EMPTY_RESPONSE");
+}
 
     let draft;
     try {
-      draft = JSON.parse(responseText.trim());
-    } catch {
-      return res.status(502).json({ error: "The AI returned an invalid draft. Please try again." });
-    }
+  draft = JSON.parse(responseText.trim());
+} catch {
+  throw new Error("AI_INVALID_JSON");
+}
 
     if (
       !draft || typeof draft !== "object" ||
@@ -2357,8 +2523,12 @@ Rules:
         (item.unit_price !== null && (typeof item.unit_price !== "number" ||
           !Number.isFinite(item.unit_price) || item.unit_price < 0 || item.unit_price > 100000000)))
     ) {
-      return res.status(502).json({ error: "The AI returned incomplete or invalid order details." });
+        throw new Error("AI_INVALID_ORDER_DETAILS");
     }
+
+    // Finalize the successful AI Task.
+await commitAITask(aiTaskReservationId);
+aiTaskReservationId = null;
 
     return res.json({
       draft: {
@@ -2377,9 +2547,33 @@ Rules:
         needs_review: true
       }
     });
-  } catch (error) {
-    console.error("Order extraction failed. Check AI provider configuration and availability.");
-    return res.status(502).json({ error: "Could not extract the order. Please try again." });
+    } catch (error) {
+
+    // Refund the reservation if extraction failed.
+    if (aiTaskReservationId) {
+      try {
+        await refundAITask(aiTaskReservationId);
+      } catch (refundError) {
+        console.error(
+          "AI Task refund failed:",
+          refundError.message
+        );
+      }
+    }
+
+    // Handle subscription quota errors.
+    const quotaResponse = handleAITaskQuotaError(res, error);
+
+    if (quotaResponse) return quotaResponse;
+
+    console.error(
+      "Order extraction failed:",
+      error.message
+    );
+
+    return res.status(502).json({
+      error: "Could not extract the order. Please try again."
+    });
   }
 });
 
@@ -2709,10 +2903,14 @@ app.put(
 // --------------------------------------------------
 
 
+
 app.post(
   "/api/smart-assistant/chat",
   authenticateUser,
   async (req, res) => {
+
+    let aiTaskReservationId = null;
+
     if (!supabase) {
       return res.status(503).json({
         error: "Database is not configured."
@@ -2814,36 +3012,35 @@ app.post(
           "many", "much", "is", "are", "was", "were",
           "the", "a", "an", "my", "our", "me", "us",
           "for", "of", "in", "on", "with", "from",
-          "to", "and", "or", "please", "i", "need",
+          "to", "and", "or", "i", "need",
           "want", "can", "you", "do", "have",
           "order", "orders", "customer", "customers",
           "client", "clients", "product", "products",
           "item", "items", "containing", "contains",
-          "including", "number", "name", "named", "called", "status", "total",
-          "all", "any", "older", "oldest", "newest",
-          "associated", "association", "this", "that", "these", "those",
-          "their", "them", "they", "customer's", "customers",
-          "related", "belonging", "belongs", "belonged",
-          "latest", "recent", "pending", "paid",
-          "completed", "complete", "processing",
-          "shipped", "delivered", "cancelled",
-          "canceled", "refunded", "overdue", "draft",
-          "issued", "voided"
+          "including", "number", "name", "named", "called",
+          "status", "total", "all", "any", "older", "oldest",
+          "newest", "associated", "association", "this",
+          "that", "these", "those", "their", "them", "they",
+          "customer's", "related", "belonging", "belongs",
+          "belonged", "latest", "recent", "pending", "paid",
+          "completed", "complete", "processing", "shipped",
+          "delivered", "cancelled", "canceled", "refunded",
+          "overdue", "draft", "issued", "voided"
         ];
 
         const stopWordSet = new Set(stopWords);
 
         return text
-  .replace(/[^\w\s@.+-]/g, " ")
-  .split(/\s+/)
-  .map(word => word.replace(/[.,!?;:]+$/g, ""))
-  .filter(word =>
-    word &&
-    !stopWordSet.has(word.toLowerCase())
-  )
-  .join(" ")
-  .trim()
-  .slice(0, 120);
+          .replace(/[^\w\s@.+-]/g, " ")
+          .split(/\s+/)
+          .map(word => word.replace(/[.,!?;:]+$/g, ""))
+          .filter(word =>
+            word &&
+            !stopWordSet.has(word.toLowerCase())
+          )
+          .join(" ")
+          .trim()
+          .slice(0, 120);
       }
 
       const searchTerm = extractSearchTerm(message);
@@ -2931,11 +3128,12 @@ app.post(
       const matchingOrderCount = Number(
         orderSearchRow?.total_count || 0
       );
+
       console.log("SMART ASSISTANT ORDER SEARCH:", {
-  searchTerm,
-  matchingOrderCount,
-  returnedOrders: orders.length
-});
+        searchTerm,
+        matchingOrderCount,
+        returnedOrders: orders.length
+      });
 
       // Search customers across the workspace when relevant.
       let customers = [];
@@ -2977,11 +3175,10 @@ app.post(
         );
 
         console.log("SMART ASSISTANT CUSTOMER SEARCH:", {
-  searchTerm,
-  matchingCustomerCount,
-  returnedCustomers: customers.length
-});
-        
+          searchTerm,
+          matchingCustomerCount,
+          returnedCustomers: customers.length
+        });
       }
 
       // Retrieve customer details for the matching orders too.
@@ -3230,6 +3427,11 @@ ${conversationText}
 Respond to the user's latest message.
 `;
 
+      // Reserve one AI Task before calling the provider.
+      const reservation = await reserveAITask(workspaceId);
+      aiTaskReservationId = reservation.reservation_id;
+
+      // Generate the Smart Assistant response.
       const answer = await generateAIText(
         aiConfig,
         prompt,
@@ -3240,10 +3442,12 @@ Respond to the user's latest message.
         typeof answer !== "string" ||
         !answer.trim()
       ) {
-        return res.status(502).json({
-          error: "The AI provider returned an empty response."
-        });
+        throw new Error("AI_EMPTY_RESPONSE");
       }
+
+      // Finalize the successful AI Task.
+      await commitAITask(aiTaskReservationId);
+      aiTaskReservationId = null;
 
       return res.json({
         success: true,
@@ -3251,6 +3455,24 @@ Respond to the user's latest message.
       });
 
     } catch (error) {
+
+      // Refund the reservation if generation failed.
+      if (aiTaskReservationId) {
+        try {
+          await refundAITask(aiTaskReservationId);
+        } catch (refundError) {
+          console.error(
+            "AI Task refund failed:",
+            refundError.message
+          );
+        }
+      }
+
+      // Handle subscription quota errors.
+      const quotaResponse = handleAITaskQuotaError(res, error);
+
+      if (quotaResponse) return quotaResponse;
+
       console.error(
         "Smart Assistant chat failed:",
         error.message
@@ -3262,12 +3484,6 @@ Respond to the user's latest message.
     }
   }
 );
-
-
-
-
-
-
 
 
 
