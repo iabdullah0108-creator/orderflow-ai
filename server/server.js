@@ -146,6 +146,87 @@ app.use(express.json({ limit: "20kb" }));
 
 
 
+
+
+
+
+// --------------------------------------------------
+// Safepay webhook receiver
+// --------------------------------------------------
+
+app.post("/api/safepay/webhook", (req, res) => {
+  try {
+    const webhookSecret = process.env.SAFEPAY_WEBHOOK_SECRET;
+    const signature = req.get("X-SFPY-SIGNATURE");
+
+    if (!webhookSecret) {
+      console.error("Safepay webhook secret is not configured.");
+      return res.status(503).json({
+        success: false,
+        message: "Webhook verification is not configured."
+      });
+    }
+
+    if (!signature || !req.body || typeof req.body !== "object") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid webhook request."
+      });
+    }
+
+    // Safepay's documented JSON-payload HMAC verification.
+    const payload = Buffer.from(JSON.stringify(req.body));
+
+    const expectedSignature = crypto
+      .createHmac("sha512", webhookSecret)
+      .update(payload)
+      .digest("hex");
+
+    const receivedSignature = signature.trim().replace(/^sha512=/i, "");
+
+    const expectedBuffer = Buffer.from(expectedSignature, "hex");
+    const receivedBuffer = Buffer.from(receivedSignature, "hex");
+
+    if (
+      expectedBuffer.length !== receivedBuffer.length ||
+      !crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+    ) {
+      console.warn("Safepay webhook signature verification failed.");
+
+      return res.status(401).json({
+        success: false,
+        message: "Invalid webhook signature."
+      });
+    }
+
+    const eventType = req.body.type;
+
+    console.log("Verified Safepay webhook:", eventType || "unknown event");
+
+    return res.status(200).json({
+      success: true,
+      received: true
+    });
+
+  } catch (error) {
+    console.error("Safepay webhook processing error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Webhook processing failed."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 // Initialize Supabase using server-side environment secrets.
 
 // Never expose SUPABASE_SECRET_KEY to the browser.
