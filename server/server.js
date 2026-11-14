@@ -156,18 +156,19 @@ app.use(express.json({ limit: "20kb" }));
 
 
 
+
 app.post(
   "/api/safepay/webhook",
   express.raw({ type: "application/json" }),
   (req, res) => {
     try {
-      const webhookSecret = process.env.SAFEPAY_WEBHOOK_SECRET;
+      const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
       const signature = req.get("X-SFPY-SIGNATURE");
 
-      if (!webhookSecret) {
+      if (!secret) {
         return res.status(503).json({
           success: false,
-          message: "Webhook secret is not configured."
+          message: "Webhook verification is not configured."
         });
       }
 
@@ -178,39 +179,32 @@ app.post(
         });
       }
 
+      const received = signature.trim().replace(/^sha256=/i, "");
+
+      if (!/^[a-f0-9]{64}$/i.test(received)) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid signature."
+        });
+      }
+
+      const expected = crypto
+        .createHmac("sha256", secret)
+        .update(req.body)
+        .digest();
+
+      const receivedBuffer = Buffer.from(received, "hex");
+
+      if (!crypto.timingSafeEqual(expected, receivedBuffer)) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid webhook signature."
+        });
+      }
+
       const event = JSON.parse(req.body.toString("utf8"));
 
-      // Safepay merchant webhook signature:
-      // HMAC-SHA512 over JSON.stringify(payload)
-      const payload = Buffer.from(JSON.stringify(event));
-
-      const expectedSignature = crypto
-        .createHmac("sha512", webhookSecret)
-        .update(payload)
-        .digest("hex");
-
-      const receivedSignature = signature.trim();
-
-      if (!/^[a-f0-9]{128}$/i.test(receivedSignature)) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid webhook signature."
-        });
-      }
-
-      const expectedBuffer = Buffer.from(expectedSignature, "hex");
-      const receivedBuffer = Buffer.from(receivedSignature, "hex");
-
-      if (!crypto.timingSafeEqual(expectedBuffer, receivedBuffer)) {
-        console.warn("Safepay webhook signature verification failed.");
-
-        return res.status(401).json({
-          success: false,
-          message: "Invalid webhook signature."
-        });
-      }
-
-      console.log("Verified Safepay webhook:", event.type || "unknown");
+      console.log("Verified Safepay event:", event.type || "unknown");
 
       return res.status(200).json({
         success: true,
@@ -228,8 +222,6 @@ app.post(
   }
 );
 
-
-// General JSON parsing for all other API routes
 app.use(express.json({ limit: "20kb" }));
 
 
