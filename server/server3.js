@@ -179,61 +179,50 @@ const supabase =
 
 
 
-
 async function getUserWorkspace(userId) {
-
   if (!supabase || !userId) {
-
     return { workspace: null, error: "not_configured" };
-
   }
-
-
 
   const { data, error } = await supabase
-
     .from("workspace_members")
-
     .select("workspace_id, role")
-
     .eq("user_id", userId)
-
     .limit(2);
 
-
-
   if (error) {
-
     console.error("Workspace membership lookup failed:", error.message);
-
     return { workspace: null, error: "lookup_failed" };
-
   }
-
-
 
   if (!data || data.length !== 1) {
-
     return { workspace: null, error: "workspace_missing_or_ambiguous" };
-
   }
 
+  // Retrieve the actual workspace details, including currency.
+  const { data: workspaceData, error: workspaceLookupError } =
+    await supabase
+      .from("workspaces")
+      .select("id, name, currency")
+      .eq("id", data[0].workspace_id)
+      .single();
 
+  if (workspaceLookupError || !workspaceData) {
+    console.error(
+      "Workspace details lookup failed:",
+      workspaceLookupError?.message
+    );
+
+    return { workspace: null, error: "workspace_lookup_failed" };
+  }
 
   return {
-
     workspace: {
-
-      id: data[0].workspace_id,
-
+      ...workspaceData,
       role: data[0].role
-
     },
-
     error: null
-
   };
-
 }
 
 
@@ -480,6 +469,108 @@ if (typeof content !== "string" || !content.trim()) {
 
 return content;
 }
+
+
+
+
+
+
+
+
+// =========================================
+// AI Task Usage — Subscription Enforcement
+// =========================================
+
+async function reserveAITask(workspaceId) {
+  const { data, error } = await supabase.rpc(
+    "enforce_ai_task_subscription_quota",
+    {
+      p_workspace_id: workspaceId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.reservation_id) {
+    throw new Error("AI_TASK_RESERVATION_FAILED");
+  }
+
+  return data;
+}
+
+async function commitAITask(reservationId) {
+  const { data, error } = await supabase.rpc(
+    "commit_ai_task_usage",
+    {
+      p_reservation_id: reservationId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+async function refundAITask(reservationId) {
+  const { data, error } = await supabase.rpc(
+    "refund_ai_task_usage",
+    {
+      p_reservation_id: reservationId
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+function handleAITaskQuotaError(res, error) {
+  const message = error?.message || "";
+
+  if (message.includes("AI_TASK_LIMIT_REACHED")) {
+    return res.status(429).json({
+      success: false,
+      code: "AI_TASK_LIMIT_REACHED",
+      error: "Your monthly AI Task allowance has been reached. Please upgrade your plan."
+    });
+  }
+
+  if (message.includes("SUBSCRIPTION_INACTIVE_OR_EXPIRED")) {
+    return res.status(403).json({
+      success: false,
+      code: "SUBSCRIPTION_INACTIVE_OR_EXPIRED",
+      error: "Your subscription is inactive or expired."
+    });
+  }
+
+  if (message.includes("SUBSCRIPTION_NOT_FOUND")) {
+    return res.status(403).json({
+      success: false,
+      code: "SUBSCRIPTION_NOT_FOUND",
+      error: "No active subscription was found for this workspace."
+    });
+  }
+
+  return null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function getOwnerWorkspaceForAI(req, res) {
   const { workspace, error } = await getUserWorkspace(req.user.id);
@@ -1295,55 +1386,82 @@ app.post("/api/customers", authenticateUser, async (req, res) => {
     }
 
     // Normalize values for comparison without changing stored customer details.
-    const normalizeText = value =>
-      typeof value === "string"
-        ? value.trim().replace(/\s+/g, " ").toLowerCase()
-        : "";
+   // Normalize values for comparison without changing stored customer details.
+const normalizeText = value =>
+  typeof value === "string"
+    ? value.trim().replace(/\s+/g, " ").toLowerCase()
+    : "";
 
-    const normalizePhone = value =>
-      typeof value === "string"
-        ? value.replace(/\D/g, "")
-        : "";
+const normalizePhone = value => {
+  if (typeof value !== "string") return "";
 
-    const target = {
-      name: normalizeText(cleanName),
-      phone: normalizePhone(cleanPhone),
-      email: normalizeText(cleanEmail),
-      address: normalizeText(cleanAddress)
-    };
+  let digits = value.replace(/\D/g, "");
 
-    // Search only within this authenticated user's workspace.
-    const { data: customers, error: searchError } = await supabase
-      .from("customers")
-      .select("id, name, phone, email, address, workspace_id")
-      .eq("workspace_id", workspace.id);
+  // Treat international 00 prefix and + prefix as equivalent.
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
 
-    if (searchError) {
-      console.error(
-        "Existing customer search failed:",
-        searchError.message
-      );
+  return digits;
+};
 
-      return res.status(503).json({
-        error: "Could not check for an existing customer."
-      });
-    }
+const target = {
+  name: normalizeText(cleanName),
+  phone: normalizePhone(cleanPhone),
+  address: normalizeText(cleanAddress)
+};
 
+// Search only within this authenticated user's workspace.
+const { data: customers, error: searchError } = await supabase
+  .from("customers")
+  .select("id, name, phone, email, address, workspace_id")
+  .eq("workspace_id", workspace.id);
+
+if (searchError) {
+  console.error(
+    "Existing customer search failed:",
+    searchError.message
+  );
+
+  return res.status(503).json({
+    error: "Could not check for an existing customer."
+  });
+}
+
+// Reuse ONLY when name, phone, AND address all match.
+// Email is deliberately excluded from customer identity matching.
+const existingCustomer = (customers || []).find(customer =>
+  normalizeText(customer.name) === target.name &&
+  normalizePhone(customer.phone) === target.phone &&
+  normalizeText(customer.address) === target.address
+);
+
+if (existingCustomer) {
+  return res.status(200).json({
+    message: "Existing customer matched. No duplicate was created.",
+    reused: true,
+    customer: existingCustomer
+  });
+}
+
+// If even one of the three details differs, create a new record.
+
+    
     // Reuse a customer only when all four details match.
-    const existingCustomer = (customers || []).find(customer =>
-      normalizeText(customer.name) === target.name &&
-      normalizePhone(customer.phone) === target.phone &&
-      normalizeText(customer.email) === target.email &&
-      normalizeText(customer.address) === target.address
-    );
+    // const existingCustomer = (customers || []).find(customer =>
+    //   normalizeText(customer.name) === target.name &&
+    //   normalizePhone(customer.phone) === target.phone &&
+    //   normalizeText(customer.email) === target.email &&
+    //   normalizeText(customer.address) === target.address
+    // );
 
-    if (existingCustomer) {
-      return res.status(200).json({
-        message: "Existing customer matched. No duplicate was created.",
-        reused: true,
-        customer: existingCustomer
-      });
-    }
+    // if (existingCustomer) {
+    //   return res.status(200).json({
+    //     message: "Existing customer matched. No duplicate was created.",
+    //     reused: true,
+    //     customer: existingCustomer
+    //   });
+    // }
 
     // No complete match: create a new customer record.
     const { data, error } = await supabase
@@ -1633,10 +1751,26 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
     }
 
     const {
-      customer_id,
-      items,
-      shipping_address
-    } = req.body || {};
+  customer_id,
+  items,
+  shipping_address,
+  currency
+} = req.body || {};
+
+const supportedCurrencies = [
+  "PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"
+];
+
+const orderCurrency =
+  typeof currency === "string"
+    ? currency.trim().toUpperCase()
+    : workspace.currency;
+
+if (!supportedCurrencies.includes(orderCurrency)) {
+  return res.status(400).json({
+    error: "Unsupported order currency."
+  });
+}
 
     if (
       typeof customer_id !== "string" ||
@@ -1710,17 +1844,49 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
           shipping_address !== undefined
             ? shipping_address.trim() || null
             : null,
-        p_user_email: req.user.email || null
+        p_user_email: req.user.email || null,
+        p_currency: orderCurrency
       }
     );
 
-    if (error) {
-      console.error("Order and invoice creation failed:", error);
 
-      return res.status(503).json({
-        error: "Could not create the order and invoice. No order was saved."
-      });
-    }
+
+    if (error) {
+  const rpcError = error.message || "";
+
+  // Monthly order quota reached.
+  if (rpcError.includes("ORDER_LIMIT_REACHED")) {
+    return res.status(429).json({
+      code: "ORDER_LIMIT_REACHED",
+      error: "You've reached your monthly order limit. Upgrade your plan or wait for your next billing period."
+    });
+  }
+
+  // Subscription is inactive or expired.
+  if (rpcError.includes("SUBSCRIPTION_INACTIVE_OR_EXPIRED")) {
+    return res.status(403).json({
+      code: "SUBSCRIPTION_INACTIVE_OR_EXPIRED",
+      error: "Your subscription is inactive or expired. Please activate an eligible plan to create orders."
+    });
+  }
+
+  // No subscription exists for this workspace.
+  if (rpcError.includes("SUBSCRIPTION_NOT_FOUND")) {
+    return res.status(403).json({
+      code: "SUBSCRIPTION_NOT_FOUND",
+      error: "No subscription was found for this workspace."
+    });
+  }
+
+  console.error("Order and invoice creation failed:", error);
+
+  return res.status(503).json({
+    error: "Could not create the order and invoice. No order was saved."
+  });
+}
+
+
+    
 
     return res.status(201).json({
       message: "Order and invoice created successfully.",
@@ -1769,10 +1935,26 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
     }
 
     const {
-      customer_id,
-      shipping_address,
-      items
-    } = req.body || {};
+  customer_id,
+  shipping_address,
+  items,
+  currency
+} = req.body || {};
+
+const supportedCurrencies = [
+  "PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"
+];
+
+const orderCurrency =
+  typeof currency === "string"
+    ? currency.trim().toUpperCase()
+    : workspace.currency;
+
+if (!supportedCurrencies.includes(orderCurrency)) {
+  return res.status(400).json({
+    error: "Unsupported order currency."
+  });
+}
 
     if (
       typeof customer_id !== "string" ||
@@ -1839,7 +2021,8 @@ app.put("/api/orders/:id", authenticateUser, async (req, res) => {
         p_shipping_address:
           shipping_address === undefined ? null : shipping_address.trim(),
         p_shipping_address_provided: shipping_address !== undefined,
-        p_user_email: req.user.email || null
+        p_user_email: req.user.email || null,
+        p_currency: orderCurrency
       }
     );
 
@@ -2071,6 +2254,9 @@ app.patch("/api/orders/:id/status", authenticateUser, async (req, res) => {
 
 
 app.post("/api/draft-reply", authenticateUser, async (req, res) => {
+
+  let aiTaskReservationId = null;
+  
   try {
     const { message } = req.body || {};
     if (typeof message !== "string" || !message.trim()) {
@@ -2159,7 +2345,31 @@ app.post("/api/draft-reply", authenticateUser, async (req, res) => {
     let reply;
 
 try {
-  reply = await generateAIText(aiConfig, prompt, { maxTokens: 1200 });
+
+
+
+  // Reserve one AI Task before calling the provider.
+const reservation = await reserveAITask(workspace.id);
+aiTaskReservationId = reservation.reservation_id;
+
+// Generate the reply.
+reply = await generateAIText(
+  aiConfig,
+  prompt,
+  { maxTokens: 1200 }
+);
+
+if (typeof reply !== "string" || !reply.trim()) {
+  throw new Error("AI_EMPTY_RESPONSE");
+}
+
+// Finalize the successful AI Task.
+await commitAITask(aiTaskReservationId);
+aiTaskReservationId = null;
+  
+
+
+  
 } catch (error) {
   console.error("AI provider diagnostic:", {
     provider: aiConfig.provider,
@@ -2178,13 +2388,40 @@ try {
       return res.status(502).json({ error: "The AI did not return a reply." });
     }
     return res.json({ reply: reply.trim() });
-  } catch (error) {
-    console.error("Reply generation failed. Check AI provider configuration and availability.");
-    return res.status(502).json({ error: "Could not generate a reply. Please try again." });
+   } catch (error) {
+
+    // Refund the reservation if generation failed.
+    if (aiTaskReservationId) {
+      try {
+        await refundAITask(aiTaskReservationId);
+      } catch (refundError) {
+        console.error(
+          "AI Task refund failed:",
+          refundError.message
+        );
+      }
+    }
+
+    // Handle subscription quota errors.
+    const quotaResponse = handleAITaskQuotaError(res, error);
+
+    if (quotaResponse) return quotaResponse;
+
+    console.error(
+      "Reply generation failed:",
+      error.message
+    );
+
+    return res.status(502).json({
+      error: "Could not generate a reply. Please try again."
+    });
   }
 });
 
 app.post("/api/extract-order", authenticateUser, async (req, res) => {
+
+  let aiTaskReservationId = null;
+  
   try {
     const { message, businessInfo = "", currency = "USD" } = req.body || {};
     if (typeof message !== "string" || !message.trim() || message.length > 5000) {
@@ -2254,18 +2491,28 @@ Rules:
       "\nCUSTOMER MESSAGE (untrusted data):\n",
       message.trim()
     ].join("\n");
-    const responseText = await generateAIText(aiConfig, prompt, { json: true, maxTokens: 1800 });
+    
+    // Reserve one AI Task before calling the provider.
+const reservation = await reserveAITask(workspace.id);
+aiTaskReservationId = reservation.reservation_id;
+
+// Generate the order extraction.
+const responseText = await generateAIText(
+  aiConfig,
+  prompt,
+  { json: true, maxTokens: 1800 }
+);
 
     if (typeof responseText !== "string" || !responseText.trim()) {
-      return res.status(502).json({ error: "The AI did not return order details." });
-    }
+  throw new Error("AI_EMPTY_RESPONSE");
+}
 
     let draft;
     try {
-      draft = JSON.parse(responseText.trim());
-    } catch {
-      return res.status(502).json({ error: "The AI returned an invalid draft. Please try again." });
-    }
+  draft = JSON.parse(responseText.trim());
+} catch {
+  throw new Error("AI_INVALID_JSON");
+}
 
     if (
       !draft || typeof draft !== "object" ||
@@ -2276,8 +2523,12 @@ Rules:
         (item.unit_price !== null && (typeof item.unit_price !== "number" ||
           !Number.isFinite(item.unit_price) || item.unit_price < 0 || item.unit_price > 100000000)))
     ) {
-      return res.status(502).json({ error: "The AI returned incomplete or invalid order details." });
+        throw new Error("AI_INVALID_ORDER_DETAILS");
     }
+
+    // Finalize the successful AI Task.
+await commitAITask(aiTaskReservationId);
+aiTaskReservationId = null;
 
     return res.json({
       draft: {
@@ -2296,9 +2547,33 @@ Rules:
         needs_review: true
       }
     });
-  } catch (error) {
-    console.error("Order extraction failed. Check AI provider configuration and availability.");
-    return res.status(502).json({ error: "Could not extract the order. Please try again." });
+    } catch (error) {
+
+    // Refund the reservation if extraction failed.
+    if (aiTaskReservationId) {
+      try {
+        await refundAITask(aiTaskReservationId);
+      } catch (refundError) {
+        console.error(
+          "AI Task refund failed:",
+          refundError.message
+        );
+      }
+    }
+
+    // Handle subscription quota errors.
+    const quotaResponse = handleAITaskQuotaError(res, error);
+
+    if (quotaResponse) return quotaResponse;
+
+    console.error(
+      "Order extraction failed:",
+      error.message
+    );
+
+    return res.status(502).json({
+      error: "Could not extract the order. Please try again."
+    });
   }
 });
 
@@ -2628,10 +2903,14 @@ app.put(
 // --------------------------------------------------
 
 
+
 app.post(
   "/api/smart-assistant/chat",
   authenticateUser,
   async (req, res) => {
+
+    let aiTaskReservationId = null;
+
     if (!supabase) {
       return res.status(503).json({
         error: "Database is not configured."
@@ -2733,36 +3012,35 @@ app.post(
           "many", "much", "is", "are", "was", "were",
           "the", "a", "an", "my", "our", "me", "us",
           "for", "of", "in", "on", "with", "from",
-          "to", "and", "or", "please", "i", "need",
+          "to", "and", "or", "i", "need",
           "want", "can", "you", "do", "have",
           "order", "orders", "customer", "customers",
           "client", "clients", "product", "products",
           "item", "items", "containing", "contains",
-          "including", "number", "name", "named", "called", "status", "total",
-          "all", "any", "older", "oldest", "newest",
-          "associated", "association", "this", "that", "these", "those",
-          "their", "them", "they", "customer's", "customers",
-          "related", "belonging", "belongs", "belonged",
-          "latest", "recent", "pending", "paid",
-          "completed", "complete", "processing",
-          "shipped", "delivered", "cancelled",
-          "canceled", "refunded", "overdue", "draft",
-          "issued", "voided"
+          "including", "number", "name", "named", "called",
+          "status", "total", "all", "any", "older", "oldest",
+          "newest", "associated", "association", "this",
+          "that", "these", "those", "their", "them", "they",
+          "customer's", "related", "belonging", "belongs",
+          "belonged", "latest", "recent", "pending", "paid",
+          "completed", "complete", "processing", "shipped",
+          "delivered", "cancelled", "canceled", "refunded",
+          "overdue", "draft", "issued", "voided"
         ];
 
         const stopWordSet = new Set(stopWords);
 
         return text
-  .replace(/[^\w\s@.+-]/g, " ")
-  .split(/\s+/)
-  .map(word => word.replace(/[.,!?;:]+$/g, ""))
-  .filter(word =>
-    word &&
-    !stopWordSet.has(word.toLowerCase())
-  )
-  .join(" ")
-  .trim()
-  .slice(0, 120);
+          .replace(/[^\w\s@.+-]/g, " ")
+          .split(/\s+/)
+          .map(word => word.replace(/[.,!?;:]+$/g, ""))
+          .filter(word =>
+            word &&
+            !stopWordSet.has(word.toLowerCase())
+          )
+          .join(" ")
+          .trim()
+          .slice(0, 120);
       }
 
       const searchTerm = extractSearchTerm(message);
@@ -2850,11 +3128,12 @@ app.post(
       const matchingOrderCount = Number(
         orderSearchRow?.total_count || 0
       );
+
       console.log("SMART ASSISTANT ORDER SEARCH:", {
-  searchTerm,
-  matchingOrderCount,
-  returnedOrders: orders.length
-});
+        searchTerm,
+        matchingOrderCount,
+        returnedOrders: orders.length
+      });
 
       // Search customers across the workspace when relevant.
       let customers = [];
@@ -2896,11 +3175,10 @@ app.post(
         );
 
         console.log("SMART ASSISTANT CUSTOMER SEARCH:", {
-  searchTerm,
-  matchingCustomerCount,
-  returnedCustomers: customers.length
-});
-        
+          searchTerm,
+          matchingCustomerCount,
+          returnedCustomers: customers.length
+        });
       }
 
       // Retrieve customer details for the matching orders too.
@@ -3149,6 +3427,11 @@ ${conversationText}
 Respond to the user's latest message.
 `;
 
+      // Reserve one AI Task before calling the provider.
+      const reservation = await reserveAITask(workspaceId);
+      aiTaskReservationId = reservation.reservation_id;
+
+      // Generate the Smart Assistant response.
       const answer = await generateAIText(
         aiConfig,
         prompt,
@@ -3159,10 +3442,12 @@ Respond to the user's latest message.
         typeof answer !== "string" ||
         !answer.trim()
       ) {
-        return res.status(502).json({
-          error: "The AI provider returned an empty response."
-        });
+        throw new Error("AI_EMPTY_RESPONSE");
       }
+
+      // Finalize the successful AI Task.
+      await commitAITask(aiTaskReservationId);
+      aiTaskReservationId = null;
 
       return res.json({
         success: true,
@@ -3170,6 +3455,24 @@ Respond to the user's latest message.
       });
 
     } catch (error) {
+
+      // Refund the reservation if generation failed.
+      if (aiTaskReservationId) {
+        try {
+          await refundAITask(aiTaskReservationId);
+        } catch (refundError) {
+          console.error(
+            "AI Task refund failed:",
+            refundError.message
+          );
+        }
+      }
+
+      // Handle subscription quota errors.
+      const quotaResponse = handleAITaskQuotaError(res, error);
+
+      if (quotaResponse) return quotaResponse;
+
       console.error(
         "Smart Assistant chat failed:",
         error.message
@@ -3181,12 +3484,6 @@ Respond to the user's latest message.
     }
   }
 );
-
-
-
-
-
-
 
 
 
@@ -3792,6 +4089,198 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+// =========================================
+// Subscription API — Current Workspace Plan
+// =========================================
+
+app.get("/api/subscription", authenticateUser, async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        success: false,
+        message: "Subscription service is not configured."
+      });
+    }
+
+    // Always derive the workspace from the authenticated user.
+    const { workspace, error: workspaceError } =
+      await getUserWorkspace(req.user.id);
+
+    if (!workspace) {
+      return res.status(403).json({
+        success: false,
+        message: "Unable to identify your workspace."
+      });
+    }
+
+    // Retrieve this workspace's subscription.
+    const { data: subscription, error: subscriptionError } =
+      await supabase
+        .from("workspace_subscriptions")
+        .select(`
+          id,
+          workspace_id,
+          plan_id,
+          status,
+          billing_period,
+          current_period_start,
+          current_period_end,
+          cancel_at_period_end,
+          cancelled_at,
+          payment_provider,
+          is_unlimited
+        `)
+        .eq("workspace_id", workspace.id)
+        .maybeSingle();
+
+    if (subscriptionError) {
+      console.error(
+        "Subscription lookup failed:",
+        subscriptionError
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load your subscription."
+      });
+    }
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "No subscription was found for this workspace."
+      });
+    }
+
+    // Retrieve plan details from the database.
+    const { data: plan, error: planError } =
+      await supabase
+        .from("subscription_plans")
+        .select(`
+          id,
+          name,
+          price_monthly,
+          currency,
+          monthly_ai_replies,
+          monthly_orders,
+          active_automations,
+          connected_channels,
+          team_members,
+          is_active
+        `)
+        .eq("id", subscription.plan_id)
+        .maybeSingle();
+
+    if (planError) {
+      console.error("Subscription plan lookup failed:", planError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load your subscription plan."
+      });
+    }
+
+    if (!plan) {
+      return res.status(409).json({
+        success: false,
+        message: "Your subscription plan could not be found."
+      });
+    }
+
+
+
+
+
+    
+    // Retrieve all active plans for the plan selector.
+    const { data: availablePlans, error: plansError } =
+      await supabase
+        .from("subscription_plans")
+        .select(`
+          id,
+          name,
+          price_monthly,
+          currency,
+          monthly_ai_replies,
+          monthly_orders,
+          active_automations,
+          connected_channels,
+          team_members
+        `)
+        .eq("is_active", true)
+        .order("price_monthly", { ascending: true });
+
+    if (plansError) {
+      console.error("Available plans lookup failed:", plansError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load available subscription plans."
+      });
+    }
+
+
+    
+
+    
+
+    
+
+
+    
+
+    // Retrieve usage for this subscription's current billing period.
+    const { data: usageRows, error: usageError } =
+      await supabase
+        .from("usage_counters")
+        .select("metric, used_count")
+        .eq("workspace_id", workspace.id)
+        .eq("period_start", subscription.current_period_start);
+
+    if (usageError) {
+      console.error("Usage lookup failed:", usageError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load subscription usage."
+      });
+    }
+
+    const usage = {
+      ai_replies: 0,
+      orders: 0
+    };
+
+    for (const row of usageRows || []) {
+      if (Object.prototype.hasOwnProperty.call(usage, row.metric)) {
+        usage[row.metric] = Number(row.used_count);
+      }
+    }
+
+   return res.json({
+  success: true,
+  subscription,
+  plan,
+  usage,
+  availablePlans: availablePlans || []
+});
+
+  } catch (error) {
+    console.error("Subscription API error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred while loading your subscription."
+    });
+  }
+});
 
 
 
