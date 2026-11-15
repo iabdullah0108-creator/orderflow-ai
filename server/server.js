@@ -166,6 +166,15 @@ app.post(
       const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
       const signature = req.get("X-SFPY-SIGNATURE");
 
+      console.log("SAFE­PAY WEBHOOK RECEIVED", {
+  method: req.method,
+  contentType: req.get("content-type"),
+  rawBodyReceived: Buffer.isBuffer(req.body),
+  rawBodyLength: Buffer.isBuffer(req.body) ? req.body.length : 0,
+  signaturePresent: Boolean(signature),
+  secretConfigured: Boolean(secret)
+});
+
       if (!secret) {
         return res.status(503).json({
           success: false,
@@ -181,6 +190,8 @@ app.post(
       }
 
       const event = JSON.parse(req.body.toString("utf8"));
+
+      console.log("SAFE­PAY EVENT TYPE:", event.type || "unknown");
 
       if (!event || typeof event !== "object" || typeof event.type !== "string") {
         return res.status(400).json({
