@@ -4360,7 +4360,9 @@ if (workspaceError || !workspace) {
     }
 
     // This integration currently uses Sandbox plan IDs only.
-    const environment = process.env.SAFEPAY_ENV || "sandbox";
+   const environment = String(
+  process.env.SAFEPAY_ENV || "sandbox"
+).trim().toLowerCase();
 
     if (environment !== "sandbox") {
       return res.status(409).json({
