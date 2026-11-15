@@ -4232,6 +4232,264 @@ app.get("/api/invoices", authenticateUser, async (req, res) => {
 
 
 
+
+
+
+
+
+
+// =========================================
+// Safepay — Create Subscription Checkout
+// =========================================
+
+app.post("/api/subscription/checkout", authenticateUser, async (req, res) => {
+  let checkoutSessionId = null;
+
+  try {
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        message: "Subscription service is not configured."
+      });
+    }
+
+    const planId = String(req.body?.plan_id || "").trim();
+
+    // Only allow the paid plans configured in OrderFlow.
+    const allowedPlans = new Set([
+      "starter",
+      "professional",
+      "business"
+    ]);
+
+    if (!allowedPlans.has(planId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid subscription plan."
+      });
+    }
+
+    // Derive workspace from the authenticated user.
+    const { workspace } = await getUserWorkspace(req.user.id);
+
+    if (!workspace) {
+      return res.status(403).json({
+        success: false,
+        message: "Unable to identify your workspace."
+      });
+    }
+
+    // Only workspace owners can initiate billing.
+    if (workspace.role !== "owner") {
+      return res.status(403).json({
+        success: false,
+        message: "Only the workspace owner can manage billing."
+      });
+    }
+
+    // Retrieve the selected plan from our database.
+    const { data: plan, error: planError } = await supabase
+      .from("subscription_plans")
+      .select(`
+        id,
+        name,
+        currency,
+        is_active,
+        safepay_plan_id_sandbox
+      `)
+      .eq("id", planId)
+      .maybeSingle();
+
+    if (planError || !plan || !plan.is_active) {
+      console.error("Checkout plan lookup failed:", planError);
+
+      return res.status(404).json({
+        success: false,
+        message: "The selected subscription plan is unavailable."
+      });
+    }
+
+    if (
+      plan.currency !== "PKR" ||
+      !plan.safepay_plan_id_sandbox
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: "This plan is not configured for Safepay Sandbox."
+      });
+    }
+
+    const secretKey = process.env.SAFEPAY_SECRET_KEY;
+    const appUrl = process.env.APP_URL;
+
+    if (!secretKey || !appUrl) {
+      console.error("Safepay checkout configuration is incomplete.");
+
+      return res.status(503).json({
+        success: false,
+        message: "Payment service configuration is incomplete."
+      });
+    }
+
+    // Validate the public application URL.
+    let applicationUrl;
+
+    try {
+      applicationUrl = new URL(appUrl);
+
+      if (applicationUrl.protocol !== "https:") {
+        throw new Error("HTTPS_REQUIRED");
+      }
+    } catch {
+      return res.status(503).json({
+        success: false,
+        message: "The application URL configuration is invalid."
+      });
+    }
+
+    // This integration currently uses Sandbox plan IDs only.
+    const environment = process.env.SAFEPAY_ENV || "sandbox";
+
+    if (environment !== "sandbox") {
+      return res.status(409).json({
+        success: false,
+        message: "Only Safepay Sandbox checkout is currently enabled."
+      });
+    }
+
+    // Generate and persist our reference BEFORE contacting checkout.
+    const reference = `ofsub_${crypto.randomUUID()}`;
+
+    const { data: checkoutSession, error: insertError } =
+      await supabase
+        .from("subscription_checkout_sessions")
+        .insert({
+          reference,
+          workspace_id: workspace.id,
+          plan_id: plan.id,
+          status: "pending"
+        })
+        .select("id")
+        .single();
+
+    if (insertError || !checkoutSession) {
+      console.error("Checkout session creation failed:", insertError);
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to start subscription checkout."
+      });
+    }
+
+    checkoutSessionId = checkoutSession.id;
+
+    // Generate Safepay's short-lived authentication token.
+    const tokenResponse = await fetch(
+      "https://sandbox.api.getsafepay.com/client/passport/v1/token",
+      {
+        method: "POST",
+        headers: {
+          "X-SFPY-MERCHANT-SECRET": secretKey
+        }
+      }
+    );
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenResponse.ok || typeof tokenData?.data !== "string") {
+      console.error(
+        "Safepay authentication token request failed:",
+        tokenData?.status?.message || tokenResponse.status
+      );
+
+      throw new Error("SAFEPAY_TOKEN_GENERATION_FAILED");
+    }
+
+    // Build the hosted subscription checkout URL.
+    const checkoutUrl = new URL(
+      "/checkout/auth/login",
+      "https://sandbox.api.getsafepay.com"
+    );
+
+    checkoutUrl.searchParams.set(
+      "plan_id",
+      plan.safepay_plan_id_sandbox
+    );
+
+    checkoutUrl.searchParams.set("auth_token", tokenData.data);
+    checkoutUrl.searchParams.set("env", "sandbox");
+
+    checkoutUrl.searchParams.set(
+      "reference",
+      reference
+    );
+
+    checkoutUrl.searchParams.set(
+      "redirect_url",
+      `${applicationUrl.origin}/?subscription=success&reference=${encodeURIComponent(reference)}`
+    );
+
+    checkoutUrl.searchParams.set(
+      "cancel_url",
+      `${applicationUrl.origin}/?subscription=cancelled&reference=${encodeURIComponent(reference)}`
+    );
+
+    // Mark the checkout as created.
+    const { error: updateError } = await supabase
+      .from("subscription_checkout_sessions")
+      .update({
+        status: "checkout_created",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", checkoutSessionId);
+
+    if (updateError) {
+      console.error("Checkout session update failed:", updateError);
+
+      throw new Error("CHECKOUT_SESSION_UPDATE_FAILED");
+    }
+
+    // Only the hosted URL and internal reference go to the browser.
+    return res.json({
+      success: true,
+      checkout_url: checkoutUrl.toString(),
+      reference
+    });
+
+  } catch (error) {
+    console.error("Safepay subscription checkout error:", error.message);
+
+    if (checkoutSessionId) {
+      await supabase
+        .from("subscription_checkout_sessions")
+        .update({
+          status: "failed",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", checkoutSessionId);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to create subscription checkout. Please try again."
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // =========================================
 // Subscription API — Current Workspace Plan
 // =========================================
