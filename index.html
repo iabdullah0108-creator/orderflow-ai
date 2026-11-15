@@ -7408,6 +7408,7 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 
 
   
+
 /* =========================================
    OrderFlow AI — Plan Confirmation Modal
 ========================================= */
@@ -7424,8 +7425,9 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(8, 12, 24, .65);
-  backdrop-filter: blur(6px);
+  background: rgba(5, 8, 18, .78);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
 }
 
 .of-plan-confirm-modal {
@@ -7435,11 +7437,11 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
   overflow-y: auto;
   box-sizing: border-box;
   padding: 26px;
-  border: 1px solid var(--border);
+  border: 1px solid #34394c;
   border-radius: 18px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 24px 80px rgba(0,0,0,.28);
+  background: #171b2b;
+  color: #f3f4fa;
+  box-shadow: 0 24px 80px rgba(0,0,0,.48);
 }
 
 .of-plan-confirm-header {
@@ -7453,42 +7455,45 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .of-plan-confirm-header h2 {
   margin: 0;
   font-size: 20px;
+  color: inherit;
 }
 
 .of-plan-confirm-close {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--border);
+  border: 1px solid #41465a;
   border-radius: 9px;
-  background: transparent;
-  color: var(--text);
+  background: #22273a;
+  color: #f3f4fa;
   font-size: 20px;
   cursor: pointer;
 }
 
 .of-plan-confirm-summary {
   padding: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid #383e54;
   border-radius: 13px;
-  background: var(--bg);
+  background: #20263a;
 }
 
 .of-plan-confirm-name {
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 700;
+  color: #ffffff;
 }
 
 .of-plan-confirm-price {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
+  color: #a99aff;
 }
 
 .of-plan-confirm-price small {
   font-size: 13px;
   font-weight: 400;
-  opacity: .7;
+  color: #c0c4d3;
 }
 
 .of-plan-confirm-features {
@@ -7500,22 +7505,22 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .of-plan-confirm-features li {
   padding: 7px 0;
   font-size: 13px;
-  color: var(--text);
+  color: #e0e3ed;
 }
 
 .of-plan-confirm-features li::before {
   content: "✓";
   margin-right: 10px;
-  color: #36b985;
+  color: #4bd6a0;
   font-weight: 700;
 }
 
 .of-plan-confirm-note {
   padding: 12px;
+  border: 1px solid #353b50;
   border-radius: 9px;
-  background: var(--bg);
-  color: var(--text);
-  opacity: .8;
+  background: #20263a;
+  color: #d0d4e1;
   font-size: 12px;
   line-height: 1.6;
 }
@@ -7523,7 +7528,7 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .of-plan-confirm-error {
   display: none;
   margin-top: 12px;
-  color: #e45c68;
+  color: #ff818b;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -7549,15 +7554,15 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 }
 
 .of-plan-confirm-cancel {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
+  border: 1px solid #41465a;
+  background: #22273a;
+  color: #f3f4fa;
 }
 
 .of-plan-confirm-continue {
   border: 0;
   background: #8975f5;
-  color: white;
+  color: #ffffff;
 }
 
 .of-plan-confirm-continue:hover {
@@ -7567,6 +7572,67 @@ html[data-theme="dark"] #view-subscriptions .subscription-history-empty {
 .of-plan-confirm-actions button:disabled {
   opacity: .6;
   cursor: wait;
+}
+
+/* Light theme */
+html[data-theme="light"] .of-plan-confirm-modal,
+body[data-theme="light"] .of-plan-confirm-modal {
+  background: #ffffff;
+  color: #202437;
+  border-color: #e0e3ec;
+  box-shadow: 0 24px 80px rgba(0,0,0,.24);
+}
+
+html[data-theme="light"] .of-plan-confirm-header h2,
+body[data-theme="light"] .of-plan-confirm-header h2 {
+  color: #202437;
+}
+
+html[data-theme="light"] .of-plan-confirm-close,
+body[data-theme="light"] .of-plan-confirm-close {
+  background: #f3f4f8;
+  border-color: #dfe2eb;
+  color: #30364a;
+}
+
+html[data-theme="light"] .of-plan-confirm-summary,
+body[data-theme="light"] .of-plan-confirm-summary {
+  background: #f5f6fb;
+  border-color: #e1e4ed;
+}
+
+html[data-theme="light"] .of-plan-confirm-name,
+body[data-theme="light"] .of-plan-confirm-name {
+  color: #202437;
+}
+
+html[data-theme="light"] .of-plan-confirm-price,
+body[data-theme="light"] .of-plan-confirm-price {
+  color: #7158dc;
+}
+
+html[data-theme="light"] .of-plan-confirm-price small,
+body[data-theme="light"] .of-plan-confirm-price small {
+  color: #656b7b;
+}
+
+html[data-theme="light"] .of-plan-confirm-features li,
+body[data-theme="light"] .of-plan-confirm-features li {
+  color: #42485a;
+}
+
+html[data-theme="light"] .of-plan-confirm-note,
+body[data-theme="light"] .of-plan-confirm-note {
+  background: #f5f6fb;
+  border-color: #e1e4ed;
+  color: #51586b;
+}
+
+html[data-theme="light"] .of-plan-confirm-cancel,
+body[data-theme="light"] .of-plan-confirm-cancel {
+  background: #f5f6fa;
+  border-color: #dfe2eb;
+  color: #30364a;
 }
 
 @media (max-width: 480px) {
