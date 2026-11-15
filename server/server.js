@@ -248,14 +248,15 @@ app.post(
         received: true
       });
 
-    } catch (error) {
-      console.error("Safepay webhook error:", error.message);
+   } catch (error) {
+  console.error("Safepay webhook error:", error.stack || error.message);
 
-      return res.status(400).json({
-        success: false,
-        message: "Invalid webhook payload."
-      });
-    }
+  return res.status(400).json({
+    success: false,
+    message: "Webhook processing error.",
+    diagnostic: error.message
+  });
+}
   }
 );
 
