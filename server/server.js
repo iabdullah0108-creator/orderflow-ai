@@ -207,6 +207,15 @@ app.post(
 
       console.log("SAFE­PAY EVENT TYPE:", event.type || "unknown");
 
+
+      console.log(
+  "SAFE­PAY WEBHOOK PAYLOAD:",
+  JSON.stringify(event, null, 2)
+);
+
+
+      
+
       if (!event || typeof event !== "object" || typeof event.type !== "string") {
         return res.status(400).json({
           success: false,
