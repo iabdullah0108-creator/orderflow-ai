@@ -1023,6 +1023,197 @@ td{font-size:13px}
 
 
 
+
+  
+/* =========================================
+   OrderFlow AI — Responsive Signup Layout
+   ========================================= */
+
+/* Better vertical layout and scrolling */
+#auth-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
+  padding: 16px 16px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  justify-content: flex-start;
+}
+
+/* Center the complete auth content when space allows.
+   When content is taller than the screen, it starts
+   at the top and remains scrollable. */
+#auth-screen .auth-brand {
+  flex-shrink: 0;
+  margin: auto 0 18px;
+}
+
+#auth-screen .auth-card {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 420px;
+  padding: 26px;
+}
+
+#auth-screen .auth-heading {
+  margin-bottom: 20px;
+}
+
+#auth-screen .auth-heading h1 {
+  font-size: 26px;
+}
+
+#auth-screen .auth-field {
+  margin-bottom: 13px;
+}
+
+#auth-screen .auth-field label {
+  margin-bottom: 6px;
+}
+
+#auth-screen .auth-field input,
+#auth-screen .auth-field select {
+  min-height: 43px;
+}
+
+#auth-screen .auth-terms {
+  margin: 6px 0 11px;
+}
+
+#auth-screen .auth-submit {
+  min-height: 45px;
+}
+
+#auth-screen .auth-switch {
+  margin-top: 17px;
+}
+
+#auth-screen .auth-security {
+  flex-shrink: 0;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+#auth-screen .auth-footer {
+  flex-shrink: 0;
+  margin: 16px 0 auto;
+}
+
+/* Short laptop and desktop screens */
+@media (max-height: 800px) {
+  #auth-screen {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  #auth-screen .auth-brand {
+    margin-bottom: 12px;
+  }
+
+  #auth-screen .auth-card {
+    padding: 21px 26px;
+  }
+
+  #auth-screen .auth-heading {
+    margin-bottom: 15px;
+  }
+
+  #auth-screen .auth-heading h1 {
+    font-size: 24px;
+  }
+
+  #auth-screen .auth-field {
+    margin-bottom: 10px;
+  }
+
+  #auth-screen .auth-field input,
+  #auth-screen .auth-field select {
+    min-height: 40px;
+  }
+
+  #auth-screen .auth-security {
+    margin-top: 12px;
+    padding-top: 11px;
+  }
+
+  #auth-screen .auth-footer {
+    margin-top: 11px;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 480px) {
+  #auth-screen {
+    padding: 12px 12px;
+  }
+
+  #auth-screen .auth-card {
+    max-width: 100%;
+    padding: 20px 18px;
+    border-radius: 16px;
+  }
+
+  #auth-screen .auth-brand {
+    margin-bottom: 13px;
+    font-size: 19px;
+  }
+
+  #auth-screen .auth-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 21px;
+  }
+
+  #auth-screen .auth-heading h1 {
+    font-size: 23px;
+  }
+
+  #auth-screen .auth-field {
+    margin-bottom: 11px;
+  }
+}
+
+/* Very short screens */
+@media (max-height: 650px) {
+  #auth-screen {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  #auth-screen .auth-brand {
+    margin-bottom: 8px;
+  }
+
+  #auth-screen .auth-card {
+    padding: 17px 22px;
+  }
+
+  #auth-screen .auth-heading {
+    margin-bottom: 12px;
+  }
+
+  #auth-screen .auth-field {
+    margin-bottom: 8px;
+  }
+
+  #auth-screen .auth-security {
+    margin-top: 9px;
+    padding-top: 9px;
+  }
+
+  #auth-screen .auth-footer {
+    margin-top: 8px;
+  }
+}
+
+  
+
+  
+
+  
+
+
 /* Profile dropdown */
 .top-actions {
   position: relative;
