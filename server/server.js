@@ -214,39 +214,19 @@ app.post(
         });
       }
 
-      const isSubscriptionEvent = event.type.startsWith("subscription.");
+      const received = signature.trim();
 
-      let received = signature.trim();
-      let expected;
+if (!/^[a-f0-9]{128}$/i.test(received)) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid signature."
+  });
+}
 
-      if (isSubscriptionEvent) {
-        received = received.replace(/^sha256=/i, "");
-
-        if (!/^[a-f0-9]{64}$/i.test(received)) {
-          return res.status(401).json({
-            success: false,
-            message: "Invalid signature."
-          });
-        }
-
-        expected = crypto
-          .createHmac("sha256", secret)
-          .update(req.body)
-          .digest();
-
-      } else {
-        if (!/^[a-f0-9]{128}$/i.test(received)) {
-          return res.status(401).json({
-            success: false,
-            message: "Invalid signature."
-          });
-        }
-
-        expected = crypto
-          .createHmac("sha512", secret)
-          .update(JSON.stringify(event))
-          .digest();
-      }
+const expected = crypto
+  .createHmac("sha512", secret)
+  .update(JSON.stringify(event))
+  .digest();
 
       const receivedBuffer = Buffer.from(received, "hex");
 
