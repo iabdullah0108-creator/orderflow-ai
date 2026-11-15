@@ -166,6 +166,20 @@ app.post(
       const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
       const signature = req.get("X-SFPY-SIGNATURE");
 
+
+      console.log("Safepay signature diagnostics:", {
+  signatureLength: signature?.length || 0,
+  signaturePrefix: signature?.slice(0, 7) || "missing",
+  signatureIsHex: /^[a-f0-9]+$/i.test(
+    (signature || "").replace(/^sha256=/i, "")
+  ),
+  timestampPresent: Boolean(req.get("X-SFPY-TIMESTAMP"))
+});
+
+      
+
+      
+
       console.log("SAFE­PAY WEBHOOK RECEIVED", {
   method: req.method,
   contentType: req.get("content-type"),
