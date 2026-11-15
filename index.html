@@ -16726,13 +16726,13 @@ let currentSubscriptionData = null;
 
 /* Currency formatting */
 
-// function formatSubscriptionPrice(price, currency = "PKR") {
-//   const formatted = Number(price).toLocaleString("en-PK");
+function formatSubscriptionPrice(price, currency = "PKR") {
+  const formatted = Number(price).toLocaleString("en-PK");
 
-//   if (currency === "PKR") return "Rs. " + formatted;
+  if (currency === "PKR") return "Rs. " + formatted;
 
-//   return currency + " " + formatted;
-// }
+  return currency + " " + formatted;
+}
 
 
 
