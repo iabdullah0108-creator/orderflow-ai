@@ -4270,9 +4270,13 @@ app.post("/api/subscription/checkout", authenticateUser, async (req, res) => {
     }
 
     // Derive workspace from the authenticated user.
-    const { workspace } = await getUserWorkspace(req.user.id);
+   const {
+  workspace,
+  error: workspaceError
+} = await getUserWorkspace(req.user.id);
 
-    if (!workspace) {
+if (workspaceError || !workspace) {
+  console.error("Checkout workspace lookup failed:", workspaceError);
       return res.status(403).json({
         success: false,
         message: "Unable to identify your workspace."
@@ -4388,9 +4392,11 @@ app.post("/api/subscription/checkout", authenticateUser, async (req, res) => {
       "https://sandbox.api.getsafepay.com/client/passport/v1/token",
       {
         method: "POST",
-        headers: {
-          "X-SFPY-MERCHANT-SECRET": secretKey
-        }
+headers: {
+  "X-SFPY-MERCHANT-SECRET": secretKey,
+  "Content-Type": "application/json"
+},
+body: JSON.stringify({})
       }
     );
 
