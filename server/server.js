@@ -157,9 +157,10 @@ app.use(express.json({ limit: "20kb" }));
 
 
 
+
 app.post(
   "/api/safepay/webhook",
-  express.raw({ type: "application/json" }),
+  express.raw({ type: "application/json", limit: "20kb" }),
   (req, res) => {
     try {
       const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
@@ -179,32 +180,68 @@ app.post(
         });
       }
 
-      const received = signature.trim().replace(/^sha256=/i, "");
+      const event = JSON.parse(req.body.toString("utf8"));
 
-      if (!/^[a-f0-9]{64}$/i.test(received)) {
-        return res.status(401).json({
+      if (!event || typeof event !== "object" || typeof event.type !== "string") {
+        return res.status(400).json({
           success: false,
-          message: "Invalid signature."
+          message: "Invalid webhook event."
         });
       }
 
-      const expected = crypto
-        .createHmac("sha256", secret)
-        .update(req.body)
-        .digest();
+      const isSubscriptionEvent = event.type.startsWith("subscription.");
+
+      let received = signature.trim();
+      let expected;
+
+      if (isSubscriptionEvent) {
+        received = received.replace(/^sha256=/i, "");
+
+        if (!/^[a-f0-9]{64}$/i.test(received)) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid signature."
+          });
+        }
+
+        expected = crypto
+          .createHmac("sha256", secret)
+          .update(req.body)
+          .digest();
+
+      } else {
+        if (!/^[a-f0-9]{128}$/i.test(received)) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid signature."
+          });
+        }
+
+        expected = crypto
+          .createHmac("sha512", secret)
+          .update(JSON.stringify(event))
+          .digest();
+      }
 
       const receivedBuffer = Buffer.from(received, "hex");
 
-      if (!crypto.timingSafeEqual(expected, receivedBuffer)) {
+      if (
+        expected.length !== receivedBuffer.length ||
+        !crypto.timingSafeEqual(expected, receivedBuffer)
+      ) {
+        console.warn("Safepay webhook signature rejected:", event.type);
+
         return res.status(401).json({
           success: false,
           message: "Invalid webhook signature."
         });
       }
 
-      const event = JSON.parse(req.body.toString("utf8"));
+      console.log("Verified Safepay event:", event.type);
 
-      console.log("Verified Safepay event:", event.type || "unknown");
+      // Acknowledge verified events.
+      // Subscription activation and payment processing
+      // will be implemented separately with database checks.
 
       return res.status(200).json({
         success: true,
