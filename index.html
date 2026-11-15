@@ -16437,27 +16437,79 @@ function renderSubscriptionPlans() {
     if (manageName) manageName.textContent = currentPlan.name;
   }
 
-  // Plan selection is informational until checkout is connected.
+  
+container.querySelectorAll("[data-select-plan]").forEach(button => {
+  button.addEventListener("click", async () => {
+    const selectedPlan = subscriptionPlans.find(
+      plan => plan.id === button.dataset.selectPlan
+    );
 
-  container.querySelectorAll("[data-select-plan]").forEach(button => {
-    button.addEventListener("click", () => {
-      const selectedPlan = subscriptionPlans.find(
-        plan => plan.id === button.dataset.selectPlan
+    if (!selectedPlan) return;
+
+    const confirmed = confirm(
+      `Continue to Safepay Sandbox checkout for ${selectedPlan.name} at ${
+        formatSubscriptionPrice(
+          selectedPlan.price_monthly,
+          selectedPlan.currency
+        )
+      } / month?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      button.disabled = true;
+      button.textContent = "Connecting to Safepay...";
+
+      const authKey = Object.keys(localStorage).find(
+        key => key.startsWith("sb-") &&
+               key.endsWith("-auth-token")
       );
 
-      if (!selectedPlan) return;
+      const authData = authKey
+        ? JSON.parse(localStorage.getItem(authKey))
+        : null;
 
-      alert(
-        `${selectedPlan.name} — ${
-          formatSubscriptionPrice(
-            selectedPlan.price_monthly,
-            selectedPlan.currency
-          )
-        } / month\n\n` +
-        "Your plan has not been changed. Checkout integration is required."
-      );
-    });
+      const accessToken = authData?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Your login session could not be found.");
+      }
+
+      const response = await fetch("/api/subscription/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          plan_id: selectedPlan.id
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.checkout_url) {
+        throw new Error(
+          result.message || "Unable to start checkout."
+        );
+      }
+
+      window.location.href = result.checkout_url;
+
+    } catch (error) {
+      console.error("Subscription checkout failed:", error);
+
+      alert(error.message || "Unable to start checkout.");
+
+      button.disabled = false;
+      button.textContent = "Select plan";
+    }
   });
+});
+
+
+ 
 }
 
 
