@@ -16304,20 +16304,18 @@ async function loadSubscriptionPlans() {
   );
 
   try {
-    const authKey = Object.keys(localStorage).find(
-      key => key.startsWith("sb-") &&
-             key.endsWith("-auth-token")
-    );
+    const { data: { session }, error: sessionError } =
+  await supabaseClient.auth.getSession();
 
-    const authData = authKey
-      ? JSON.parse(localStorage.getItem(authKey))
-      : null;
+if (sessionError) {
+  throw sessionError;
+}
 
-    const accessToken = authData?.access_token;
+const accessToken = session?.access_token;
 
-    if (!accessToken) {
-      throw new Error("Your login session could not be found.");
-    }
+if (!accessToken) {
+  throw new Error("Your login session could not be found.");
+}
 
     const response = await fetch("/api/subscription", {
       headers: {
