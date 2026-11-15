@@ -142,7 +142,7 @@ async function authenticateUser(req, res, next) {
 
 
 
-app.use(express.json({ limit: "20kb" }));
+
 
 
 
