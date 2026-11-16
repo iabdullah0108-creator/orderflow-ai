@@ -236,8 +236,8 @@ app.post(
       }
 
       const data = event.data;
-      const reference = data.reference;
-      const providerSubscriptionId = data.id;
+const reference = data.reference || null;
+const providerSubscriptionId = data.id || null;
 
       console.log("Safepay payload structure:", {
   eventKeys: Object.keys(event),
@@ -275,10 +275,70 @@ app.post(
         });
       }
 
-      if (
-        typeof reference !== "string" ||
-        typeof providerSubscriptionId !== "string"
-      ) {
+      if (typeof providerSubscriptionId !== "string") {
+  console.error("Safepay event is missing subscription ID.");
+
+  return res.status(400).json({
+    success: false,
+    message: "Missing subscription identifier."
+  });
+}
+
+let checkoutQuery = supabase
+  .from("subscription_checkout_sessions")
+  .select(`
+    id,
+    reference,
+    workspace_id,
+    plan_id,
+    status,
+    provider_subscription_id
+  `);
+
+if (typeof reference === "string" && reference.length > 0) {
+  checkoutQuery = checkoutQuery.eq("reference", reference);
+} else {
+  checkoutQuery = checkoutQuery.eq(
+    "provider_subscription_id",
+    providerSubscriptionId
+  );
+}
+
+const {
+  data: checkout,
+  error: checkoutError
+} = await checkoutQuery.maybeSingle();
+
+if (checkoutError) {
+  console.error("Checkout lookup failed:", checkoutError.message);
+
+  return res.status(500).json({
+    success: false,
+    message: "Unable to verify checkout session."
+  });
+}
+
+if (!checkout) {
+  console.error("No matching OrderFlow checkout found.");
+
+  return res.status(200).json({
+    success: true,
+    received: true,
+    ignored: true
+  });
+}
+
+if (
+  checkout.provider_subscription_id &&
+  checkout.provider_subscription_id !== providerSubscriptionId
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Subscription identifier mismatch."
+  });
+} 
+      
+      {
         console.error("Safepay subscription event is missing identifiers.");
 
         return res.status(400).json({
