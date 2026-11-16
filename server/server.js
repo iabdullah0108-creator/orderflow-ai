@@ -239,6 +239,14 @@ app.post(
       const reference = data.reference || null;
       const providerSubscriptionId = data.id || null;
 
+
+      console.log("Safepay lookup identifiers:", {
+  reference,
+  providerSubscriptionId
+});
+      
+      
+
       // Ignore unrelated events.
       if (
         event.type !== "subscription.created" &&
