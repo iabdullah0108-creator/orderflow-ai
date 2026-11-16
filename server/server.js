@@ -197,7 +197,7 @@ app.post(
         });
       }
 
-      // Preserve the existing Safepay HMAC-SHA512 verification.
+      // Verify Safepay HMAC-SHA512 signature.
       const received = signature.trim();
 
       if (!/^[a-f0-9]{128}$/i.test(received)) {
@@ -236,34 +236,10 @@ app.post(
       }
 
       const data = event.data;
-const reference = data.reference || null;
-const providerSubscriptionId = data.id || null;
+      const reference = data.reference || null;
+      const providerSubscriptionId = data.id || null;
 
-      console.log("Safepay payload structure:", {
-  eventKeys: Object.keys(event),
-  dataKeys: Object.keys(data),
-  dataTypes: Object.fromEntries(
-    Object.entries(data).map(([key, value]) => [
-      key,
-      value === null ? "null" : Array.isArray(value) ? "array" : typeof value
-    ])
-  )
-});
-
-      
-
-      // Convert Safepay timestamps into ISO dates.
-      const safepayDate = (value) => {
-        const seconds = Number(value?.seconds);
-
-        if (!Number.isFinite(seconds)) {
-          return null;
-        }
-
-        return new Date(seconds * 1000).toISOString();
-      };
-
-      // Ignore unrelated Safepay events.
+      // Ignore unrelated events.
       if (
         event.type !== "subscription.created" &&
         event.type !== "subscription.payment.succeeded"
@@ -276,82 +252,15 @@ const providerSubscriptionId = data.id || null;
       }
 
       if (typeof providerSubscriptionId !== "string") {
-  console.error("Safepay event is missing subscription ID.");
-
-  return res.status(400).json({
-    success: false,
-    message: "Missing subscription identifier."
-  });
-}
-
-let checkoutQuery = supabase
-  .from("subscription_checkout_sessions")
-  .select(`
-    id,
-    reference,
-    workspace_id,
-    plan_id,
-    status,
-    provider_subscription_id
-  `);
-
-if (typeof reference === "string" && reference.length > 0) {
-  checkoutQuery = checkoutQuery.eq("reference", reference);
-} else {
-  checkoutQuery = checkoutQuery.eq(
-    "provider_subscription_id",
-    providerSubscriptionId
-  );
-}
-
-const {
-  data: checkout,
-  error: checkoutError
-} = await checkoutQuery.maybeSingle();
-
-if (checkoutError) {
-  console.error("Checkout lookup failed:", checkoutError.message);
-
-  return res.status(500).json({
-    success: false,
-    message: "Unable to verify checkout session."
-  });
-}
-
-if (!checkout) {
-  console.error("No matching OrderFlow checkout found.");
-
-  return res.status(200).json({
-    success: true,
-    received: true,
-    ignored: true
-  });
-}
-
-if (
-  checkout.provider_subscription_id &&
-  checkout.provider_subscription_id !== providerSubscriptionId
-) {
-  return res.status(400).json({
-    success: false,
-    message: "Subscription identifier mismatch."
-  });
-} 
-      
-      {
-        console.error("Safepay subscription event is missing identifiers.");
-
         return res.status(400).json({
           success: false,
-          message: "Missing subscription identifiers."
+          message: "Missing subscription identifier."
         });
       }
 
-      // Find the exact checkout created by OrderFlow.
-      const {
-        data: checkout,
-        error: checkoutError
-      } = await supabase
+      // Find the checkout by reference when available.
+      // Otherwise, use the previously linked Safepay subscription ID.
+      let checkoutQuery = supabase
         .from("subscription_checkout_sessions")
         .select(`
           id,
@@ -360,9 +269,21 @@ if (
           plan_id,
           status,
           provider_subscription_id
-        `)
-        .eq("reference", reference)
-        .maybeSingle();
+        `);
+
+      if (typeof reference === "string" && reference.length > 0) {
+        checkoutQuery = checkoutQuery.eq("reference", reference);
+      } else {
+        checkoutQuery = checkoutQuery.eq(
+          "provider_subscription_id",
+          providerSubscriptionId
+        );
+      }
+
+      const {
+        data: checkout,
+        error: checkoutError
+      } = await checkoutQuery.maybeSingle();
 
       if (checkoutError) {
         console.error("Checkout lookup failed:", checkoutError.message);
@@ -374,7 +295,7 @@ if (
       }
 
       if (!checkout) {
-        console.error("No OrderFlow checkout matches Safepay reference.");
+        console.warn("No matching OrderFlow checkout found.");
 
         return res.status(200).json({
           success: true,
@@ -383,7 +304,19 @@ if (
         });
       }
 
-      // Verify that Safepay's plan belongs to this OrderFlow plan.
+      // Prevent a different Safepay subscription from replacing
+      // an existing subscription link.
+      if (
+        checkout.provider_subscription_id &&
+        checkout.provider_subscription_id !== providerSubscriptionId
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Subscription identifier mismatch."
+        });
+      }
+
+      // Verify the selected OrderFlow plan.
       const {
         data: plan,
         error: planError
@@ -399,7 +332,10 @@ if (
         .maybeSingle();
 
       if (planError || !plan) {
-        console.error("Subscription plan lookup failed:", planError?.message);
+        console.error(
+          "Subscription plan lookup failed:",
+          planError?.message
+        );
 
         return res.status(500).json({
           success: false,
@@ -411,7 +347,7 @@ if (
         data.plan_id !== plan.safepay_plan_id_sandbox ||
         plan.currency !== "PKR"
       ) {
-        console.error("Safepay plan does not match OrderFlow plan.");
+        console.error("Safepay plan mismatch.");
 
         return res.status(400).json({
           success: false,
@@ -419,7 +355,8 @@ if (
         });
       }
 
-      // Subscription creation is NOT proof of successful payment.
+      // Subscription creation only links the subscription.
+      // It does not activate a paid plan.
       if (event.type === "subscription.created") {
         const { error: creationUpdateError } = await supabase
           .from("subscription_checkout_sessions")
@@ -450,13 +387,11 @@ if (
         });
       }
 
-      // Only a completed, active subscription payment can activate a plan.
+      // Only completed, active subscription payments can activate a plan.
       if (
         data.status !== "ACTIVE" ||
         data.transaction_status !== "COMPLETE"
       ) {
-        console.warn("Subscription payment is not confirmed as complete.");
-
         return res.status(200).json({
           success: true,
           received: true,
@@ -465,8 +400,9 @@ if (
       }
 
       if (
-        !event.token ||
         typeof event.token !== "string" ||
+        !event.token ||
+        typeof data.transaction_id !== "string" ||
         !data.transaction_id
       ) {
         return res.status(400).json({
@@ -475,7 +411,7 @@ if (
         });
       }
 
-      // Safepay reports amounts in paisa.
+      // Safepay reports payment amounts in paisa.
       const expectedAmount = Number(plan.price_monthly) * 100;
       const receivedAmount = Number(data.amount);
 
@@ -492,8 +428,28 @@ if (
         });
       }
 
-      const periodStart = safepayDate(data.current_period_start_date);
-      const periodEnd = safepayDate(data.current_period_end_date);
+      // Convert Safepay timestamps to ISO dates.
+      const safepayDate = (value) => {
+        const seconds = Number(value?.seconds);
+
+        if (!Number.isFinite(seconds)) {
+          return null;
+        }
+
+        const date = new Date(seconds * 1000);
+
+        return Number.isNaN(date.getTime())
+          ? null
+          : date.toISOString();
+      };
+
+      const periodStart = safepayDate(
+        data.current_period_start_date
+      );
+
+      const periodEnd = safepayDate(
+        data.current_period_end_date
+      );
 
       if (
         !periodStart ||
@@ -508,7 +464,7 @@ if (
         });
       }
 
-      // Retrieve the existing subscription.
+      // Retrieve the existing workspace subscription.
       const {
         data: existingSubscription,
         error: subscriptionLookupError
@@ -520,7 +476,7 @@ if (
 
       if (subscriptionLookupError || !existingSubscription) {
         console.error(
-          "Existing workspace subscription lookup failed:",
+          "Workspace subscription lookup failed:",
           subscriptionLookupError?.message
         );
 
@@ -530,8 +486,7 @@ if (
         });
       }
 
-      // Register the verified payment event.
-      // The database unique index prevents duplicate event IDs.
+      // Insert the verified payment event.
       const eventRecord = {
         workspace_id: checkout.workspace_id,
         subscription_id: existingSubscription.id,
@@ -556,7 +511,10 @@ if (
         .from("payment_events")
         .insert(eventRecord);
 
-      if (eventInsertError && eventInsertError.code !== "23505") {
+      if (
+        eventInsertError &&
+        eventInsertError.code !== "23505"
+      ) {
         console.error(
           "Payment event insertion failed:",
           eventInsertError.message
@@ -568,23 +526,45 @@ if (
         });
       }
 
-      // Check whether this event was already processed.
+      // Retrieve the event and verify its workspace association.
       const {
         data: savedEvent,
         error: savedEventError
       } = await supabase
         .from("payment_events")
-        .select("id, processed")
+        .select(`
+          id,
+          workspace_id,
+          subscription_id,
+          processed,
+          event_data
+        `)
         .eq("provider", "safepay")
         .eq("provider_event_id", event.token)
         .single();
 
       if (savedEventError || !savedEvent) {
-        console.error("Payment event retrieval failed:", savedEventError?.message);
+        console.error(
+          "Payment event retrieval failed:",
+          savedEventError?.message
+        );
 
         return res.status(500).json({
           success: false,
           message: "Unable to verify payment event."
+        });
+      }
+
+      if (
+        savedEvent.workspace_id !== checkout.workspace_id ||
+        savedEvent.subscription_id !== existingSubscription.id ||
+        savedEvent.event_data?.subscription_id !== providerSubscriptionId
+      ) {
+        console.error("Payment event association mismatch.");
+
+        return res.status(409).json({
+          success: false,
+          message: "Payment event association mismatch."
         });
       }
 
@@ -615,7 +595,10 @@ if (
         .eq("id", existingSubscription.id);
 
       if (activationError) {
-        console.error("Subscription activation failed:", activationError.message);
+        console.error(
+          "Subscription activation failed:",
+          activationError.message
+        );
 
         return res.status(500).json({
           success: false,
@@ -623,7 +606,7 @@ if (
         });
       }
 
-      // Mark the checkout as completed.
+      // Mark checkout as completed.
       const { error: checkoutUpdateError } = await supabase
         .from("subscription_checkout_sessions")
         .update({
@@ -645,7 +628,7 @@ if (
         });
       }
 
-      // Mark the payment event as successfully processed.
+      // Mark the payment event as processed.
       const { error: processedUpdateError } = await supabase
         .from("payment_events")
         .update({
@@ -668,7 +651,7 @@ if (
 
       console.log("OrderFlow subscription activated:", {
         planId: checkout.plan_id,
-        reference
+        reference: checkout.reference
       });
 
       return res.status(200).json({
@@ -678,7 +661,10 @@ if (
       });
 
     } catch (error) {
-      console.error("Safepay webhook processing error:", error.message);
+      console.error(
+        "Safepay webhook processing error:",
+        error.message
+      );
 
       return res.status(500).json({
         success: false,
@@ -687,6 +673,7 @@ if (
     }
   }
 );
+
 
 
 app.use(express.json({ limit: "20kb" }));
