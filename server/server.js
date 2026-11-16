@@ -258,40 +258,63 @@ app.post(
         });
       }
 
-      // Find the checkout by reference when available.
-      // Otherwise, use the previously linked Safepay subscription ID.
-      let checkoutQuery = supabase
-        .from("subscription_checkout_sessions")
-        .select(`
-          id,
-          reference,
-          workspace_id,
-          plan_id,
-          status,
-          provider_subscription_id
-        `);
+      
+      // Find the checkout by reference first.
+      // If that fails, fall back to the linked Safepay subscription ID.
+      let checkout = null;
 
       if (typeof reference === "string" && reference.length > 0) {
-        checkoutQuery = checkoutQuery.eq("reference", reference);
-      } else {
-        checkoutQuery = checkoutQuery.eq(
-          "provider_subscription_id",
-          providerSubscriptionId
-        );
+        const { data: referenceCheckout, error: referenceError } =
+          await supabase
+            .from("subscription_checkout_sessions")
+            .select(`
+              id,
+              reference,
+              workspace_id,
+              plan_id,
+              status,
+              provider_subscription_id
+            `)
+            .eq("reference", reference)
+            .maybeSingle();
+
+        if (referenceError) {
+          console.error("Checkout reference lookup failed:", referenceError.message);
+
+          return res.status(500).json({
+            success: false,
+            message: "Unable to verify checkout session."
+          });
+        }
+
+        checkout = referenceCheckout;
       }
 
-      const {
-        data: checkout,
-        error: checkoutError
-      } = await checkoutQuery.maybeSingle();
+      if (!checkout) {
+        const { data: subscriptionCheckout, error: subscriptionError } =
+          await supabase
+            .from("subscription_checkout_sessions")
+            .select(`
+              id,
+              reference,
+              workspace_id,
+              plan_id,
+              status,
+              provider_subscription_id
+            `)
+            .eq("provider_subscription_id", providerSubscriptionId)
+            .maybeSingle();
 
-      if (checkoutError) {
-        console.error("Checkout lookup failed:", checkoutError.message);
+        if (subscriptionError) {
+          console.error("Checkout subscription lookup failed:", subscriptionError.message);
 
-        return res.status(500).json({
-          success: false,
-          message: "Unable to verify checkout session."
-        });
+          return res.status(500).json({
+            success: false,
+            message: "Unable to verify checkout session."
+          });
+        }
+
+        checkout = subscriptionCheckout;
       }
 
       if (!checkout) {
@@ -303,6 +326,7 @@ app.post(
           ignored: true
         });
       }
+
 
       // Prevent a different Safepay subscription from replacing
       // an existing subscription link.
