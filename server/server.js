@@ -239,6 +239,17 @@ app.post(
       const reference = data.reference;
       const providerSubscriptionId = data.id;
 
+      console.log("Safepay identifier diagnostics:", {
+  dataKeys: Object.keys(data),
+  hasReference: typeof data.reference === "string",
+  hasSubscriptionId: typeof data.id === "string",
+  referenceType: typeof data.reference,
+  subscriptionIdType: typeof data.id
+});
+
+
+      
+
       // Convert Safepay timestamps into ISO dates.
       const safepayDate = (value) => {
         const seconds = Number(value?.seconds);
