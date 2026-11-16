@@ -239,14 +239,16 @@ app.post(
       const reference = data.reference;
       const providerSubscriptionId = data.id;
 
-      console.log("Safepay identifier diagnostics:", {
+      console.log("Safepay payload structure:", {
+  eventKeys: Object.keys(event),
   dataKeys: Object.keys(data),
-  hasReference: typeof data.reference === "string",
-  hasSubscriptionId: typeof data.id === "string",
-  referenceType: typeof data.reference,
-  subscriptionIdType: typeof data.id
+  dataTypes: Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      value === null ? "null" : Array.isArray(value) ? "array" : typeof value
+    ])
+  )
 });
-
 
       
 
