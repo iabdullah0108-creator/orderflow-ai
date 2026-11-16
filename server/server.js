@@ -611,181 +611,83 @@ app.post(
         });
       }
 
-      // Prevent older checkouts from replacing newer subscriptions.
-      if (
-        existingSubscription.provider_subscription_id &&
-        existingSubscription.provider_subscription_id !== providerSubscriptionId
-      ) {
-        const {
-          data: currentCheckout,
-          error: currentCheckoutError
-        } = await supabase
-          .from("subscription_checkout_sessions")
-          .select("id, created_at")
-          .eq(
-            "provider_subscription_id",
-            existingSubscription.provider_subscription_id
-          )
-          .maybeSingle();
+      
+      // Atomically compare checkout timestamps and activate the subscription.
+      // PostgreSQL locks the workspace subscription row so simultaneous
+      // Safepay webhooks cannot overwrite a newer subscription.
+      const {
+        data: activationResult,
+        error: activationError
+      } = await supabase.rpc("activate_safepay_subscription", {
+        p_workspace_id: checkout.workspace_id,
+        p_checkout_id: checkout.id,
+        p_provider_subscription_id: providerSubscriptionId,
+        p_period_start: periodStart,
+        p_period_end: periodEnd
+      });
 
-        if (currentCheckoutError) {
+      if (activationError || !activationResult) {
+        console.error(
+          "Atomic subscription activation failed:",
+          activationError?.message || "No activation result returned."
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Unable to safely activate subscription."
+        });
+      }
+
+      // The database has safely ignored an older checkout.
+      if (activationResult.ignored_as_older_checkout === true) {
+        console.warn("Older Safepay checkout ignored:", {
+          incomingPlan: checkout.plan_id,
+          incomingSubscriptionId: providerSubscriptionId,
+          currentPlan: activationResult.current_plan_id,
+          checkoutCreatedAt: checkout.created_at
+        });
+
+        const { error: staleEventError } = await supabase
+          .from("payment_events")
+          .update({
+            processed: true,
+            processed_at: new Date().toISOString()
+          })
+          .eq("id", savedEvent.id);
+
+        if (staleEventError) {
           console.error(
-            "Current checkout lookup failed:",
-            currentCheckoutError.message
+            "Stale payment event update failed:",
+            staleEventError.message
           );
 
           return res.status(500).json({
             success: false,
-            message: "Unable to verify current subscription."
+            message: "Unable to finalize older payment event."
           });
         }
 
-        // Fail safely if the current subscription cannot be traced
-        // to its original checkout.
-        if (!currentCheckout || !currentCheckout.created_at || !checkout.created_at) {
-          console.error(
-            "Unable to compare subscription checkout timestamps."
-          );
-
-          return res.status(409).json({
-            success: false,
-            message: "Unable to verify subscription checkout order."
-          });
-        }
-
-        const currentCheckoutTime = new Date(
-          currentCheckout.created_at
-        ).getTime();
-
-        const incomingCheckoutTime = new Date(
-          checkout.created_at
-        ).getTime();
-
-        if (
-          !Number.isFinite(currentCheckoutTime) ||
-          !Number.isFinite(incomingCheckoutTime)
-        ) {
-          return res.status(409).json({
-            success: false,
-            message: "Invalid subscription checkout timestamps."
-          });
-        }
-
-        if (incomingCheckoutTime < currentCheckoutTime) {
-          console.warn("Older Safepay checkout ignored:", {
-            incomingPlan: checkout.plan_id,
-            currentSubscriptionId:
-              existingSubscription.provider_subscription_id,
-            incomingCheckoutCreatedAt: checkout.created_at,
-            currentCheckoutCreatedAt: currentCheckout.created_at
-          });
-
-          // Keep the older successfully paid checkout recorded as active.
-          const { error: staleCheckoutError } = await supabase
-            .from("subscription_checkout_sessions")
-            .update({
-              status: "active",
-              provider_subscription_id: providerSubscriptionId,
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", checkout.id);
-
-          if (staleCheckoutError) {
-            console.error(
-              "Stale checkout update failed:",
-              staleCheckoutError.message
-            );
-
-            return res.status(500).json({
-              success: false,
-              message: "Unable to finalize older checkout."
-            });
-          }
-
-          // Record the old payment as processed without changing
-          // the active workspace subscription.
-          const { error: staleEventError } = await supabase
-            .from("payment_events")
-            .update({
-              processed: true,
-              processed_at: new Date().toISOString()
-            })
-            .eq("id", savedEvent.id);
-
-          if (staleEventError) {
-            console.error(
-              "Stale payment event update failed:",
-              staleEventError.message
-            );
-
-            return res.status(500).json({
-              success: false,
-              message: "Unable to finalize older payment event."
-            });
-          }
-
-          return res.status(200).json({
-            success: true,
-            received: true,
-            activated: false,
-            ignored_as_older_checkout: true
-          });
-        }
+        return res.status(200).json({
+          success: true,
+          received: true,
+          activated: false,
+          ignored_as_older_checkout: true
+        });
       }
 
-      // Activate the existing workspace subscription.
-      const { error: activationError } = await supabase
-        .from("workspace_subscriptions")
-        .update({
-          plan_id: checkout.plan_id,
-          status: "active",
-          billing_period: "monthly",
-          is_unlimited: false,
-          current_period_start: periodStart,
-          current_period_end: periodEnd,
-          cancel_at_period_end: false,
-          cancelled_at: null,
-          payment_provider: "safepay",
-          provider_subscription_id: providerSubscriptionId,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", existingSubscription.id);
-
-      if (activationError) {
+      if (activationResult.activated !== true) {
         console.error(
-          "Subscription activation failed:",
-          activationError.message
+          "Unexpected subscription activation result:",
+          activationResult
         );
 
         return res.status(500).json({
           success: false,
-          message: "Unable to activate subscription."
+          message: "Subscription activation result was invalid."
         });
       }
 
-      // Mark checkout as active.
-      const { error: checkoutUpdateError } = await supabase
-        .from("subscription_checkout_sessions")
-        .update({
-          status: "active",
-          provider_subscription_id: providerSubscriptionId,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", checkout.id);
-
-      if (checkoutUpdateError) {
-        console.error(
-          "Checkout activation update failed:",
-          checkoutUpdateError.message
-        );
-
-        return res.status(500).json({
-          success: false,
-          message: "Unable to activate checkout session."
-        });
-      }
-
-      // Mark the payment event as processed.
+      // Mark the payment event as processed after successful activation.
       const { error: processedUpdateError } = await supabase
         .from("payment_events")
         .update({
@@ -807,7 +709,7 @@ app.post(
       }
 
       console.log("OrderFlow subscription activated:", {
-        planId: checkout.plan_id,
+        planId: activationResult.plan_id,
         reference: checkout.reference
       });
 
@@ -816,6 +718,7 @@ app.post(
         received: true,
         activated: true
       });
+
 
     } catch (error) {
       console.error(
