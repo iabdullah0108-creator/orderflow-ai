@@ -639,26 +639,27 @@ app.post(
       }
 
       // Mark checkout as completed.
-      const { error: checkoutUpdateError } = await supabase
-        .from("subscription_checkout_sessions")
-        .update({
-          status: "completed",
-          provider_subscription_id: providerSubscriptionId,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", checkout.id);
+      // Mark checkout as active.
+const { error: checkoutUpdateError } = await supabase
+  .from("subscription_checkout_sessions")
+  .update({
+    status: "active",
+    provider_subscription_id: providerSubscriptionId,
+    updated_at: new Date().toISOString()
+  })
+  .eq("id", checkout.id);
 
-      if (checkoutUpdateError) {
-        console.error(
-          "Checkout completion update failed:",
-          checkoutUpdateError.message
-        );
+if (checkoutUpdateError) {
+  console.error(
+    "Checkout activation update failed:",
+    checkoutUpdateError.message
+  );
 
-        return res.status(500).json({
-          success: false,
-          message: "Unable to complete checkout session."
-        });
-      }
+  return res.status(500).json({
+    success: false,
+    message: "Unable to activate checkout session."
+  });
+}
 
       // Mark the payment event as processed.
       const { error: processedUpdateError } = await supabase
