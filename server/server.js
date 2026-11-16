@@ -542,7 +542,7 @@ if (
         event_data: {
           subscription_id: providerSubscriptionId,
           transaction_id: data.transaction_id,
-          reference,
+          reference: checkout.reference,
           amount: receivedAmount,
           currency: data.currency,
           status: data.status,
@@ -603,6 +603,7 @@ if (
           plan_id: checkout.plan_id,
           status: "active",
           billing_period: "monthly",
+          is_unlimited: false,
           current_period_start: periodStart,
           current_period_end: periodEnd,
           cancel_at_period_end: false,
