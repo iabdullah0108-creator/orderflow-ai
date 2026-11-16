@@ -159,6 +159,7 @@ async function authenticateUser(req, res, next) {
 
 
 
+
 app.post(
   "/api/safepay/webhook",
   express.raw({ type: "application/json", limit: "20kb" }),
@@ -239,14 +240,6 @@ app.post(
       const reference = data.reference || null;
       const providerSubscriptionId = data.id || null;
 
-
-      console.log("Safepay lookup identifiers:", {
-  reference,
-  providerSubscriptionId
-});
-      
-      
-
       // Ignore unrelated events.
       if (
         event.type !== "subscription.created" &&
@@ -266,28 +259,33 @@ app.post(
         });
       }
 
-      
-      // Find the checkout by reference first.
-      // If that fails, fall back to the linked Safepay subscription ID.
+      // Find checkout by reference first.
+      // Fall back to the linked Safepay subscription ID.
       let checkout = null;
 
       if (typeof reference === "string" && reference.length > 0) {
-        const { data: referenceCheckout, error: referenceError } =
-          await supabase
-            .from("subscription_checkout_sessions")
-            .select(`
-              id,
-              reference,
-              workspace_id,
-              plan_id,
-              status,
-              provider_subscription_id
-            `)
-            .eq("reference", reference)
-            .maybeSingle();
+        const {
+          data: referenceCheckout,
+          error: referenceError
+        } = await supabase
+          .from("subscription_checkout_sessions")
+          .select(`
+            id,
+            reference,
+            workspace_id,
+            plan_id,
+            status,
+            provider_subscription_id,
+            created_at
+          `)
+          .eq("reference", reference)
+          .maybeSingle();
 
         if (referenceError) {
-          console.error("Checkout reference lookup failed:", referenceError.message);
+          console.error(
+            "Checkout reference lookup failed:",
+            referenceError.message
+          );
 
           return res.status(500).json({
             success: false,
@@ -299,22 +297,28 @@ app.post(
       }
 
       if (!checkout) {
-        const { data: subscriptionCheckout, error: subscriptionError } =
-          await supabase
-            .from("subscription_checkout_sessions")
-            .select(`
-              id,
-              reference,
-              workspace_id,
-              plan_id,
-              status,
-              provider_subscription_id
-            `)
-            .eq("provider_subscription_id", providerSubscriptionId)
-            .maybeSingle();
+        const {
+          data: subscriptionCheckout,
+          error: subscriptionError
+        } = await supabase
+          .from("subscription_checkout_sessions")
+          .select(`
+            id,
+            reference,
+            workspace_id,
+            plan_id,
+            status,
+            provider_subscription_id,
+            created_at
+          `)
+          .eq("provider_subscription_id", providerSubscriptionId)
+          .maybeSingle();
 
         if (subscriptionError) {
-          console.error("Checkout subscription lookup failed:", subscriptionError.message);
+          console.error(
+            "Checkout subscription lookup failed:",
+            subscriptionError.message
+          );
 
           return res.status(500).json({
             success: false,
@@ -334,7 +338,6 @@ app.post(
           ignored: true
         });
       }
-
 
       // Prevent a different Safepay subscription from replacing
       // an existing subscription link.
@@ -502,7 +505,7 @@ app.post(
         error: subscriptionLookupError
       } = await supabase
         .from("workspace_subscriptions")
-        .select("id")
+        .select("id, provider_subscription_id")
         .eq("workspace_id", checkout.workspace_id)
         .maybeSingle();
 
@@ -608,6 +611,128 @@ app.post(
         });
       }
 
+      // Prevent older checkouts from replacing newer subscriptions.
+      if (
+        existingSubscription.provider_subscription_id &&
+        existingSubscription.provider_subscription_id !== providerSubscriptionId
+      ) {
+        const {
+          data: currentCheckout,
+          error: currentCheckoutError
+        } = await supabase
+          .from("subscription_checkout_sessions")
+          .select("id, created_at")
+          .eq(
+            "provider_subscription_id",
+            existingSubscription.provider_subscription_id
+          )
+          .maybeSingle();
+
+        if (currentCheckoutError) {
+          console.error(
+            "Current checkout lookup failed:",
+            currentCheckoutError.message
+          );
+
+          return res.status(500).json({
+            success: false,
+            message: "Unable to verify current subscription."
+          });
+        }
+
+        // Fail safely if the current subscription cannot be traced
+        // to its original checkout.
+        if (!currentCheckout || !currentCheckout.created_at || !checkout.created_at) {
+          console.error(
+            "Unable to compare subscription checkout timestamps."
+          );
+
+          return res.status(409).json({
+            success: false,
+            message: "Unable to verify subscription checkout order."
+          });
+        }
+
+        const currentCheckoutTime = new Date(
+          currentCheckout.created_at
+        ).getTime();
+
+        const incomingCheckoutTime = new Date(
+          checkout.created_at
+        ).getTime();
+
+        if (
+          !Number.isFinite(currentCheckoutTime) ||
+          !Number.isFinite(incomingCheckoutTime)
+        ) {
+          return res.status(409).json({
+            success: false,
+            message: "Invalid subscription checkout timestamps."
+          });
+        }
+
+        if (incomingCheckoutTime < currentCheckoutTime) {
+          console.warn("Older Safepay checkout ignored:", {
+            incomingPlan: checkout.plan_id,
+            currentSubscriptionId:
+              existingSubscription.provider_subscription_id,
+            incomingCheckoutCreatedAt: checkout.created_at,
+            currentCheckoutCreatedAt: currentCheckout.created_at
+          });
+
+          // Keep the older successfully paid checkout recorded as active.
+          const { error: staleCheckoutError } = await supabase
+            .from("subscription_checkout_sessions")
+            .update({
+              status: "active",
+              provider_subscription_id: providerSubscriptionId,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", checkout.id);
+
+          if (staleCheckoutError) {
+            console.error(
+              "Stale checkout update failed:",
+              staleCheckoutError.message
+            );
+
+            return res.status(500).json({
+              success: false,
+              message: "Unable to finalize older checkout."
+            });
+          }
+
+          // Record the old payment as processed without changing
+          // the active workspace subscription.
+          const { error: staleEventError } = await supabase
+            .from("payment_events")
+            .update({
+              processed: true,
+              processed_at: new Date().toISOString()
+            })
+            .eq("id", savedEvent.id);
+
+          if (staleEventError) {
+            console.error(
+              "Stale payment event update failed:",
+              staleEventError.message
+            );
+
+            return res.status(500).json({
+              success: false,
+              message: "Unable to finalize older payment event."
+            });
+          }
+
+          return res.status(200).json({
+            success: true,
+            received: true,
+            activated: false,
+            ignored_as_older_checkout: true
+          });
+        }
+      }
+
       // Activate the existing workspace subscription.
       const { error: activationError } = await supabase
         .from("workspace_subscriptions")
@@ -638,28 +763,27 @@ app.post(
         });
       }
 
-      // Mark checkout as completed.
       // Mark checkout as active.
-const { error: checkoutUpdateError } = await supabase
-  .from("subscription_checkout_sessions")
-  .update({
-    status: "active",
-    provider_subscription_id: providerSubscriptionId,
-    updated_at: new Date().toISOString()
-  })
-  .eq("id", checkout.id);
+      const { error: checkoutUpdateError } = await supabase
+        .from("subscription_checkout_sessions")
+        .update({
+          status: "active",
+          provider_subscription_id: providerSubscriptionId,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", checkout.id);
 
-if (checkoutUpdateError) {
-  console.error(
-    "Checkout activation update failed:",
-    checkoutUpdateError.message
-  );
+      if (checkoutUpdateError) {
+        console.error(
+          "Checkout activation update failed:",
+          checkoutUpdateError.message
+        );
 
-  return res.status(500).json({
-    success: false,
-    message: "Unable to activate checkout session."
-  });
-}
+        return res.status(500).json({
+          success: false,
+          message: "Unable to activate checkout session."
+        });
+      }
 
       // Mark the payment event as processed.
       const { error: processedUpdateError } = await supabase
@@ -706,6 +830,7 @@ if (checkoutUpdateError) {
     }
   }
 );
+
 
 
 
