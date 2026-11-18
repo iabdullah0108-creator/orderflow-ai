@@ -15452,32 +15452,66 @@ dialog.appendChild(actions);
     const email = form.elements.namedItem("email").value.trim();
     const address = form.elements.namedItem("shipping_address").value.trim();
 
-    let customerId = selectedLive?.customer_id || null;
 
-    if (!customerId) {
-      const customerResult = await api("/api/customers/lookup", {
-        method: "POST",
-        body: JSON.stringify({
-          phone,
-          email: email || null
-        })
-      });
+    const customerResult = await api("/api/customers", {
+  method: "POST",
+  body: JSON.stringify({
+    name: customerName,
+    phone,
+    email: email || null,
+    address
+  })
+});
 
-      customerId =
-        customerResult.customer?.id ||
-        customerResult.id ||
-        null;
-    }
+const customerId = customerResult.customer?.id;
 
-    if (!customerId) {
-      throw new Error(
-        "Could not identify an existing customer. We need to create or resolve the customer before saving the order."
-      );
-    }
+if (!customerId) {
+  throw new Error("Could not resolve or create the customer.");
+}
 
-    notifyUser("Customer identified. Preparing the order...");
+
+    const items = (draft.items || []).map((item, index) => ({
+  product_name: form.elements.namedItem(`product_name_${index}`).value.trim(),
+  options: form.elements.namedItem(`options_${index}`).value.trim(),
+  quantity: Number(form.elements.namedItem(`quantity_${index}`).value),
+  unit_price: Number(form.elements.namedItem(`unit_price_${index}`).value)
+}));
+
+const currencyCode = form.elements.namedItem("currency").value.trim().toUpperCase();
+
+const orderResult = await api("/api/orders", {
+  method: "POST",
+  body: JSON.stringify({
+    customer_id: customerId,
+    items,
+    currency: currencyCode,
+    shipping_address: address,
+    conversation_id: conversationId,
+    idempotency_key: idempotencyKey
+  })
+});
+
+if (!orderResult.order?.id) {
+  throw new Error("The server did not confirm that the order was saved.");
+}
+
+
+    dialog.close();
+
+await fetchOrdersPage(false);
+await fetchCustomersPage(false);
+await fetchInvoicesPage(false);
+    
+notifyUser(
+  orderResult.duplicate
+    ? `This order was already saved: ${orderResult.order.order_number}`
+    : `Order ${orderResult.order.order_number} saved successfully.`
+);
+
+
+    
   } catch (error) {
-    notifyUser("Could not prepare order: " + error.message);
+    notifyUser("Could not save order: " + error.message);
   } finally {
     savingLiveOrder = false;
     confirmButton.disabled = false;
