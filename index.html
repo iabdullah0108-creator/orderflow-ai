@@ -11503,94 +11503,6 @@ function showCustomerNotice(message) {
   
 
 
-  const errorBox = document.createElement("p");
-errorBox.className = "form-error";
-errorBox.id = "live-order-review-error";
-errorBox.hidden = true;
-form.appendChild(errorBox);
-
-function validateLiveOrderReview() {
-  errorBox.hidden = true;
-  errorBox.textContent = "";
-
-  form.querySelectorAll("input").forEach(input => {
-    input.style.borderColor = "";
-  });
-
-  const required = [
-    "customer_name",
-    "phone",
-    "currency"
-  ];
-
-  let firstInvalid = null;
-  const errors = [];
-
-  for (const name of required) {
-    const input = form.elements.namedItem(name);
-
-    if (!input || !input.value.trim()) {
-      errors.push(name.replaceAll("_", " ") + " is required.");
-      if (input) {
-        input.style.borderColor = "#ef6464";
-        firstInvalid ||= input;
-      }
-    }
-  }
-
-  const currency = form.elements.namedItem("currency");
-  if (currency && !/^[A-Z]{3}$/.test(currency.value.trim().toUpperCase())) {
-    errors.push("Enter a valid three-letter currency code.");
-    currency.style.borderColor = "#ef6464";
-    firstInvalid ||= currency;
-  }
-
-  const itemCount = (draft.items || []).length;
-
-  if (itemCount === 0) {
-    errors.push("At least one order item is required.");
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const product = form.elements.namedItem(`product_name_${i}`);
-    const quantity = form.elements.namedItem(`quantity_${i}`);
-    const price = form.elements.namedItem(`unit_price_${i}`);
-
-    if (!product?.value.trim()) {
-      errors.push(`Item ${i + 1}: product name is required.`);
-      if (product) {
-        product.style.borderColor = "#ef6464";
-        firstInvalid ||= product;
-      }
-    }
-
-    if (!quantity || !Number.isSafeInteger(Number(quantity.value)) || Number(quantity.value) < 1) {
-      errors.push(`Item ${i + 1}: quantity must be a whole number of at least 1.`);
-      if (quantity) {
-        quantity.style.borderColor = "#ef6464";
-        firstInvalid ||= quantity;
-      }
-    }
-
-    if (!price || price.value.trim() === "" || !Number.isFinite(Number(price.value)) || Number(price.value) < 0) {
-      errors.push(`Item ${i + 1}: enter a valid unit price.`);
-      if (price) {
-        price.style.borderColor = "#ef6464";
-        firstInvalid ||= price;
-      }
-    }
-  }
-
-  if (errors.length) {
-    errorBox.textContent = errors.join(" ");
-    errorBox.hidden = false;
-    firstInvalid?.focus();
-    return false;
-  }
-
-  return true;
-}
-
 
   
 
@@ -15515,6 +15427,99 @@ dialog.style.webkitBackdropFilter = "none";
 
   const form = document.createElement("form");
   form.id = "live-order-review-form";
+
+
+
+    
+const errorBox = document.createElement("p");
+errorBox.className = "form-error";
+errorBox.id = "live-order-review-error";
+errorBox.hidden = true;
+form.appendChild(errorBox);
+
+function validateLiveOrderReview() {
+  errorBox.hidden = true;
+  errorBox.textContent = "";
+
+  form.querySelectorAll("input").forEach(input => {
+    input.style.borderColor = "";
+  });
+
+  const required = ["customer_name", "phone", "shipping_address", "currency"];
+
+  let firstInvalid = null;
+  const errors = [];
+
+  for (const name of required) {
+    const input = form.elements.namedItem(name);
+
+    if (!input || !input.value.trim()) {
+      errors.push(name.replaceAll("_", " ") + " is required.");
+
+      if (input) {
+        input.style.borderColor = "#ef6464";
+        firstInvalid ||= input;
+      }
+    }
+  }
+
+  const currency = form.elements.namedItem("currency");
+
+  if (currency && !/^[A-Z]{3}$/.test(currency.value.trim().toUpperCase())) {
+    errors.push("Enter a valid three-letter currency code.");
+    currency.style.borderColor = "#ef6464";
+    firstInvalid ||= currency;
+  }
+
+  const itemCount = (draft.items || []).length;
+
+  if (itemCount === 0) {
+    errors.push("At least one order item is required.");
+  }
+
+  for (let i = 0; i < itemCount; i++) {
+    const product = form.elements.namedItem(`product_name_${i}`);
+    const quantity = form.elements.namedItem(`quantity_${i}`);
+    const price = form.elements.namedItem(`unit_price_${i}`);
+
+    if (!product?.value.trim()) {
+      errors.push(`Item ${i + 1}: product name is required.`);
+      if (product) {
+        product.style.borderColor = "#ef6464";
+        firstInvalid ||= product;
+      }
+    }
+
+    if (!quantity || !Number.isSafeInteger(Number(quantity.value)) || Number(quantity.value) < 1) {
+      errors.push(`Item ${i + 1}: quantity must be a whole number of at least 1.`);
+      if (quantity) {
+        quantity.style.borderColor = "#ef6464";
+        firstInvalid ||= quantity;
+      }
+    }
+
+    if (!price || price.value.trim() === "" || !Number.isFinite(Number(price.value)) || Number(price.value) < 0) {
+      errors.push(`Item ${i + 1}: enter a valid unit price.`);
+      if (price) {
+        price.style.borderColor = "#ef6464";
+        firstInvalid ||= price;
+      }
+    }
+  }
+
+  if (errors.length) {
+    errorBox.textContent = errors.join(" ");
+    errorBox.hidden = false;
+    firstInvalid?.focus();
+    return false;
+  }
+
+  return true;
+}
+
+
+
+    
 
   function addField(labelText, name, value, type = "text") {
     const label = document.createElement("label");
