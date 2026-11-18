@@ -3199,7 +3199,7 @@ aiTaskReservationId = reservation.reservation_id;
 const responseText = await generateAIText(
   aiConfig,
   prompt,
-  { json: true, maxTokens: 1800 }
+  { json: true, maxTokens: 4096 }
 );
 
     if (typeof responseText !== "string" || !responseText.trim()) {
