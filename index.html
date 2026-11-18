@@ -15330,10 +15330,23 @@ const idempotencyKey = crypto.randomUUID();
   dialog.style.maxWidth = "620px";
   dialog.style.maxHeight = "85vh";
   dialog.style.border = "1px solid var(--border)";
-  dialog.style.background = "var(--panel)";
-  dialog.style.color = "var(--text)";
-  dialog.style.borderRadius = "18px";
-  dialog.style.padding = "26px";
+
+    dialog.style.background = "var(--panel)";
+dialog.style.color = "var(--text)";
+dialog.style.border = "1px solid var(--border)";
+dialog.style.borderRadius = "18px";
+dialog.style.padding = "26px";
+dialog.style.opacity = "1";
+dialog.style.boxShadow = "0 24px 80px rgba(0, 0, 0, 0.45)";
+dialog.style.backdropFilter = "none";
+dialog.style.webkitBackdropFilter = "none";
+
+    dialog.style.setProperty("color-scheme", "light dark");
+
+dialog.addEventListener("click", event => {
+  if (event.target === dialog) dialog.close();
+});
+    
 
   const heading = document.createElement("h2");
   heading.textContent = "Review extracted order";
