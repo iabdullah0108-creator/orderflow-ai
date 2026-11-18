@@ -1063,7 +1063,14 @@ if (typeof content !== "string" || !content.trim()) {
     responseKeys: Object.keys(result || {}),
     choicesCount: Array.isArray(result?.choices) ? result.choices.length : null,
     finishReason: result?.choices?.[0]?.finish_reason || null,
-    responseError: result?.error?.message || null
+    responseError: result?.error?.message || null,
+    usage: result.usage || null,
+    messageKeys: Object.keys(result.choices?.[0]?.message || {}),
+    contentType: typeof result.choices?.[0]?.message?.content,
+    reasoningLength:
+      typeof result.choices?.[0]?.message?.reasoning === "string"
+        ? result.choices[0].message.reasoning.length
+        : null
   });
 
   throw new Error("AI_PROVIDER_RETURNED_NO_TEXT");
