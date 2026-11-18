@@ -8075,6 +8075,11 @@ body[data-theme="light"] .of-plan-confirm-cancel {
                 <button class="btn btn-soft" id="draft-btn">✧ Generate draft</button>
                 <button class="btn btn-primary" id="approve-send-btn">Approve draft</button>
                 <button class="btn" id="escalate-btn">Send to review</button>
+
+                <button class="btn btn-soft" id="extract-live-order-btn" hidden>
+  ✧ Extract Order
+</button>
+                
               </div>
             </div>
           </div>
@@ -11334,6 +11339,107 @@ function showCustomerNotice(message) {
   const description = document.createElement("p");
   description.className = "of-dialog-description";
   description.textContent = message;
+
+
+
+
+  
+
+
+  const errorBox = document.createElement("p");
+errorBox.className = "form-error";
+errorBox.id = "live-order-review-error";
+errorBox.hidden = true;
+form.appendChild(errorBox);
+
+function validateLiveOrderReview() {
+  errorBox.hidden = true;
+  errorBox.textContent = "";
+
+  form.querySelectorAll("input").forEach(input => {
+    input.style.borderColor = "";
+  });
+
+  const required = [
+    "customer_name",
+    "phone",
+    "currency"
+  ];
+
+  let firstInvalid = null;
+  const errors = [];
+
+  for (const name of required) {
+    const input = form.elements.namedItem(name);
+
+    if (!input || !input.value.trim()) {
+      errors.push(name.replaceAll("_", " ") + " is required.");
+      if (input) {
+        input.style.borderColor = "#ef6464";
+        firstInvalid ||= input;
+      }
+    }
+  }
+
+  const currency = form.elements.namedItem("currency");
+  if (currency && !/^[A-Z]{3}$/.test(currency.value.trim().toUpperCase())) {
+    errors.push("Enter a valid three-letter currency code.");
+    currency.style.borderColor = "#ef6464";
+    firstInvalid ||= currency;
+  }
+
+  const itemCount = (draft.items || []).length;
+
+  if (itemCount === 0) {
+    errors.push("At least one order item is required.");
+  }
+
+  for (let i = 0; i < itemCount; i++) {
+    const product = form.elements.namedItem(`product_name_${i}`);
+    const quantity = form.elements.namedItem(`quantity_${i}`);
+    const price = form.elements.namedItem(`unit_price_${i}`);
+
+    if (!product?.value.trim()) {
+      errors.push(`Item ${i + 1}: product name is required.`);
+      if (product) {
+        product.style.borderColor = "#ef6464";
+        firstInvalid ||= product;
+      }
+    }
+
+    if (!quantity || !Number.isSafeInteger(Number(quantity.value)) || Number(quantity.value) < 1) {
+      errors.push(`Item ${i + 1}: quantity must be a whole number of at least 1.`);
+      if (quantity) {
+        quantity.style.borderColor = "#ef6464";
+        firstInvalid ||= quantity;
+      }
+    }
+
+    if (!price || price.value.trim() === "" || !Number.isFinite(Number(price.value)) || Number(price.value) < 0) {
+      errors.push(`Item ${i + 1}: enter a valid unit price.`);
+      if (price) {
+        price.style.borderColor = "#ef6464";
+        firstInvalid ||= price;
+      }
+    }
+  }
+
+  if (errors.length) {
+    errorBox.textContent = errors.join(" ");
+    errorBox.hidden = false;
+    firstInvalid?.focus();
+    return false;
+  }
+
+  return true;
+}
+
+
+  
+
+
+
+  
 
   const actions = document.createElement("div");
   actions.className = "of-dialog-actions";
@@ -14641,6 +14747,7 @@ button.of-return-demo-btn:focus-visible {
   let liveMode = false;
   let liveConversations = [];
   let selectedLive = null;
+  let pendingLiveOrderDraft = null;
   let activeChannel = "all";
   let originalListMarkup = null;
 
@@ -15198,6 +15305,207 @@ if (m.direction !== "outbound" && platform !== "other") {
     notifyUser("Returned to the original demo conversation list.");
   }
 
+
+
+
+
+
+
+
+  function openLiveOrderReview(draft) {
+  document.getElementById("live-order-review-dialog")?.remove();
+
+
+    const conversationId = selectedLive.id;
+const idempotencyKey = crypto.randomUUID();
+
+    let savingLiveOrder = false;
+
+    
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "live-order-review-dialog";
+  dialog.className = "modal-card";
+  dialog.style.width = "min(620px, calc(100vw - 32px))";
+  dialog.style.maxWidth = "620px";
+  dialog.style.maxHeight = "85vh";
+  dialog.style.border = "1px solid var(--border)";
+  dialog.style.background = "var(--panel)";
+  dialog.style.color = "var(--text)";
+  dialog.style.borderRadius = "18px";
+  dialog.style.padding = "26px";
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Review extracted order";
+  dialog.appendChild(heading);
+
+  const description = document.createElement("p");
+  description.className = "subtitle";
+  description.textContent =
+    "Check the extracted customer and product details. Nothing has been saved yet.";
+  dialog.appendChild(description);
+
+  const form = document.createElement("form");
+  form.id = "live-order-review-form";
+
+  function addField(labelText, name, value, type = "text") {
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    label.style.display = "block";
+    label.style.marginTop = "12px";
+
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = name;
+    input.value = value ?? "";
+    input.style.width = "100%";
+    input.style.boxSizing = "border-box";
+    input.style.padding = "10px";
+    input.style.marginTop = "5px";
+
+    label.appendChild(input);
+    form.appendChild(label);
+    return input;
+  }
+
+  addField("Customer name", "customer_name", draft.customer_name);
+  addField("Phone", "phone", draft.phone);
+  addField("Email (optional)", "email", draft.email, "email");
+  addField("Shipping address", "shipping_address", draft.shipping_address);
+
+  addField("Currency", "currency", draft.currency || "PKR");
+
+  const itemsHeading = document.createElement("h3");
+  itemsHeading.textContent = "Order items";
+  itemsHeading.style.marginTop = "24px";
+  form.appendChild(itemsHeading);
+
+  (draft.items || []).forEach((item, index) => {
+    const section = document.createElement("div");
+    section.style.padding = "14px";
+    section.style.marginTop = "12px";
+    section.style.border = "1px solid var(--border)";
+    section.style.borderRadius = "10px";
+
+    const title = document.createElement("strong");
+    title.textContent = `Item ${index + 1}`;
+    section.appendChild(title);
+    form.appendChild(section);
+
+    addField("Product name", `product_name_${index}`, item.product_name);
+    addField("Options / size / colour", `options_${index}`, item.options);
+    addField("Quantity", `quantity_${index}`, item.quantity, "number");
+    addField("Unit price", `unit_price_${index}`, item.unit_price, "number");
+
+    // Keep each item's fields grouped in the review form.
+    const fields = Array.from(form.children).slice(-4);
+    fields.forEach(field => section.appendChild(field));
+  });
+
+  const missing = document.createElement("p");
+  missing.className = "form-error";
+  missing.textContent = (draft.missing_information || []).length
+    ? "Information still needed: " + draft.missing_information.join(", ")
+    : "No missing information reported by AI.";
+  form.appendChild(missing);
+
+  dialog.appendChild(form);
+
+  const actions = document.createElement("div");
+  actions.className = "modal-actions";
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "btn btn-secondary";
+  closeButton.textContent = "Close";
+  closeButton.addEventListener("click", () => dialog.close());
+
+
+
+
+    actions.appendChild(closeButton);
+
+const confirmButton = document.createElement("button");
+confirmButton.type = "button";
+confirmButton.className = "btn btn-primary";
+confirmButton.id = "confirm-live-order-btn";
+confirmButton.textContent = "Confirm & Save Order";
+
+actions.appendChild(confirmButton);
+dialog.appendChild(actions);
+
+
+
+
+    confirmButton.addEventListener("click", async () => {
+  if (savingLiveOrder) return;
+
+  if (!validateLiveOrderReview()) return;
+
+  savingLiveOrder = true;
+  confirmButton.disabled = true;
+  confirmButton.textContent = "Saving...";
+
+  try {
+    const customerName = form.elements.namedItem("customer_name").value.trim();
+    const phone = form.elements.namedItem("phone").value.trim();
+    const email = form.elements.namedItem("email").value.trim();
+    const address = form.elements.namedItem("shipping_address").value.trim();
+
+    let customerId = selectedLive?.customer_id || null;
+
+    if (!customerId) {
+      const customerResult = await api("/api/customers/lookup", {
+        method: "POST",
+        body: JSON.stringify({
+          phone,
+          email: email || null
+        })
+      });
+
+      customerId =
+        customerResult.customer?.id ||
+        customerResult.id ||
+        null;
+    }
+
+    if (!customerId) {
+      throw new Error(
+        "Could not identify an existing customer. We need to create or resolve the customer before saving the order."
+      );
+    }
+
+    notifyUser("Customer identified. Preparing the order...");
+  } catch (error) {
+    notifyUser("Could not prepare order: " + error.message);
+  } finally {
+    savingLiveOrder = false;
+    confirmButton.disabled = false;
+    confirmButton.textContent = "Confirm & Save Order";
+  }
+});
+
+
+
+    
+
+  dialog.addEventListener("close", () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
+
+
+  
+
+  
+
+
+
+
+
+  
+
   document.addEventListener("click", async event => {
     if (!liveMode || !selectedLive) return;
 
@@ -15240,6 +15548,64 @@ if (m.direction !== "outbound" && platform !== "other") {
         }
       }
     }
+
+
+
+
+
+    if (event.target.closest("#extract-live-order-btn")) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
+
+  const button = $("extract-live-order-btn");
+  const originalLabel = button?.textContent || "✧ Extract Order";
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "✧ Extracting...";
+  }
+
+  try {
+    const data = await api(
+      `/api/inbox/conversations/${encodeURIComponent(selectedLive.id)}/extract-order`,
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    if (!data.draft) {
+      throw new Error("The server did not return an extracted order draft.");
+    }
+
+    pendingLiveOrderDraft = data.draft;
+
+    openLiveOrderReview(pendingLiveOrderDraft);
+
+    notifyUser(
+      "Order extracted successfully. Next, we'll open the editable review form."
+    );
+  } catch (e) {
+    pendingLiveOrderDraft = null;
+    notifyUser("Could not extract order: " + e.message);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+
+  return;
+}
+
+    
+
+    
+
+    
+
+
+    
 
     if (event.target.closest("#draft-btn")) {
       event.preventDefault();
