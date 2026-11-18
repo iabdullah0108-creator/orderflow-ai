@@ -3210,9 +3210,7 @@ const responseText = await generateAIText(
     json: true,
     maxTokens: 4096,
     reasoning: {
-     // effort: "low",
-      max_tokens: 512,
-      exclude: true
+      effort: "none"
     }
   }
 );
