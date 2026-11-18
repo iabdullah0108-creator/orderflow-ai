@@ -7652,6 +7652,163 @@ body[data-theme="light"] .of-plan-confirm-cancel {
 
 
 
+
+
+
+  
+/* =========================================
+   ORDERFLOW AI — LIVE ORDER REVIEW POPUP
+========================================= */
+
+#live-order-review-dialog {
+  width: min(620px, calc(100vw - 32px)) !important;
+  max-width: 620px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+
+  background: #ffffff !important;
+  color: #171923 !important;
+
+  border: 1px solid #dedfe5 !important;
+  border-radius: 18px !important;
+  padding: 28px !important;
+
+  opacity: 1 !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Popup backdrop */
+#live-order-review-dialog::backdrop {
+  background: rgba(10, 12, 20, 0.72) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Headings */
+#live-order-review-dialog h2,
+#live-order-review-dialog h3 {
+  color: inherit !important;
+  font-weight: 700;
+}
+
+#live-order-review-dialog .subtitle {
+  color: #686b78 !important;
+  line-height: 1.6;
+}
+
+/* Form labels */
+#live-order-review-dialog label {
+  display: block;
+  color: inherit !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Input fields */
+#live-order-review-dialog input {
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  background: #f5f6f8 !important;
+  color: #171923 !important;
+
+  border: 1px solid #d8dae2 !important;
+  border-radius: 9px !important;
+
+  padding: 11px 13px !important;
+  font: inherit;
+  outline: none;
+  opacity: 1 !important;
+}
+
+#live-order-review-dialog input:focus {
+  border-color: #16b9c4 !important;
+  box-shadow: 0 0 0 3px rgba(22, 185, 196, 0.14);
+}
+
+#live-order-review-dialog input::placeholder {
+  color: #858895 !important;
+}
+
+/* Item sections */
+#live-order-review-dialog form > div {
+  background: #f7f8fa;
+  border: 1px solid #e0e2e8;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* Missing information and errors */
+#live-order-review-dialog .form-error {
+  color: #d33d4b !important;
+  line-height: 1.5;
+}
+
+/* Action buttons */
+#live-order-review-dialog .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+#live-order-review-dialog .btn {
+  border-radius: 9px;
+  padding: 11px 17px;
+  font-weight: 600;
+}
+
+/* =========================================
+   DARK THEME
+========================================= */
+
+html[data-theme="dark"] #live-order-review-dialog,
+body[data-theme="dark"] #live-order-review-dialog,
+html.dark #live-order-review-dialog,
+body.dark #live-order-review-dialog,
+body.dark-mode #live-order-review-dialog {
+  background: #171923 !important;
+  color: #f1f2f6 !important;
+  border-color: #353847 !important;
+}
+
+html[data-theme="dark"] #live-order-review-dialog .subtitle,
+body[data-theme="dark"] #live-order-review-dialog .subtitle,
+html.dark #live-order-review-dialog .subtitle,
+body.dark #live-order-review-dialog .subtitle,
+body.dark-mode #live-order-review-dialog .subtitle {
+  color: #a6a9b8 !important;
+}
+
+html[data-theme="dark"] #live-order-review-dialog input,
+body[data-theme="dark"] #live-order-review-dialog input,
+html.dark #live-order-review-dialog input,
+body.dark #live-order-review-dialog input,
+body.dark-mode #live-order-review-dialog input {
+  background: #222634 !important;
+  color: #f5f6fa !important;
+  border-color: #414657 !important;
+}
+
+html[data-theme="dark"] #live-order-review-dialog form > div,
+body[data-theme="dark"] #live-order-review-dialog form > div,
+html.dark #live-order-review-dialog form > div,
+body.dark #live-order-review-dialog form > div,
+body.dark-mode #live-order-review-dialog form > div {
+  background: #202432 !important;
+  border-color: #383e50 !important;
+}
+
+
+
+
+  
+
+
+
   
 
 
