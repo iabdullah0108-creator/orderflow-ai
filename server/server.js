@@ -1020,7 +1020,7 @@ async function generateAIText(aiConfig, prompt, options = {}) {
   model: aiConfig.model,
   messages: [{ role: "user", content: prompt }],
   max_tokens: Math.max(maxTokens, 2048),
-  reasoning: { effort: "low", exclude: true }
+  reasoning: options.reasoning || { effort: "low", exclude: true }
 };
     if (options.json) body.response_format = { type: "json_object" };
   } else {
@@ -3199,7 +3199,15 @@ aiTaskReservationId = reservation.reservation_id;
 const responseText = await generateAIText(
   aiConfig,
   prompt,
-  { json: true, maxTokens: 4096 }
+  {
+    json: true,
+    maxTokens: 4096,
+    reasoning: {
+     // effort: "low",
+      max_tokens: 512,
+      exclude: true
+    }
+  }
 );
 
     if (typeof responseText !== "string" || !responseText.trim()) {
