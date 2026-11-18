@@ -2352,12 +2352,82 @@ app.post("/api/orders", authenticateUser, async (req, res) => {
       });
     }
 
-    const {
+   const {
   customer_id,
   items,
   shipping_address,
-  currency
+  currency,
+  conversation_id,
+  idempotency_key
 } = req.body || {};
+
+    
+
+
+
+    // Conversation-linked orders are restricted to the workspace owner.
+const isConversationOrder =
+  conversation_id !== undefined || idempotency_key !== undefined;
+
+if (isConversationOrder) {
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (workspace.role !== "owner") {
+    return res.status(403).json({
+      error: "Only the workspace owner can save orders from Smart Inbox."
+    });
+  }
+
+  if (
+    typeof conversation_id !== "string" ||
+    !uuidPattern.test(conversation_id) ||
+    typeof idempotency_key !== "string" ||
+    idempotency_key.length < 16 ||
+    idempotency_key.length > 200
+  ) {
+    return res.status(400).json({
+      error: "A valid conversation and submission key are required."
+    });
+  }
+
+  // Verify the conversation belongs to this workspace.
+  const { data: conversation, error: conversationError } =
+    await supabase
+      .from("inbox_conversations")
+      .select("id")
+      .eq("id", conversation_id)
+      .eq("workspace_id", workspace.id)
+      .maybeSingle();
+
+  if (conversationError || !conversation) {
+    return res.status(404).json({
+      error: "The selected inbox conversation was not found."
+    });
+  }
+
+  // Verify the selected customer belongs to this workspace.
+  const { data: customer, error: customerError } =
+    await supabase
+      .from("customers")
+      .select("id")
+      .eq("id", customer_id)
+      .eq("workspace_id", workspace.id)
+      .maybeSingle();
+
+  if (customerError || !customer) {
+    return res.status(400).json({
+      error: "The selected customer does not belong to this workspace."
+    });
+  }
+}
+
+
+
+    
+
+
+    
 
 const supportedCurrencies = [
   "PKR", "USD", "GBP", "EUR", "AED", "CAD", "AUD"
@@ -2436,25 +2506,47 @@ if (!supportedCurrencies.includes(orderCurrency)) {
 
     // Create the order, order items, invoice and invoice
     // item snapshots together in one database transaction.
-    const { data, error } = await supabase.rpc(
-      "create_order_with_invoice",
-      {
-        p_workspace_id: workspace.id,
-        p_customer_id: customer_id,
-        p_items: validatedItems,
-        p_shipping_address:
-          shipping_address !== undefined
-            ? shipping_address.trim() || null
-            : null,
-        p_user_email: req.user.email || null,
-        p_currency: orderCurrency
-      }
-    );
+  const rpcName = isConversationOrder
+  ? "create_inbox_order_with_invoice"
+  : "create_order_with_invoice";
+
+const rpcArgs = {
+  p_workspace_id: workspace.id,
+  p_customer_id: customer_id,
+  p_items: validatedItems,
+  p_shipping_address:
+    shipping_address !== undefined
+      ? shipping_address.trim() || null
+      : null,
+  p_user_email: req.user.email || null,
+  p_currency: orderCurrency
+};
+
+if (isConversationOrder) {
+  rpcArgs.p_conversation_id = conversation_id;
+  rpcArgs.p_idempotency_key = idempotency_key;
+}
+
+const { data, error } = await supabase.rpc(rpcName, rpcArgs);
 
 
 
     if (error) {
   const rpcError = error.message || "";
+
+      if (rpcError.includes("CONVERSATION_NOT_FOUND")) {
+  return res.status(404).json({
+    error: "The inbox conversation could not be found."
+  });
+}
+
+if (rpcError.includes("INVALID_IDEMPOTENCY_KEY")) {
+  return res.status(400).json({
+    error: "The order submission key is invalid."
+  });
+}
+
+      
 
   // Monthly order quota reached.
   if (rpcError.includes("ORDER_LIMIT_REACHED")) {
@@ -2490,11 +2582,16 @@ if (!supportedCurrencies.includes(orderCurrency)) {
 
     
 
-    return res.status(201).json({
-      message: "Order and invoice created successfully.",
-      order: data.order,
-      invoice: data.invoice
-    });
+    const duplicate = Boolean(data?.duplicate);
+
+return res.status(duplicate ? 200 : 201).json({
+  message: duplicate
+    ? "This order submission was already saved."
+    : "Order and invoice created successfully.",
+  duplicate,
+  order: data.order,
+  invoice: data.invoice
+});
 
   } catch (error) {
     console.error("Order creation endpoint failed:", error.message);
