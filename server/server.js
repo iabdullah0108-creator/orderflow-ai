@@ -4,7 +4,100 @@ const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
 
+
+
+
+
+
+
+
+
+
+
+function getTokenEncryptionKey() {
+  const key = process.env.TOKEN_ENCRYPTION_KEY;
+
+  if (!key || !/^[0-9a-fA-F]{64}$/.test(key)) {
+    throw new Error("TOKEN_ENCRYPTION_KEY must be a 64-character hex key.");
+  }
+
+  return Buffer.from(key, "hex");
+}
+
+function encryptToken(token) {
+  if (!token) return null;
+
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv(
+    "aes-256-gcm",
+    getTokenEncryptionKey(),
+    iv
+  );
+
+  const encrypted = Buffer.concat([
+    cipher.update(token, "utf8"),
+    cipher.final()
+  ]);
+
+  const authTag = cipher.getAuthTag();
+
+  return `v1:${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
+}
+
+function decryptToken(encryptedToken) {
+  if (!encryptedToken) return null;
+
+  const parts = encryptedToken.split(":");
+
+  if (parts.length !== 4 || parts[0] !== "v1") {
+    throw new Error("Invalid encrypted token format.");
+  }
+
+  const [, ivHex, authTagHex, encryptedHex] = parts;
+
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    getTokenEncryptionKey(),
+    Buffer.from(ivHex, "hex")
+  );
+
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(encryptedHex, "hex")),
+    decipher.final()
+  ]);
+
+  return decrypted.toString("utf8");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { GoogleGenAI } = require("@google/genai");
+
+
+const { google } = require("googleapis");
+
+
 
 const { createClient } = require("@supabase/supabase-js");
 
