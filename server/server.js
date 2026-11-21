@@ -6405,13 +6405,20 @@ app.post(
             .single();
 
           if (error) {
-            if (error.code === "23505") {
-              skippedMessages += gmailMessages.length;
-              continue;
-            }
+  console.error("Gmail conversation insert failed:", {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint
+  });
 
-            throw new Error("Could not create a Gmail conversation.");
-          }
+  if (error.code === "23505") {
+    skippedMessages += gmailMessages.length;
+    continue;
+  }
+
+  throw new Error("Could not create a Gmail conversation.");
+}
 
           conversation = data;
           importedThreads++;
