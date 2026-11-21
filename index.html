@@ -15611,17 +15611,16 @@ function validateLiveOrderReview() {
 
 
     
+
 const missingInformation = (draft.missing_information || [])
   .filter(value => typeof value === "string" && value.trim());
 
-const optionalInformation = missingInformation.filter(value =>
-  /\bemail\b/i.test(value)
-);
-
+// Email is optional, so exclude it from required-field warnings.
 const requiredInformation = missingInformation.filter(value =>
   !/\bemail\b/i.test(value)
 );
 
+// Display genuinely missing required information in red.
 if (requiredInformation.length) {
   const missing = document.createElement("p");
   missing.className = "form-error";
@@ -15630,18 +15629,28 @@ if (requiredInformation.length) {
   form.appendChild(missing);
 }
 
-if (optionalInformation.length) {
-  const optional = document.createElement("p");
-  optional.className = "form-warning";
-  optional.textContent =
-    "Optional information: " + optionalInformation.join(", ");
-  form.appendChild(optional);
+// Display the optional email reminder only when email is empty.
+const emailInput = form.elements.namedItem("email");
+
+const optional = document.createElement("p");
+optional.className = "form-warning";
+optional.textContent = "Optional information: Email (not required).";
+
+function updateOptionalEmailWarning() {
+  optional.hidden = Boolean(emailInput?.value.trim());
 }
 
-if (!missingInformation.length) {
+updateOptionalEmailWarning();
+form.appendChild(optional);
+
+// Update the reminder immediately when the user enters an email.
+emailInput?.addEventListener("input", updateOptionalEmailWarning);
+
+// Show green success when no required information is missing.
+if (!requiredInformation.length) {
   const complete = document.createElement("p");
   complete.className = "form-success";
-  complete.textContent = "No missing information reported by AI.";
+  complete.textContent = "No missing required information.";
   form.appendChild(complete);
 }
 
