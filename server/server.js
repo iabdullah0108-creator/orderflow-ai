@@ -5309,6 +5309,137 @@ Be precise and concise. Return the JSON directly without explaining your reasoni
 
 
 
+async function sendNativeGmailReply(workspaceId, conversation, body) {
+  const { gmail, connection } =
+    await getGmailClientForWorkspace(workspaceId);
+
+  const { data: profile } = await gmail.users.getProfile({
+    userId: "me"
+  });
+
+  const ownEmail = String(
+    profile.emailAddress || connection.external_account_id || ""
+  ).toLowerCase();
+
+  if (!ownEmail) {
+    throw new Error("Could not identify the connected Gmail account.");
+  }
+
+  const { data: thread } = await gmail.users.threads.get({
+    userId: "me",
+    id: conversation.external_thread_id,
+    format: "full"
+  });
+
+  const inboundMessages = (thread.messages || [])
+    .filter(message => {
+      const sender = parseGmailAddress(
+        getGmailHeader(message, "From")
+      );
+
+      return sender.email && sender.email !== ownEmail;
+    })
+    .sort(
+      (a, b) =>
+        Number(a.internalDate || 0) -
+        Number(b.internalDate || 0)
+    );
+
+  const originalMessage = inboundMessages[inboundMessages.length - 1];
+
+  if (!originalMessage) {
+    throw new Error("Could not find an incoming email to reply to.");
+  }
+
+  const recipient = parseGmailAddress(
+    getGmailHeader(originalMessage, "Reply-To") ||
+    getGmailHeader(originalMessage, "From")
+  );
+
+  if (!recipient.email) {
+    throw new Error("Could not identify the email reply recipient.");
+  }
+
+  const messageId = getGmailHeader(
+    originalMessage,
+    "Message-ID"
+  ).replace(/[\r\n]/g, "").trim();
+
+  if (!messageId) {
+    throw new Error("The original email is missing its Message-ID header.");
+  }
+
+  const originalReferences = getGmailHeader(
+    originalMessage,
+    "References"
+  ).replace(/[\r\n]/g, " ").trim();
+
+  const references = [originalReferences, messageId]
+    .filter(Boolean)
+    .join(" ");
+
+  const originalSubject =
+    getGmailHeader(originalMessage, "Subject") ||
+    conversation.subject ||
+    "(no subject)";
+
+  const cleanSubject = originalSubject
+    .replace(/[\r\n]/g, " ")
+    .trim();
+
+  const replySubject = /^re:/i.test(cleanSubject)
+    ? cleanSubject
+    : `Re: ${cleanSubject}`;
+
+  const encodedSubject = /^[\x00-\x7F]*$/.test(replySubject)
+    ? replySubject
+    : `=?UTF-8?B?${Buffer.from(replySubject, "utf8").toString("base64")}?=`;
+
+  const encodedBody = Buffer.from(
+    body.replace(/\r?\n/g, "\r\n"),
+    "utf8"
+  ).toString("base64");
+
+  const mimeMessage = [
+    `To: ${recipient.email}`,
+    `Subject: ${encodedSubject}`,
+    `In-Reply-To: ${messageId}`,
+    `References: ${references}`,
+    "MIME-Version: 1.0",
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    encodedBody
+  ].join("\r\n");
+
+  const raw = Buffer.from(mimeMessage, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const { data: sentMessage } =
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: {
+        raw,
+        threadId: conversation.external_thread_id
+      }
+    });
+
+  return {
+    id: sentMessage.id,
+    threadId: sentMessage.threadId,
+    senderEmail: ownEmail,
+    recipientEmail: recipient.email
+  };
+}
+
+
+
+
+
+
 
 
 
@@ -5337,6 +5468,137 @@ app.post("/api/inbox/conversations/:conversationId/reply", authenticateUser, asy
   if (conversationError || !conversation) {
     return res.status(404).json({ success: false, error: "Conversation not found." });
   }
+
+
+
+
+  
+  // Gmail replies are sent directly through the connected Gmail account.
+  if (conversation.channel === "gmail") {
+    if (!conversation.external_thread_id) {
+      return res.status(400).json({
+        success: false,
+        error: "This Gmail conversation has no thread ID."
+      });
+    }
+
+    const { data: message, error: insertError } = await supabase
+      .from("inbox_messages")
+      .insert({
+        workspace_id: workspace.id,
+        conversation_id: conversation.id,
+        direction: "outbound",
+        body_text: body,
+        delivery_status: "sending",
+        is_ai_draft: false,
+        requires_review: false
+      })
+      .select("id, direction, body_text, delivery_status, created_at")
+      .single();
+
+    if (insertError) {
+      console.error("Could not create Gmail sending record:", insertError.message);
+      return res.status(500).json({
+        success: false,
+        error: "Could not prepare the Gmail reply."
+      });
+    }
+
+    let sent;
+
+    try {
+      sent = await sendNativeGmailReply(
+        workspace.id,
+        conversation,
+        body
+      );
+    } catch (error) {
+      console.error("Gmail reply sending failed:", error.message);
+
+      const isDefiniteRejection =
+        Number.isInteger(error.code) &&
+        error.code >= 400 &&
+        error.code < 500;
+
+      const failedStatus = isDefiniteRejection
+        ? "failed"
+        : "unknown";
+
+      await supabase
+        .from("inbox_messages")
+        .update({ delivery_status: failedStatus })
+        .eq("id", message.id)
+        .eq("workspace_id", workspace.id);
+
+      return res.status(502).json({
+        success: false,
+        error: isDefiniteRejection
+          ? "Gmail rejected the reply. It was not sent."
+          : "Gmail's delivery result could not be confirmed. Check the Gmail Sent folder before trying again.",
+        message: {
+          ...message,
+          delivery_status: failedStatus
+        }
+      });
+    }
+
+    const sentAt = new Date().toISOString();
+
+    const { data: savedMessage, error: saveError } = await supabase
+      .from("inbox_messages")
+      .update({
+        external_message_id: sent.id,
+        sender_address: sent.senderEmail,
+        provider_payload: {
+          provider: "gmail",
+          thread_id: sent.threadId,
+          recipient_email: sent.recipientEmail
+        },
+        delivery_status: "sent",
+        sent_at: sentAt
+      })
+      .eq("id", message.id)
+      .eq("workspace_id", workspace.id)
+      .select("id, direction, body_text, delivery_status, created_at, sent_at")
+      .single();
+
+    if (saveError || !savedMessage) {
+      console.error("Gmail sent, but message record could not be updated:", saveError?.message);
+
+      return res.status(200).json({
+        success: true,
+        sent: true,
+        saved: false,
+        note: "Gmail confirmed the reply was sent, but OrderFlow could not update its message record. Do not resend it."
+      });
+    }
+
+    const { error: conversationUpdateError } = await supabase
+      .from("inbox_conversations")
+      .update({
+        last_message_at: sentAt,
+        updated_at: sentAt
+      })
+      .eq("id", conversation.id)
+      .eq("workspace_id", workspace.id);
+
+    if (conversationUpdateError) {
+      console.error("Could not update Gmail conversation timestamp:", conversationUpdateError.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      sent: true,
+      message: savedMessage,
+      note: "Reply sent successfully through Gmail."
+    });
+  }
+
+
+
+
+
+  
 
   const webhookUrl = process.env.N8N_SEND_REPLY_WEBHOOK_URL;
   const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
