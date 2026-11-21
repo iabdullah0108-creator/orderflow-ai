@@ -99,6 +99,36 @@ const { google } = require("googleapis");
 
 
 
+
+
+function createGmailOAuthClient() {
+  const appUrl = process.env.APP_URL;
+
+  if (!appUrl) {
+    throw new Error("APP_URL is not configured.");
+  }
+
+  const redirectUri = new URL(
+    "/api/integrations/gmail/callback",
+    appUrl
+  ).toString();
+
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri
+  );
+}
+
+
+
+
+
+
+
+
+
+
 const { createClient } = require("@supabase/supabase-js");
 
 
@@ -4374,6 +4404,226 @@ app.get("/api/integrations/connections", authenticateUser, async (req, res) => {
   }
   return res.json({ success: true, connections: data || [] });
 });
+
+
+
+
+
+
+
+app.get(
+  "/api/integrations/gmail/connect",
+  authenticateUser,
+  async (req, res) => {
+    try {
+      const workspace = await requireWorkspace(req, res);
+      if (!workspace) return;
+
+      if (!process.env.GOOGLE_CLIENT_ID ||
+          !process.env.GOOGLE_CLIENT_SECRET) {
+        return res.status(500).json({
+          success: false,
+          error: "Google OAuth is not configured."
+        });
+      }
+
+      const state = crypto.randomBytes(32).toString("hex");
+      const stateHash = crypto
+        .createHash("sha256")
+        .update(state)
+        .digest("hex");
+
+      const { error } = await supabase
+        .from("provider_oauth_states")
+        .insert({
+          state_hash: stateHash,
+          user_id: req.user.id,
+          workspace_id: workspace.id,
+          provider: "gmail",
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+        });
+
+      if (error) {
+        console.error("Gmail OAuth state creation failed:", error.message);
+        return res.status(500).json({
+          success: false,
+          error: "Could not start Gmail connection."
+        });
+      }
+
+      const oauthClient = createGmailOAuthClient();
+
+      const url = oauthClient.generateAuthUrl({
+        access_type: "offline",
+        prompt: "consent",
+        scope: [
+          "https://www.googleapis.com/auth/gmail.readonly",
+          "https://www.googleapis.com/auth/gmail.send",
+          "https://www.googleapis.com/auth/gmail.modify"
+        ],
+        state
+      });
+
+      return res.json({ success: true, url });
+    } catch (error) {
+      console.error("Gmail connection start failed:", error.message);
+      return res.status(500).json({
+        success: false,
+        error: "Could not start Gmail connection."
+      });
+    }
+  }
+);
+
+
+
+
+
+
+app.get(
+  "/api/integrations/gmail/callback",
+  async (req, res) => {
+    const appUrl = process.env.APP_URL;
+
+    const redirect = (status) => {
+      const url = new URL("/", appUrl);
+      url.searchParams.set("gmail", status);
+      return res.redirect(url.toString());
+    };
+
+    try {
+      const { code, state, error: googleError } = req.query;
+
+      if (googleError) return redirect("error");
+      if (!code || !state || typeof state !== "string") {
+        return redirect("error");
+      }
+
+      const stateHash = crypto
+        .createHash("sha256")
+        .update(state)
+        .digest("hex");
+
+      // Consume the state so it cannot be reused.
+      const { data: oauthState, error: stateError } = await supabase
+        .from("provider_oauth_states")
+        .delete()
+        .eq("state_hash", stateHash)
+        .eq("provider", "gmail")
+        .select("user_id, workspace_id, expires_at")
+        .maybeSingle();
+
+      if (stateError || !oauthState) return redirect("error");
+
+      if (new Date(oauthState.expires_at).getTime() < Date.now()) {
+        return redirect("error");
+      }
+
+      const oauthClient = createGmailOAuthClient();
+      const { tokens } = await oauthClient.getToken(code);
+      oauthClient.setCredentials(tokens);
+
+      if (!tokens.access_token) {
+        throw new Error("Google did not return an access token.");
+      }
+
+      const gmail = google.gmail({
+        version: "v1",
+        auth: oauthClient
+      });
+
+      const { data: profile } = await gmail.users.getProfile({
+        userId: "me"
+      });
+
+      const email = profile.emailAddress;
+
+      if (!email) {
+        throw new Error("Could not identify the Gmail account.");
+      }
+
+      const { data: connection, error: connectionError } = await supabase
+        .from("provider_connections")
+        .upsert(
+          {
+            workspace_id: oauthState.workspace_id,
+            channel: "gmail",
+            external_account_id: email,
+            display_name: email,
+            status: "connected",
+            last_error: null,
+            connected_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "workspace_id,channel" }
+        )
+        .select("id")
+        .single();
+
+      if (connectionError || !connection) {
+        throw new Error("Could not save Gmail connection.");
+      }
+
+      // Preserve an existing refresh token if Google does not return a new one.
+      const { data: existingCredentials, error: existingError } = await supabase
+        .from("provider_credentials")
+        .select("refresh_token_encrypted")
+        .eq("provider_connection_id", connection.id)
+        .maybeSingle();
+
+      if (existingError) {
+        throw new Error("Could not retrieve existing credentials.");
+      }
+
+      const refreshToken = tokens.refresh_token
+        ? encryptToken(tokens.refresh_token)
+        : existingCredentials?.refresh_token_encrypted || null;
+
+      const scopes = tokens.scope
+        ? tokens.scope.split(" ")
+        : [
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/gmail.modify"
+          ];
+
+      const { error: credentialsError } = await supabase
+        .from("provider_credentials")
+        .upsert(
+          {
+            workspace_id: oauthState.workspace_id,
+            provider_connection_id: connection.id,
+            access_token_encrypted: encryptToken(tokens.access_token),
+            refresh_token_encrypted: refreshToken,
+            token_expires_at: tokens.expiry_date
+              ? new Date(tokens.expiry_date).toISOString()
+              : null,
+            scopes,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "provider_connection_id" }
+        );
+
+      if (credentialsError) {
+        throw new Error("Could not securely save Gmail credentials.");
+      }
+
+      return redirect("connected");
+    } catch (error) {
+      console.error("Gmail OAuth callback failed:", error.message);
+      return redirect("error");
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
 
 // GET inbox conversations for the signed-in user's workspace.
 app.get("/api/inbox/conversations", authenticateUser, async (req, res) => {
