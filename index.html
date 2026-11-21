@@ -7741,10 +7741,41 @@ body[data-theme="light"] .of-plan-confirm-cancel {
 }
 
 /* Missing information and errors */
+
+/* Missing required information */
 #live-order-review-dialog .form-error {
   color: #d33d4b !important;
   line-height: 1.5;
 }
+
+/* Missing optional information */
+#live-order-review-dialog .form-warning {
+  color: #b7791f !important;
+  line-height: 1.5;
+}
+
+/* No missing information */
+#live-order-review-dialog .form-success {
+  color: #16845b !important;
+  line-height: 1.5;
+}
+
+html[data-theme="dark"] #live-order-review-dialog .form-warning,
+body[data-theme="dark"] #live-order-review-dialog .form-warning,
+html.dark #live-order-review-dialog .form-warning,
+body.dark #live-order-review-dialog .form-warning,
+body.dark-mode #live-order-review-dialog .form-warning {
+  color: #f6c66a !important;
+}
+
+html[data-theme="dark"] #live-order-review-dialog .form-success,
+body[data-theme="dark"] #live-order-review-dialog .form-success,
+html.dark #live-order-review-dialog .form-success,
+body.dark #live-order-review-dialog .form-success,
+body.dark-mode #live-order-review-dialog .form-success {
+  color: #65d6a0 !important;
+}
+
 
 /* Action buttons */
 #live-order-review-dialog .modal-actions {
@@ -15575,12 +15606,50 @@ function validateLiveOrderReview() {
     fields.forEach(field => section.appendChild(field));
   });
 
+
+
+
+
+    
+const missingInformation = (draft.missing_information || [])
+  .filter(value => typeof value === "string" && value.trim());
+
+const optionalInformation = missingInformation.filter(value =>
+  /\bemail\b/i.test(value)
+);
+
+const requiredInformation = missingInformation.filter(value =>
+  !/\bemail\b/i.test(value)
+);
+
+if (requiredInformation.length) {
   const missing = document.createElement("p");
   missing.className = "form-error";
-  missing.textContent = (draft.missing_information || []).length
-    ? "Information still needed: " + draft.missing_information.join(", ")
-    : "No missing information reported by AI.";
+  missing.textContent =
+    "Information still needed: " + requiredInformation.join(", ");
   form.appendChild(missing);
+}
+
+if (optionalInformation.length) {
+  const optional = document.createElement("p");
+  optional.className = "form-warning";
+  optional.textContent =
+    "Optional information: " + optionalInformation.join(", ");
+  form.appendChild(optional);
+}
+
+if (!missingInformation.length) {
+  const complete = document.createElement("p");
+  complete.className = "form-success";
+  complete.textContent = "No missing information reported by AI.";
+  form.appendChild(complete);
+}
+
+
+    
+
+
+    
 
   dialog.appendChild(form);
 
