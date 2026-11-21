@@ -6566,6 +6566,79 @@ if (metadataUpdateError) {
 
 
 
+async function registerGmailWatch(workspaceId) {
+  const { gmail, connection } =
+    await getGmailClientForWorkspace(workspaceId);
+
+  const topicName =
+    "projects/orderflow-ai-512215/topics/orderflow-gmail-events";
+
+  const { data: watch } = await gmail.users.watch({
+    userId: "me",
+    requestBody: {
+      topicName,
+      labelIds: ["INBOX"]
+    }
+  });
+
+  if (!watch.historyId || !watch.expiration) {
+    throw new Error("Gmail returned an incomplete watch registration.");
+  }
+
+  const currentMetadata =
+    connection.metadata &&
+    typeof connection.metadata === "object" &&
+    !Array.isArray(connection.metadata)
+      ? connection.metadata
+      : {};
+
+  const updatedMetadata = {
+    ...currentMetadata,
+    gmail_watch_expiration: new Date(
+      Number(watch.expiration)
+    ).toISOString(),
+    gmail_watch_registered_at: new Date().toISOString()
+  };
+
+  // Initialize the history checkpoint only if one does not exist.
+  if (!updatedMetadata.gmail_history_id) {
+    updatedMetadata.gmail_history_id = String(watch.historyId);
+  }
+
+  const { error } = await supabase
+    .from("provider_connections")
+    .update({
+      metadata: updatedMetadata,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", connection.id)
+    .eq("workspace_id", workspaceId);
+
+  if (error) {
+    throw new Error(
+      "Could not save Gmail watch information: " + error.message
+    );
+  }
+
+  return {
+    success: true,
+    historyId: String(watch.historyId),
+    expiration: updatedMetadata.gmail_watch_expiration
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function syncGmailChanges(workspaceId) {
   const { gmail, connection } =
@@ -6645,6 +6718,49 @@ async function syncGmailChanges(workspaceId) {
   };
 }
 
+
+
+
+
+
+
+
+
+
+
+app.post(
+  "/api/integrations/gmail/watch/register",
+  authenticateUser,
+  async (req, res) => {
+    try {
+      const workspace = await requireWorkspace(req, res);
+      if (!workspace) return;
+
+      const result = await registerGmailWatch(workspace.id);
+
+      console.log(
+        "Gmail watch registered for workspace:",
+        workspace.id,
+        "expires:",
+        result.expiration
+      );
+
+      return res.json({
+        success: true,
+        message: "Gmail automatic notifications registered.",
+        expiration: result.expiration
+      });
+
+    } catch (error) {
+      console.error("Gmail watch registration failed:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        error: "Could not enable automatic Gmail notifications."
+      });
+    }
+  }
+);
 
 
 
