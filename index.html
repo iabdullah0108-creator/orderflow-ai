@@ -16019,11 +16019,15 @@ notifyUser(
         );
 
         if (input) input.value = "";
-        notifyUser(
-          data.note ||
-          "Reply queued. Provider delivery is not confirmed until n8n reports success."
-        );
-        await selectLiveConversation(selectedLive);
+
+notifyUser(
+  data.note ||
+  (data.sent
+    ? "Reply sent successfully."
+    : "Reply queued for delivery.")
+);
+
+await selectLiveConversation(selectedLive);
       } catch (e) {
         notifyUser("Reply was not confirmed as sent: " + e.message);
       } finally {
