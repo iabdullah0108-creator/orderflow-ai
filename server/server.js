@@ -4560,9 +4560,16 @@ app.get(
         .select("id")
         .single();
 
-      if (connectionError || !connection) {
-        throw new Error("Could not save Gmail connection.");
-      }
+     if (connectionError || !connection) {
+  console.error("Gmail connection database error:", {
+    message: connectionError?.message,
+    code: connectionError?.code,
+    details: connectionError?.details,
+    hint: connectionError?.hint
+  });
+
+  throw new Error("Could not save Gmail connection.");
+}
 
       // Preserve an existing refresh token if Google does not return a new one.
       const { data: existingCredentials, error: existingError } = await supabase
