@@ -23,6 +23,7 @@
     "@supabase/server": "^1.9.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "googleapis": "^171.0.0"
   }
 }
