@@ -6728,6 +6728,104 @@ async function syncGmailChanges(workspaceId) {
 
 
 
+
+app.post(
+  "/api/internal/gmail/watches/renew",
+  async (req, res) => {
+    const secret = process.env.GMAIL_RENEWAL_SECRET;
+    const supplied = Buffer.from(
+      req.headers.authorization || ""
+    );
+    const expected = Buffer.from(
+      `Bearer ${secret || ""}`
+    );
+
+    if (
+      !secret ||
+      supplied.length !== expected.length ||
+      !crypto.timingSafeEqual(supplied, expected)
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized."
+      });
+    }
+
+    try {
+      const { data: connections, error } = await supabase
+        .from("provider_connections")
+        .select("workspace_id, metadata")
+        .eq("channel", "gmail")
+        .eq("status", "connected");
+
+      if (error) throw error;
+
+      const now = Date.now();
+      const renewalWindow = 48 * 60 * 60 * 1000;
+
+      let renewed = 0;
+      let skipped = 0;
+      let failed = 0;
+
+      for (const connection of connections || []) {
+        const expiration = Date.parse(
+          connection.metadata?.gmail_watch_expiration || ""
+        );
+
+        if (
+          Number.isFinite(expiration) &&
+          expiration > now + renewalWindow
+        ) {
+          skipped++;
+          continue;
+        }
+
+        try {
+          await registerGmailWatch(connection.workspace_id);
+          renewed++;
+        } catch (error) {
+          failed++;
+          console.error(
+            "Gmail watch renewal failed for workspace:",
+            connection.workspace_id,
+            error.message
+          );
+        }
+      }
+
+      return res.json({
+        success: failed === 0,
+        accounts_checked: connections?.length || 0,
+        renewed,
+        skipped,
+        failed
+      });
+
+    } catch (error) {
+      console.error("Gmail renewal job failed:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        error: "Gmail renewal job failed."
+      });
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.post(
   "/api/integrations/gmail/watch/register",
   authenticateUser,
