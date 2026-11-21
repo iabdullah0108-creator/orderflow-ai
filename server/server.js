@@ -85,7 +85,7 @@ async function getGmailClientForWorkspace(workspaceId) {
   // Find the connected Gmail account for this workspace.
   const { data: connection, error: connectionError } = await supabase
     .from("provider_connections")
-    .select("id, external_account_id, display_name")
+    .select("id, external_account_id, display_name, metadata")
     .eq("workspace_id", workspaceId)
     .eq("channel", "gmail")
     .eq("status", "connected")
@@ -6250,6 +6250,415 @@ app.get("/api/subscription", authenticateUser, async (req, res) => {
 
 
 
+async function syncGmailWorkspace(workspaceId, options = {}) {
+  const { gmail, connection } =
+    await getGmailClientForWorkspace(workspaceId);
+
+  const { data: profile } = await gmail.users.getProfile({
+    userId: "me"
+  });
+
+  const ownEmail = String(
+    profile.emailAddress || connection.external_account_id || ""
+  ).toLowerCase();
+
+  if (!ownEmail) {
+    throw new Error("Could not identify the connected Gmail account.");
+  }
+
+
+  const checkpointHistoryId =
+  options.checkpointHistoryId || profile.historyId;
+
+if (!checkpointHistoryId) {
+  throw new Error("Gmail did not return a history checkpoint.");
+}
+
+
+  
+
+  let threadItems;
+
+if (Array.isArray(options.threadIds)) {
+  const uniqueThreadIds = [
+    ...new Set(options.threadIds.filter(Boolean))
+  ];
+
+  threadItems = uniqueThreadIds.map(id => ({ id }));
+} else {
+  const { data: threadList } = await gmail.users.threads.list({
+    userId: "me",
+    q: "in:inbox",
+    maxResults: 25
+  });
+
+  threadItems = threadList.threads || [];
+}
+  
+
+  let importedThreads = 0;
+  let importedMessages = 0;
+  let skippedMessages = 0;
+
+  for (const threadItem of threadItems) {
+    const { data: thread } = await gmail.users.threads.get({
+      userId: "me",
+      id: threadItem.id,
+      format: "full"
+    });
+
+    const gmailMessages = thread.messages || [];
+
+    if (!gmailMessages.length) continue;
+
+    const parsedMessages = gmailMessages.map(message => {
+      const sender = parseGmailAddress(
+        getGmailHeader(message, "From")
+      );
+
+      const timestamp = message.internalDate
+        ? new Date(Number(message.internalDate)).toISOString()
+        : new Date().toISOString();
+
+      return {
+        id: message.id,
+        threadId: message.threadId,
+        sender,
+        direction: sender.email === ownEmail
+          ? "outbound"
+          : "inbound",
+        timestamp,
+        bodyText:
+          extractGmailBody(message.payload) ||
+          message.snippet ||
+          "",
+        labels: message.labelIds || [],
+        subject: getGmailHeader(message, "Subject")
+      };
+    });
+
+    const inboundMessages = parsedMessages.filter(
+      message => message.direction === "inbound"
+    );
+
+    const customerMessage =
+      inboundMessages[0] || parsedMessages[0];
+
+    const customerEmail =
+      customerMessage?.sender.email || null;
+
+    const customerName =
+      customerMessage?.sender.name ||
+      customerEmail ||
+      "Gmail customer";
+
+    const latestMessage = parsedMessages.reduce(
+      (latest, message) =>
+        new Date(message.timestamp) > new Date(latest.timestamp)
+          ? message
+          : latest,
+      parsedMessages[0]
+    );
+
+    const unreadCount = inboundMessages.filter(
+      message => message.labels.includes("UNREAD")
+    ).length;
+
+    const subject =
+      parsedMessages.find(message => message.subject)?.subject || null;
+
+    const { data: existingConversation, error: lookupError } =
+      await supabase
+        .from("inbox_conversations")
+        .select("id")
+        .eq("workspace_id", workspaceId)
+        .eq("channel", "gmail")
+        .eq("external_thread_id", thread.id)
+        .maybeSingle();
+
+    if (lookupError) {
+      throw new Error(
+        "Could not look up an existing Gmail conversation: " +
+        lookupError.message
+      );
+    }
+
+    const conversationData = {
+      workspace_id: workspaceId,
+      channel: "gmail",
+      external_thread_id: thread.id,
+      external_account_id: ownEmail,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      subject,
+      last_message_at: latestMessage.timestamp,
+      unread_count: unreadCount,
+      updated_at: new Date().toISOString()
+    };
+
+    let conversation;
+
+    if (existingConversation) {
+      const { data, error } = await supabase
+        .from("inbox_conversations")
+        .update(conversationData)
+        .eq("id", existingConversation.id)
+        .eq("workspace_id", workspaceId)
+        .select("id")
+        .single();
+
+      if (error) {
+        throw new Error(
+          "Could not update a Gmail conversation: " + error.message
+        );
+      }
+
+      conversation = data;
+    } else {
+      const { data, error } = await supabase
+        .from("inbox_conversations")
+        .insert(conversationData)
+        .select("id")
+        .single();
+
+      if (error) {
+        if (error.code === "23505") {
+          // Another sync may have created this conversation.
+          const { data: existing, error: retryError } = await supabase
+            .from("inbox_conversations")
+            .select("id")
+            .eq("workspace_id", workspaceId)
+            .eq("channel", "gmail")
+            .eq("external_thread_id", thread.id)
+            .single();
+
+          if (retryError || !existing) {
+            throw new Error(
+              "Could not retrieve the existing Gmail conversation."
+            );
+          }
+
+          conversation = existing;
+        } else {
+          console.error("Gmail conversation insert failed:", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+
+          throw new Error("Could not create a Gmail conversation.");
+        }
+      } else {
+        conversation = data;
+        importedThreads++;
+      }
+    }
+
+    for (const message of parsedMessages) {
+      const { data, error } = await supabase
+        .from("inbox_messages")
+        .upsert(
+          {
+            workspace_id: workspaceId,
+            conversation_id: conversation.id,
+            external_message_id: message.id,
+            direction: message.direction,
+            sender_name: message.sender.name || null,
+            sender_address: message.sender.email || null,
+            body_text: message.bodyText,
+            body_html: null,
+            delivery_status: message.direction === "inbound"
+              ? "received"
+              : "sent",
+            is_ai_draft: false,
+            requires_review: false,
+            provider_payload: {
+              provider: "gmail",
+              thread_id: message.threadId,
+              labels: message.labels
+            },
+            sent_at: message.timestamp,
+            created_at: message.timestamp
+          },
+          {
+            onConflict: "workspace_id,external_message_id",
+            ignoreDuplicates: true
+          }
+        )
+        .select("id");
+
+      if (error) {
+        console.error("Gmail message import failed:", error.message);
+        throw new Error("Could not import a Gmail message.");
+      }
+
+      if (data?.length) {
+        importedMessages += data.length;
+      } else {
+        skippedMessages++;
+      }
+    }
+  }
+
+
+
+
+  // Save the Gmail history checkpoint for future incremental sync.
+const { data: currentConnection, error: metadataReadError } =
+  await supabase
+    .from("provider_connections")
+    .select("metadata")
+    .eq("id", connection.id)
+    .eq("workspace_id", workspaceId)
+    .single();
+
+if (metadataReadError || !currentConnection) {
+  throw new Error("Could not retrieve Gmail connection metadata.");
+}
+
+const existingMetadata =
+  currentConnection.metadata &&
+  typeof currentConnection.metadata === "object" &&
+  !Array.isArray(currentConnection.metadata)
+    ? currentConnection.metadata
+    : {};
+
+const { error: metadataUpdateError } = await supabase
+  .from("provider_connections")
+  .update({
+    metadata: {
+      ...existingMetadata,
+      gmail_history_id: String(checkpointHistoryId),
+      gmail_history_synced_at: new Date().toISOString()
+    },
+    updated_at: new Date().toISOString()
+  })
+  .eq("id", connection.id)
+  .eq("workspace_id", workspaceId);
+
+if (metadataUpdateError) {
+  throw new Error("Could not save the Gmail history checkpoint.");
+}
+  
+
+
+
+  
+
+  return {
+    success: true,
+    account: ownEmail,
+    threads_checked: threadItems.length,
+    threads_imported: importedThreads,
+    messages_imported: importedMessages,
+    messages_skipped: skippedMessages
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+async function syncGmailChanges(workspaceId) {
+  const { gmail, connection } =
+    await getGmailClientForWorkspace(workspaceId);
+
+  const metadata =
+    connection.metadata &&
+    typeof connection.metadata === "object" &&
+    !Array.isArray(connection.metadata)
+      ? connection.metadata
+      : {};
+
+  const startHistoryId = metadata.gmail_history_id;
+
+  if (!startHistoryId) {
+    throw new Error(
+      "Gmail history checkpoint is missing. Run initial sync first."
+    );
+  }
+
+  let pageToken;
+  let latestHistoryId = null;
+
+  const changedThreadIds = new Set();
+
+  do {
+    const { data } = await gmail.users.history.list({
+      userId: "me",
+      startHistoryId: String(startHistoryId),
+      maxResults: 500,
+      ...(pageToken ? { pageToken } : {})
+    });
+
+    if (data.historyId) {
+      latestHistoryId = String(data.historyId);
+    }
+
+    for (const historyItem of data.history || []) {
+      const messageGroups = [
+        historyItem.messages,
+        historyItem.messagesAdded?.map(item => item.message),
+        historyItem.messagesDeleted?.map(item => item.message),
+        historyItem.labelsAdded?.map(item => item.message),
+        historyItem.labelsRemoved?.map(item => item.message)
+      ];
+
+      for (const messages of messageGroups) {
+        for (const message of messages || []) {
+          if (message.threadId) {
+            changedThreadIds.add(message.threadId);
+          }
+        }
+      }
+    }
+
+    pageToken = data.nextPageToken;
+
+  } while (pageToken);
+
+  if (!latestHistoryId) {
+    throw new Error("Gmail did not return an updated history checkpoint.");
+  }
+
+  const result = await syncGmailWorkspace(workspaceId, {
+    threadIds: [...changedThreadIds],
+    checkpointHistoryId: latestHistoryId
+  });
+
+  return {
+    success: true,
+    account: result.account,
+    threads_checked: result.threads_checked,
+    threads_imported: result.threads_imported,
+    messages_imported: result.messages_imported,
+    messages_skipped: result.messages_skipped,
+    history_checkpoint_updated: true
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.post(
   "/api/integrations/gmail/sync",
@@ -6259,229 +6668,9 @@ app.post(
       const workspace = await requireWorkspace(req, res);
       if (!workspace) return;
 
-      const { gmail, connection } =
-        await getGmailClientForWorkspace(workspace.id);
+      const result = await syncGmailWorkspace(workspace.id);
 
-      const { data: profile } = await gmail.users.getProfile({
-        userId: "me"
-      });
-
-      const ownEmail = String(
-        profile.emailAddress || connection.external_account_id || ""
-      ).toLowerCase();
-
-      if (!ownEmail) {
-        throw new Error("Could not identify the connected Gmail account.");
-      }
-
-      // Fetch the latest 25 threads in the inbox.
-      const { data: threadList } = await gmail.users.threads.list({
-        userId: "me",
-        q: "in:inbox",
-        maxResults: 25
-      });
-
-      const threads = threadList.threads || [];
-
-      let importedThreads = 0;
-      let importedMessages = 0;
-      let skippedMessages = 0;
-
-      for (const threadItem of threads) {
-        const { data: thread } = await gmail.users.threads.get({
-          userId: "me",
-          id: threadItem.id,
-          format: "full"
-        });
-
-        const gmailMessages = thread.messages || [];
-
-        if (!gmailMessages.length) continue;
-
-        const parsedMessages = gmailMessages.map(message => {
-          const fromHeader = getGmailHeader(message, "From");
-          const sender = parseGmailAddress(fromHeader);
-
-          const timestamp = message.internalDate
-            ? new Date(Number(message.internalDate)).toISOString()
-            : new Date().toISOString();
-
-          const bodyText =
-            extractGmailBody(message.payload) ||
-            message.snippet ||
-            "";
-
-          return {
-            id: message.id,
-            threadId: message.threadId,
-            sender,
-            direction: sender.email === ownEmail
-              ? "outbound"
-              : "inbound",
-            timestamp,
-            bodyText,
-            bodyHtml: null,
-            labels: message.labelIds || [],
-            subject: getGmailHeader(message, "Subject")
-          };
-        });
-
-        const inboundMessages = parsedMessages.filter(
-          message => message.direction === "inbound"
-        );
-
-        const customerMessage =
-          inboundMessages[0] || parsedMessages[0];
-
-        const customerEmail =
-          customerMessage?.sender.email || null;
-
-        const customerName =
-          customerMessage?.sender.name || customerEmail || "Gmail customer";
-
-        const latestMessage = parsedMessages.reduce(
-          (latest, message) =>
-            new Date(message.timestamp) > new Date(latest.timestamp)
-              ? message
-              : latest,
-          parsedMessages[0]
-        );
-
-        const unreadCount = inboundMessages.filter(
-          message => message.labels.includes("UNREAD")
-        ).length;
-
-        const subject =
-          parsedMessages.find(message => message.subject)?.subject || null;
-
-        // Find an existing conversation without changing its status.
-        const { data: existingConversation, error: lookupError } =
-          await supabase
-            .from("inbox_conversations")
-            .select("id, status")
-            .eq("workspace_id", workspace.id)
-            .eq("channel", "gmail")
-            .eq("external_thread_id", thread.id)
-            .maybeSingle();
-
-        if (lookupError) {
-          throw new Error("Could not look up an existing Gmail conversation.");
-        }
-
-        let conversation;
-
-        const conversationData = {
-          workspace_id: workspace.id,
-          channel: "gmail",
-          external_thread_id: thread.id,
-          external_account_id: ownEmail,
-          customer_name: customerName,
-          customer_email: customerEmail,
-          subject,
-          last_message_at: latestMessage.timestamp,
-          unread_count: unreadCount,
-          updated_at: new Date().toISOString()
-        };
-
-        if (existingConversation) {
-          const { data, error } = await supabase
-            .from("inbox_conversations")
-            .update(conversationData)
-            .eq("id", existingConversation.id)
-            .eq("workspace_id", workspace.id)
-            .select("id")
-            .single();
-
-          if (error) {
-            throw new Error("Could not update a Gmail conversation.");
-          }
-
-          conversation = data;
-        } else {
-          const { data, error } = await supabase
-            .from("inbox_conversations")
-            .insert(conversationData)
-            .select("id")
-            .single();
-
-          if (error) {
-  console.error("Gmail conversation insert failed:", {
-    code: error.code,
-    message: error.message,
-    details: error.details,
-    hint: error.hint
-  });
-
-  if (error.code === "23505") {
-    skippedMessages += gmailMessages.length;
-    continue;
-  }
-
-  throw new Error("Could not create a Gmail conversation.");
-}
-
-          conversation = data;
-          importedThreads++;
-        }
-
-        // Import each Gmail message. Existing IDs are ignored.
-        for (const message of parsedMessages) {
-          const { data, error } = await supabase
-            .from("inbox_messages")
-            .upsert(
-              {
-                workspace_id: workspace.id,
-                conversation_id: conversation.id,
-                external_message_id: message.id,
-                direction: message.direction,
-                sender_name: message.sender.name || null,
-                sender_address: message.sender.email || null,
-                body_text: message.bodyText,
-                body_html: message.bodyHtml,
-                delivery_status: message.direction === "inbound"
-                  ? "received"
-                  : "sent",
-                is_ai_draft: false,
-                requires_review: false,
-                provider_payload: {
-                  provider: "gmail",
-                  thread_id: message.threadId,
-                  labels: message.labels
-                },
-                sent_at: message.timestamp,
-                created_at: message.timestamp
-              },
-              {
-                onConflict: "workspace_id,external_message_id",
-                ignoreDuplicates: true
-              }
-            )
-            .select("id");
-
-          if (error) {
-            console.error(
-              "Gmail message import failed:",
-              error.message
-            );
-            throw new Error("Could not import a Gmail message.");
-          }
-
-          if (data?.length) {
-            importedMessages += data.length;
-          } else {
-            skippedMessages++;
-          }
-        }
-      }
-
-      return res.json({
-        success: true,
-        account: ownEmail,
-        threads_checked: threads.length,
-        threads_imported: importedThreads,
-        messages_imported: importedMessages,
-        messages_skipped: skippedMessages
-      });
+      return res.json(result);
 
     } catch (error) {
       console.error("Gmail sync failed:", error.message);
@@ -6506,6 +6695,141 @@ app.post(
 
 
 
+
+
+app.post(
+  "/api/integrations/gmail/pubsub",
+  async (req, res) => {
+    try {
+      // Verify the Google Pub/Sub OIDC bearer token.
+      const authorization =
+        req.headers.authorization || "";
+
+      if (!authorization.startsWith("Bearer ")) {
+        return res.status(401).json({
+          error: "Missing authentication."
+        });
+      }
+
+      const idToken = authorization.slice(7);
+      const audience = process.env.GOOGLE_PUBSUB_AUDIENCE;
+      const expectedEmail =
+        process.env.GOOGLE_PUBSUB_PUSH_SERVICE_ACCOUNT;
+
+      if (!audience || !expectedEmail) {
+        throw new Error(
+          "Pub/Sub authentication environment variables are missing."
+        );
+      }
+
+      const verifier = new google.auth.OAuth2();
+
+      const ticket = await verifier.verifyIdToken({
+        idToken,
+        audience
+      });
+
+      const tokenPayload = ticket.getPayload();
+
+      if (
+        !tokenPayload ||
+        tokenPayload.email !== expectedEmail ||
+        tokenPayload.email_verified !== true
+      ) {
+        return res.status(403).json({
+          error: "Invalid notification identity."
+        });
+      }
+
+      // Decode the Gmail notification.
+      const message = req.body?.message;
+
+      if (!message?.data) {
+        return res.status(400).json({
+          error: "Invalid Pub/Sub message."
+        });
+      }
+
+      const notification = JSON.parse(
+        Buffer.from(message.data, "base64").toString("utf8")
+      );
+
+      const emailAddress = String(
+        notification.emailAddress || ""
+      ).toLowerCase();
+
+      const notificationHistoryId = String(
+        notification.historyId || ""
+      );
+
+      if (!emailAddress || !notificationHistoryId) {
+        return res.status(400).json({
+          error: "Invalid Gmail notification."
+        });
+      }
+
+      // Find every workspace connected to this Gmail account.
+      const { data: connections, error: connectionError } =
+        await supabase
+          .from("provider_connections")
+          .select("id, workspace_id, external_account_id")
+          .eq("channel", "gmail")
+          .eq("status", "connected")
+          .ilike("external_account_id", emailAddress);
+
+      if (connectionError) {
+        throw new Error(
+          "Could not find the connected Gmail workspaces: " +
+          connectionError.message
+        );
+      }
+
+      // A notification for an account no longer connected
+      // should be acknowledged rather than retried forever.
+      if (!connections?.length) {
+        console.log(
+          "Gmail notification ignored: no connected workspace.",
+          emailAddress
+        );
+
+        return res.status(200).json({
+          success: true,
+          ignored: true
+        });
+      }
+
+      // Process each matching workspace.
+      for (const connection of connections) {
+        await syncGmailChanges(connection.workspace_id);
+      }
+
+      console.log(
+        "Gmail notification processed:",
+        emailAddress,
+        notificationHistoryId,
+        "workspaces:",
+        connections.length
+      );
+
+      return res.status(200).json({
+        success: true,
+        workspaces_processed: connections.length
+      });
+
+    } catch (error) {
+      console.error(
+        "Gmail Pub/Sub notification failed:",
+        error.message
+      );
+
+      // Non-2xx response tells Pub/Sub to retry delivery.
+      return res.status(500).json({
+        success: false,
+        error: "Notification processing failed."
+      });
+    }
+  }
+);
 
 
 
