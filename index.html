@@ -15385,6 +15385,161 @@ if (m.direction !== "outbound" && platform !== "other") {
     }
   }
 
+
+
+
+
+
+
+
+
+
+
+
+  
+let inboxRealtimeChannel = null;
+let inboxRealtimeRefreshTimer = null;
+
+async function refreshLiveConversationList() {
+  if (!liveMode) return;
+
+  const data = await api("/api/inbox/conversations?limit=100");
+
+  liveConversations = (data.conversations || []).map(mapConversation);
+
+  if (selectedLive) {
+    selectedLive =
+      liveConversations.find(c => c.id === selectedLive.id) || selectedLive;
+  }
+
+  renderLiveList();
+}
+
+async function refreshSelectedLiveMessages() {
+  if (!selectedLive) return;
+
+  const conversationId = selectedLive.id;
+
+  const data = await api(
+    `/api/inbox/conversations/${encodeURIComponent(conversationId)}/messages`
+  );
+
+  // Don't overwrite another conversation if the user switched meanwhile.
+  if (!selectedLive || selectedLive.id !== conversationId) return;
+
+  const messages = $("messages");
+  if (!messages) return;
+
+  messages.replaceChildren();
+
+  (data.messages || []).forEach(m => {
+    const wrap = document.createElement("div");
+    wrap.className =
+      "message " +
+      (m.direction === "outbound" ? "business" : "customer");
+
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.textContent = m.body_text || "";
+
+    const platform = channelKey(selectedLive.channel);
+
+    if (m.direction !== "outbound" && platform !== "other") {
+      bubble.classList.add("of-bubble-" + platform);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+    meta.textContent =
+      (m.direction === "outbound" ? "Business" : "Customer") +
+      " · " +
+      (m.created_at ? new Date(m.created_at).toLocaleString() : "");
+
+    wrap.append(bubble, meta);
+    messages.append(wrap);
+  });
+
+  if (!(data.messages || []).length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No messages saved in this conversation yet.";
+    messages.append(empty);
+  }
+}
+
+function scheduleInboxRealtimeRefresh() {
+  clearTimeout(inboxRealtimeRefreshTimer);
+
+  inboxRealtimeRefreshTimer = setTimeout(async () => {
+    try {
+      await refreshLiveConversationList();
+    } catch (error) {
+      console.error("Realtime conversation refresh failed:", error);
+    }
+  }, 350);
+}
+
+function startInboxRealtime() {
+  if (inboxRealtimeChannel) return;
+
+  inboxRealtimeChannel = supabaseClient
+    .channel("orderflow-inbox-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "inbox_conversations"
+      },
+      () => {
+        scheduleInboxRealtimeRefresh();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "inbox_messages"
+      },
+      payload => {
+        const conversationId =
+          payload.new?.conversation_id ||
+          payload.old?.conversation_id;
+
+        if (conversationId === selectedLive?.id) {
+          refreshSelectedLiveMessages().catch(error => {
+            console.error("Realtime message refresh failed:", error);
+          });
+        }
+      }
+    )
+    .subscribe((status, error) => {
+      console.log("OrderFlow inbox Realtime:", status);
+
+      if (error) {
+        console.error("Inbox Realtime subscription error:", error);
+      }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+
   async function loadLiveInbox() {
     const button = $("orderflow-live-toggle");
     const state = $("orderflow-live-state");
@@ -15398,6 +15553,7 @@ if (m.direction !== "outbound" && platform !== "other") {
       const data = await api("/api/inbox/conversations?limit=100");
       liveConversations = (data.conversations || []).map(mapConversation);
       liveMode = true;
+      startInboxRealtime();
       activeChannel = "all";
 
       renderLiveList();
