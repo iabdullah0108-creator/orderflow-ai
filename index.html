@@ -14999,20 +14999,64 @@ button.of-return-demo-btn:focus-visible {
     wrap.insertAdjacentElement("afterend", toolbar);
   }
 
-  function showConnectInfo(channel) {
-    const c = CHANNELS[channel];
-    const docs = {
-      gmail: "https://developers.google.com/gmail/api/quickstart",
-      whatsapp: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
-      instagram: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login"
-    };
 
-    notifyUser(
-      `${c.label} is not connected yet. A real account connection requires provider OAuth credentials and a configured callback/workflow. No account has been connected and no messages have been sent.`
+
+
+
+  
+async function showConnectInfo(channel) {
+  const c = CHANNELS[channel];
+
+  if (channel === "gmail") {
+    const button = document.querySelector(
+      '[data-connect-channel="gmail"]'
     );
 
-    window.open(docs[channel], "_blank", "noopener,noreferrer");
+    try {
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Connecting…";
+      }
+
+      const data = await api("/api/integrations/gmail/connect");
+
+      if (!data.url) {
+        throw new Error("Google authorization URL was not returned.");
+      }
+
+      window.location.href = data.url;
+      return;
+    } catch (error) {
+      notifyUser("Gmail connection could not start: " + error.message);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Connect Gmail";
+      }
+    }
+
+    return;
   }
+
+  const docs = {
+    whatsapp: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
+    instagram: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login"
+  };
+
+  notifyUser(
+    `${c.label} connection is not implemented yet. No account has been connected.`
+  );
+
+  window.open(docs[channel], "_blank", "noopener,noreferrer");
+}
+
+
+  
+
+  
+
+
+  
 
   async function refreshConnectionStatus() {
     try {
