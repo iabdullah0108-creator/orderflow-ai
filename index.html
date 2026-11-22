@@ -9314,11 +9314,23 @@ const selectedConversation = () => conversations.find(c => c.id === selectedId);
         limit: 50
       });
 
+    const approvalResult =
+  await window.OrderFlowPersistentInbox.loadApprovals();
+
+const approvalsByConversation = new Map(
+  (approvalResult.approvals || []).map(approval => [
+    approval.conversation_id,
+    approval.id
+  ])
+);
+    
+
     const liveConversations = (result.conversations || []).map(c => {
       const name = c.customer_name || c.customer_email || "Unknown customer";
 
       return {
         id: c.id,
+        approvalId: approvalsByConversation.get(c.id) || null,
         name,
         initials: name
           .split(/\s+/)
