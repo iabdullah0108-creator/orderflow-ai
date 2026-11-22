@@ -4845,6 +4845,228 @@ app.get("/api/inbox/conversations", authenticateUser, async (req, res) => {
   return res.json({ success: true, conversations: data || [] });
 });
 
+
+
+
+
+
+// GET approval cases for the signed-in user's workspace.
+app.get("/api/approvals", authenticateUser, async (req, res) => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+
+  const status = inboxText(req.query.status, 30);
+  const limit = Math.min(
+    Math.max(Number.parseInt(req.query.limit, 10) || 50, 1),
+    100
+  );
+
+  const validStatuses = [
+    "pending",
+    "in_review",
+    "approved",
+    "rejected",
+    "resolved",
+    "dismissed"
+  ];
+
+  let query = supabase
+    .from("approval_cases")
+    .select(`
+      id,
+      conversation_id,
+      trigger_message_id,
+      case_type,
+      priority,
+      reason,
+      ai_summary,
+      ai_confidence,
+      suggested_reply,
+      action_required,
+      status,
+      reviewer_id,
+      reviewer_note,
+      reviewed_at,
+      resolved_at,
+      metadata,
+      created_at,
+      updated_at
+    `)
+    .eq("workspace_id", workspace.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (status && validStatuses.includes(status)) {
+    query = query.eq("status", status);
+  } else {
+    query = query.in("status", ["pending", "in_review"]);
+  }
+
+  const { data: cases, error } = await query;
+
+  if (error) {
+    console.error("Approval cases query failed:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Could not load approval cases."
+    });
+  }
+
+  const conversationIds = [
+    ...new Set((cases || [])
+      .map(item => item.conversation_id)
+      .filter(Boolean))
+  ];
+
+  const messageIds = [
+    ...new Set((cases || [])
+      .map(item => item.trigger_message_id)
+      .filter(Boolean))
+  ];
+
+  let conversations = [];
+  let messages = [];
+
+  if (conversationIds.length) {
+    const result = await supabase
+      .from("inbox_conversations")
+      .select("id, channel, customer_name, customer_email, subject")
+      .eq("workspace_id", workspace.id)
+      .in("id", conversationIds);
+
+    if (result.error) {
+      console.error("Approval conversation lookup failed:", result.error.message);
+      return res.status(500).json({
+        success: false,
+        error: "Could not load approval conversation details."
+      });
+    }
+
+    conversations = result.data || [];
+  }
+
+  if (messageIds.length) {
+    const result = await supabase
+      .from("inbox_messages")
+      .select("id, body_text, sender_name, sender_address, created_at")
+      .eq("workspace_id", workspace.id)
+      .in("id", messageIds);
+
+    if (result.error) {
+      console.error("Approval message lookup failed:", result.error.message);
+      return res.status(500).json({
+        success: false,
+        error: "Could not load approval message details."
+      });
+    }
+
+    messages = result.data || [];
+  }
+
+  const conversationMap = new Map(
+    conversations.map(item => [item.id, item])
+  );
+
+  const messageMap = new Map(
+    messages.map(item => [item.id, item])
+  );
+
+  const enrichedCases = (cases || []).map(item => ({
+    ...item,
+    conversation: conversationMap.get(item.conversation_id) || null,
+    trigger_message: messageMap.get(item.trigger_message_id) || null
+  }));
+
+  return res.json({
+    success: true,
+    approvals: enrichedCases
+  });
+});
+
+
+
+
+
+
+
+// UPDATE an approval case after human review.
+app.patch("/api/approvals/:approvalId", authenticateUser, async (req, res) => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+
+  const status = inboxText(req.body?.status, 30);
+  const reviewerNote = inboxText(req.body?.reviewer_note, 2000);
+
+  const allowedStatuses = [
+    "in_review",
+    "approved",
+    "rejected",
+    "resolved",
+    "dismissed"
+  ];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid approval status."
+    });
+  }
+
+  const now = new Date().toISOString();
+
+  const updates = {
+    status,
+    reviewer_id: req.user.id,
+    reviewer_note: reviewerNote || null,
+    updated_at: now
+  };
+
+  if (["approved", "rejected"].includes(status)) {
+    updates.reviewed_at = now;
+  }
+
+  if (status === "resolved") {
+    updates.resolved_at = now;
+  }
+
+  const { data: approval, error } = await supabase
+    .from("approval_cases")
+    .update(updates)
+    .eq("id", req.params.approvalId)
+    .eq("workspace_id", workspace.id)
+    .in("status", ["pending", "in_review"])
+    .select("id, status, reviewer_id, reviewer_note, reviewed_at, resolved_at, updated_at")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Approval case update failed:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Could not update approval case."
+    });
+  }
+
+  if (!approval) {
+    return res.status(404).json({
+      success: false,
+      error: "Approval case not found or already reviewed."
+    });
+  }
+
+  return res.json({
+    success: true,
+    approval
+  });
+});
+
+
+
+
+
+
+
+
+
 // GET messages for a conversation, after verifying workspace ownership.
 app.get("/api/inbox/conversations/:conversationId/messages", authenticateUser, async (req, res) => {
   const workspace = await requireWorkspace(req, res);
