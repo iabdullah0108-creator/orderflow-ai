@@ -13551,6 +13551,100 @@ $("theme-toggle").addEventListener("click",() => {
   setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
 });
 
+
+
+
+  window.OrderFlowPersistentInbox = (() => {
+  async function api(path, options = {}) {
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error("Please sign in again to use Smart Inbox.");
+
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+        ...(options.headers || {})
+      }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.success === false) {
+      throw new Error(payload.error || `Request failed (${response.status}).`);
+    }
+    return payload;
+  }
+
+  async function loadPersistentConversations({ channel = "", status = "", limit = 50 } = {}) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (channel) params.set("channel", channel);
+    if (status) params.set("status", status);
+    return api(`/api/inbox/conversations?${params.toString()}`);
+  }
+
+  async function loadPersistentMessages(conversationId) {
+    if (!conversationId) throw new Error("Select a conversation first.");
+    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/messages`);
+  }
+
+  async function sendPersistentReply(conversationId, body) {
+    if (!conversationId) throw new Error("Select a conversation first.");
+    if (!String(body || "").trim()) throw new Error("Enter a reply before sending.");
+    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ body: String(body).trim() })
+    });
+  }
+
+
+
+
+
+
+    async function loadApprovals(status = "") {
+    const params = new URLSearchParams();
+
+    if (status) params.set("status", status);
+
+    const query = params.toString();
+    return api(`/api/approvals${query ? "?" + query : ""}`);
+  }
+
+  async function updateApproval(approvalId, status, reviewerNote = "") {
+    if (!approvalId) throw new Error("Approval case ID is missing.");
+
+    return api(`/api/approvals/${encodeURIComponent(approvalId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status,
+        reviewer_note: reviewerNote
+      })
+    });
+  }
+
+  return {
+    loadPersistentConversations,
+    loadPersistentMessages,
+    sendPersistentReply,
+    loadApprovals,
+    updateApproval
+  };
+
+  
+
+  
+
+
+  
+})();
+
+  
+
+
+
+
+  
+
 renderInbox();
 renderSelected();
 renderOrders();
@@ -14609,89 +14703,89 @@ The existing page has different IDs/state names across its current scripts, so t
 adapter intentionally exposes functions instead of guessing/overwriting those IDs.
 -->
 <script>
-window.OrderFlowPersistentInbox = (() => {
-  async function api(path, options = {}) {
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
-    if (!session?.access_token) throw new Error("Please sign in again to use Smart Inbox.");
+// window.OrderFlowPersistentInbox = (() => {
+//   async function api(path, options = {}) {
+//     const { data: { session } } = await window.supabaseClient.auth.getSession();
+//     if (!session?.access_token) throw new Error("Please sign in again to use Smart Inbox.");
 
-    const response = await fetch(path, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${session.access_token}`,
-        ...(options.headers || {})
-      }
-    });
+//     const response = await fetch(path, {
+//       ...options,
+//       headers: {
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${session.access_token}`,
+//         ...(options.headers || {})
+//       }
+//     });
 
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || payload.success === false) {
-      throw new Error(payload.error || `Request failed (${response.status}).`);
-    }
-    return payload;
-  }
+//     const payload = await response.json().catch(() => ({}));
+//     if (!response.ok || payload.success === false) {
+//       throw new Error(payload.error || `Request failed (${response.status}).`);
+//     }
+//     return payload;
+//   }
 
-  async function loadPersistentConversations({ channel = "", status = "", limit = 50 } = {}) {
-    const params = new URLSearchParams({ limit: String(limit) });
-    if (channel) params.set("channel", channel);
-    if (status) params.set("status", status);
-    return api(`/api/inbox/conversations?${params.toString()}`);
-  }
+//   async function loadPersistentConversations({ channel = "", status = "", limit = 50 } = {}) {
+//     const params = new URLSearchParams({ limit: String(limit) });
+//     if (channel) params.set("channel", channel);
+//     if (status) params.set("status", status);
+//     return api(`/api/inbox/conversations?${params.toString()}`);
+//   }
 
-  async function loadPersistentMessages(conversationId) {
-    if (!conversationId) throw new Error("Select a conversation first.");
-    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/messages`);
-  }
+//   async function loadPersistentMessages(conversationId) {
+//     if (!conversationId) throw new Error("Select a conversation first.");
+//     return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/messages`);
+//   }
 
-  async function sendPersistentReply(conversationId, body) {
-    if (!conversationId) throw new Error("Select a conversation first.");
-    if (!String(body || "").trim()) throw new Error("Enter a reply before sending.");
-    return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/reply`, {
-      method: "POST",
-      body: JSON.stringify({ body: String(body).trim() })
-    });
-  }
-
-
+//   async function sendPersistentReply(conversationId, body) {
+//     if (!conversationId) throw new Error("Select a conversation first.");
+//     if (!String(body || "").trim()) throw new Error("Enter a reply before sending.");
+//     return api(`/api/inbox/conversations/${encodeURIComponent(conversationId)}/reply`, {
+//       method: "POST",
+//       body: JSON.stringify({ body: String(body).trim() })
+//     });
+//   }
 
 
 
 
-    async function loadApprovals(status = "") {
-    const params = new URLSearchParams();
 
-    if (status) params.set("status", status);
 
-    const query = params.toString();
-    return api(`/api/approvals${query ? "?" + query : ""}`);
-  }
+//     async function loadApprovals(status = "") {
+//     const params = new URLSearchParams();
 
-  async function updateApproval(approvalId, status, reviewerNote = "") {
-    if (!approvalId) throw new Error("Approval case ID is missing.");
+//     if (status) params.set("status", status);
 
-    return api(`/api/approvals/${encodeURIComponent(approvalId)}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        status,
-        reviewer_note: reviewerNote
-      })
-    });
-  }
+//     const query = params.toString();
+//     return api(`/api/approvals${query ? "?" + query : ""}`);
+//   }
 
-  return {
-    loadPersistentConversations,
-    loadPersistentMessages,
-    sendPersistentReply,
-    loadApprovals,
-    updateApproval
-  };
+//   async function updateApproval(approvalId, status, reviewerNote = "") {
+//     if (!approvalId) throw new Error("Approval case ID is missing.");
 
-  
+//     return api(`/api/approvals/${encodeURIComponent(approvalId)}`, {
+//       method: "PATCH",
+//       body: JSON.stringify({
+//         status,
+//         reviewer_note: reviewerNote
+//       })
+//     });
+//   }
+
+//   return {
+//     loadPersistentConversations,
+//     loadPersistentMessages,
+//     sendPersistentReply,
+//     loadApprovals,
+//     updateApproval
+//   };
 
   
 
+  
+
 
   
-})();
+// })();
 </script>
 
 
