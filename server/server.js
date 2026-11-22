@@ -6559,8 +6559,12 @@ if (Array.isArray(options.threadIds)) {
   
 
   let importedThreads = 0;
-  let importedMessages = 0;
-  let skippedMessages = 0;
+let importedMessages = 0;
+let skippedMessages = 0;
+
+const newlyImportedInboundMessages = [];
+
+  
 
   for (const threadItem of threadItems) {
     const { data: thread } = await gmail.users.threads.get({
@@ -6731,10 +6735,13 @@ if (Array.isArray(options.threadIds)) {
             body_text: message.bodyText,
             body_html: null,
             delivery_status: message.direction === "inbound"
-              ? "received"
-              : "sent",
-            is_ai_draft: false,
-            requires_review: false,
+  ? "received"
+  : "sent",
+ai_processing_status: message.direction === "inbound"
+  ? "pending"
+  : "not_required",
+is_ai_draft: false,
+requires_review: false,
             provider_payload: {
               provider: "gmail",
               thread_id: message.threadId,
@@ -6756,14 +6763,52 @@ if (Array.isArray(options.threadIds)) {
       }
 
       if (data?.length) {
-        importedMessages += data.length;
-      } else {
-        skippedMessages++;
-      }
+  importedMessages += data.length;
+
+  if (message.direction === "inbound") {
+    newlyImportedInboundMessages.push({
+      id: data[0].id,
+      conversationId: conversation.id,
+      senderName: message.sender.name || null,
+      senderEmail: message.sender.email || null,
+      subject: message.subject || null,
+      bodyText: message.bodyText,
+      timestamp: message.timestamp,
+      threadId: message.threadId
+    });
+  }
+} else {
+  skippedMessages++;
+}
+      
     }
   }
 
 
+
+  // Process only newly imported inbound customer messages.
+for (const message of newlyImportedInboundMessages) {
+  await processInboundInboxMessage(workspaceId, message);
+}
+
+
+  // Recover messages left pending or interrupted by an earlier sync.
+try {
+  const recoveryResult =
+    await recoverPendingInboxMessages(workspaceId);
+
+  if (recoveryResult.checked > 0) {
+    console.log("Gmail AI message recovery:", recoveryResult);
+  }
+} catch (recoveryError) {
+  // Recovery must not prevent Gmail from saving its history checkpoint.
+  console.error(
+    "Gmail AI message recovery failed:",
+    recoveryError.message
+  );
+}
+
+  
 
 
   // Save the Gmail history checkpoint for future incremental sync.
@@ -6817,6 +6862,533 @@ if (metadataUpdateError) {
     messages_skipped: skippedMessages
   };
 }
+
+
+
+
+
+
+
+
+
+async function processInboundInboxMessage(workspaceId, message) {
+  let reservation = null;
+
+  try {
+    // Load the conversation and confirm it belongs to this workspace.
+    const { data: conversation, error: conversationError } =
+      await supabase
+        .from("inbox_conversations")
+        .select(`
+          id,
+          channel,
+          customer_name,
+          customer_email,
+          subject
+        `)
+        .eq("id", message.conversationId)
+        .eq("workspace_id", workspaceId)
+        .single();
+
+    if (conversationError || !conversation) {
+      throw new Error("INBOX_CONVERSATION_NOT_FOUND");
+    }
+
+    // Load the newly received message.
+    const { data: savedMessage, error: messageError } =
+      await supabase
+        .from("inbox_messages")
+        .select("id, body_text, direction")
+        .eq("id", message.id)
+        .eq("workspace_id", workspaceId)
+        .eq("conversation_id", conversation.id)
+        .single();
+
+    if (messageError || !savedMessage || savedMessage.direction !== "inbound") {
+      throw new Error("INBOUND_MESSAGE_NOT_FOUND");
+    }
+
+
+
+    // Claim the message so concurrent syncs cannot process it twice.
+const { data: claimedMessage, error: claimError } =
+  await supabase
+    .from("inbox_messages")
+
+  .update({
+  ai_processing_status: "processing",
+  ai_processing_started_at: new Date().toISOString()
+})
+
+  
+    .eq("id", savedMessage.id)
+    .eq("workspace_id", workspaceId)
+    
+  .or(
+  `ai_processing_status.in.(pending,failed),and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()})`
+)
+.select("id");
+
+if (claimError) {
+  throw new Error("AI_PROCESSING_CLAIM_FAILED");
+}
+
+if (!claimedMessage?.length) {
+  return {
+    success: true,
+    skipped: true,
+    reason: "already_processing_or_completed"
+  };
+}
+
+
+
+
+    
+
+    // Defensive idempotency check: never process an existing approval case twice.
+    const { data: existingCase, error: existingCaseError } =
+      await supabase
+        .from("approval_cases")
+        .select("id")
+        .eq("workspace_id", workspaceId)
+        .eq("trigger_message_id", savedMessage.id)
+        .maybeSingle();
+
+    if (existingCaseError) {
+      throw new Error("APPROVAL_CASE_LOOKUP_FAILED");
+    }
+
+    if (existingCase) {
+  await supabase
+    .from("inbox_messages")
+
+    .update({
+  ai_processing_status: "completed",
+  ai_processing_started_at: null
+})
+    
+    .eq("id", savedMessage.id)
+    .eq("workspace_id", workspaceId);
+
+  return { success: true, skipped: true, reason: "already_processed" };
+}
+
+    // Load the workspace's business knowledge.
+    const { data: knowledge, error: knowledgeError } =
+      await supabase
+        .from("business_knowledge")
+        .select("about_business, products_pricing, delivery_returns, faqs")
+        .eq("workspace_id", workspaceId)
+        .maybeSingle();
+
+    if (knowledgeError) {
+      throw new Error("BUSINESS_KNOWLEDGE_LOOKUP_FAILED");
+    }
+
+    const businessInfo = [
+      `ABOUT OUR BUSINESS:\n${knowledge?.about_business || ""}`,
+      `PRODUCTS AND PRICING:\n${knowledge?.products_pricing || ""}`,
+      `DELIVERY AND RETURNS:\n${knowledge?.delivery_returns || ""}`,
+      `FREQUENTLY ASKED QUESTIONS:\n${knowledge?.faqs || ""}`
+    ].join("\n\n");
+
+    // Load recent conversation history for context.
+    const { data: history, error: historyError } =
+      await supabase
+        .from("inbox_messages")
+        .select("direction, sender_name, body_text, created_at")
+        .eq("workspace_id", workspaceId)
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: false })
+        .limit(12);
+
+    if (historyError) {
+      throw new Error("INBOX_HISTORY_LOOKUP_FAILED");
+    }
+
+    const conversationHistory = (history || [])
+      .reverse()
+      .map(item =>
+        `${item.direction === "inbound" ? "CUSTOMER" : "BUSINESS"}: ${item.body_text || ""}`
+      )
+      .join("\n");
+
+    const aiConfig = await getWorkspaceAIConfig(workspaceId);
+
+    // One reservation and one AI call per newly imported inbound message.
+    reservation = await reserveAITask(workspaceId);
+
+    const prompt = `
+You are the Smart Assistant for a business operations platform.
+
+Analyze the latest customer message and prepare a safe response.
+
+BUSINESS KNOWLEDGE:
+${businessInfo}
+
+CUSTOMER:
+${conversation.customer_name || message.senderName || "Customer"}
+
+CHANNEL:
+${conversation.channel}
+
+SUBJECT:
+${conversation.subject || message.subject || ""}
+
+CONVERSATION HISTORY:
+${conversationHistory}
+
+LATEST CUSTOMER MESSAGE:
+${savedMessage.body_text || ""}
+
+SAFETY RULES:
+1. Use only the supplied Business Knowledge. Never invent prices, policies, delivery dates, stock, or business facts.
+2. Always require human review for refunds, damaged or defective goods, missing or incorrect items, payment disputes, compensation, legal complaints, safety complaints, and risky cancellations.
+3. Never approve, deny, promise, or execute a refund or compensation.
+4. Routine questions may be classified as safe only when the answer is clearly supported by Business Knowledge.
+5. If the message is ambiguous, information is missing, or confidence is low, require human review or ask a clarifying question.
+6. Never claim an order is paid, confirmed, refunded, cancelled, or changed unless the supplied conversation explicitly establishes that.
+7. Do not treat a customer's request as authorization to perform a financial action.
+8. If Business Knowledge is insufficient, do not guess.
+
+Return ONLY valid JSON in this exact structure:
+{
+  "intent": "short intent category",
+  "risk": "low | normal | high | critical",
+  "confidence": 0.0,
+  "requires_human_review": true,
+  "review_reason": "reason or empty string",
+  "summary": "short summary of the customer's issue",
+  "suggested_reply": "safe customer-facing response",
+  "safe_to_auto_send": false
+}
+
+CONFIDENCE must be a number between 0 and 1.
+When uncertain, choose human review and safe_to_auto_send false.
+`;
+
+    const rawResponse = await generateAIText(
+      aiConfig,
+      prompt,
+      { json: true, maxTokens: 1200 }
+    );
+
+    let result;
+
+    try {
+      result = JSON.parse(rawResponse);
+    } catch {
+      throw new Error("AI_CLASSIFICATION_INVALID_JSON");
+    }
+
+    const confidence = Number(result.confidence);
+
+    if (
+      !result ||
+      typeof result !== "object" ||
+      !Number.isFinite(confidence) ||
+      confidence < 0 ||
+      confidence > 1 ||
+      typeof result.suggested_reply !== "string"
+    ) {
+      throw new Error("AI_CLASSIFICATION_INVALID_RESULT");
+    }
+
+    const intent = String(result.intent || "unclear").slice(0, 100);
+    const risk = ["low", "normal", "high", "critical"].includes(result.risk)
+      ? result.risk
+      : "high";
+
+    const sensitiveIntent =
+      /refund|damaged|defective|missing item|wrong item|payment dispute|compensation|legal|safety complaint|cancel/i
+        .test(intent + " " + (result.review_reason || ""));
+
+    // The server, not the model, enforces mandatory human review.
+    const requiresReview =
+  result.requires_human_review !== false ||
+  sensitiveIntent ||
+  ["high", "critical"].includes(risk) ||
+  confidence < 0.85 ||
+  !businessInfo.trim();
+
+    const safeToAutoSend =
+      !requiresReview &&
+      result.safe_to_auto_send === true &&
+      ["low", "normal"].includes(risk) &&
+      confidence >= 0.85;
+
+    
+
+    if (requiresReview) {
+      const { error: flagError } = await supabase
+        .from("inbox_messages")
+        .update({ requires_review: true })
+        .eq("id", savedMessage.id)
+        .eq("workspace_id", workspaceId);
+
+      if (flagError) {
+        throw new Error("INBOX_REVIEW_FLAG_FAILED");
+      }
+
+      const { error: caseError } = await supabase
+        .from("approval_cases")
+        .insert({
+          workspace_id: workspaceId,
+          conversation_id: conversation.id,
+          trigger_message_id: savedMessage.id,
+          case_type: intent,
+          priority: risk === "critical" ? "critical" : "high",
+          reason: sensitiveIntent
+            ? "Sensitive customer request requires human authorization."
+            : String(result.review_reason || "AI confidence or available business information is insufficient."),
+          ai_summary: String(result.summary || "").slice(0, 2000),
+          ai_confidence: confidence,
+          suggested_reply: result.suggested_reply.slice(0, 10000),
+          action_required: /refund/i.test(intent)
+            ? "refund"
+            : /compensation/i.test(intent)
+              ? "compensation"
+              : /cancel/i.test(intent)
+                ? "cancellation"
+                : "review_only",
+          status: "pending",
+          metadata: {
+            channel: conversation.channel,
+            intent,
+            risk
+          }
+        });
+
+      if (caseError) {
+        // A duplicate case can occur if two syncs race.
+        if (caseError.code !== "23505") {
+          throw new Error("APPROVAL_CASE_CREATE_FAILED");
+        }
+      }
+    
+} else {
+  // Check whether a draft was already saved for this customer message.
+  const { data: existingDraft, error: draftLookupError } =
+    await supabase
+      .from("inbox_messages")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("is_ai_draft", true)
+      .contains("provider_payload", {
+        source_message_id: savedMessage.id
+      })
+      .maybeSingle();
+
+  if (draftLookupError) {
+    throw new Error("AI_DRAFT_LOOKUP_FAILED");
+  }
+
+  if (!existingDraft) {
+    const { error: draftError } = await supabase
+      .from("inbox_messages")
+      .insert({
+        workspace_id: workspaceId,
+        conversation_id: conversation.id,
+        direction: "outbound",
+        sender_name: "Smart Assistant",
+        body_text: result.suggested_reply.slice(0, 10000),
+        delivery_status: "draft",
+        is_ai_draft: true,
+        requires_review: false,
+        provider_payload: {
+          provider: "orderflow_ai",
+          source_message_id: savedMessage.id,
+          confidence
+        }
+      });
+
+    if (draftError && draftError.code !== "23505") {
+      throw new Error("AI_DRAFT_SAVE_FAILED");
+    }
+  }
+}
+
+
+        // Commit AI usage only after the case or draft has been saved.
+    await commitAITask(reservation.reservation_id);
+    reservation = null;
+
+
+    const { error: completionError } = await supabase
+  .from("inbox_messages")
+
+      .update({
+  ai_processing_status: "completed",
+  ai_processing_started_at: null
+})
+      
+  .eq("id", savedMessage.id)
+  .eq("workspace_id", workspaceId);
+
+if (completionError) {
+  throw new Error("AI_PROCESSING_COMPLETION_FAILED");
+}
+
+    
+
+
+    
+
+    return {
+      success: true,
+      requires_review: requiresReview,
+      safe_to_auto_send: safeToAutoSend
+    };
+
+  } catch (error) {
+    if (reservation?.reservation_id) {
+      try {
+        await refundAITask(reservation.reservation_id);
+      } catch (refundError) {
+        console.error("AI task reservation refund failed:", refundError.message);
+      }
+    }
+
+    console.error("Inbound AI processing failed:", error.message);
+
+    // The original customer message remains saved.
+    // Flag it for manual handling rather than silently ignoring it.
+    try {
+      await supabase
+        .from("inbox_messages")
+
+        .update({
+  requires_review: true,
+  ai_processing_status: "failed",
+  ai_processing_started_at: null
+})
+
+        
+        .eq("id", message.id)
+        .eq("workspace_id", workspaceId);
+    } catch (flagError) {
+      console.error("Could not flag failed AI message:", flagError.message);
+    }
+
+
+
+    // Create a manual-review case when AI processing fails.
+try {
+  const { error: caseError } = await supabase
+    .from("approval_cases")
+    .insert({
+      workspace_id: workspaceId,
+      conversation_id: message.conversationId,
+      trigger_message_id: message.id,
+      case_type: "ai_processing_failed",
+      priority: "high",
+      reason: "AI could not safely process this customer message. Manual review is required.",
+      ai_summary: "Automatic message analysis failed. Please review the original customer message.",
+      suggested_reply: null,
+      action_required: "review_only",
+      status: "pending",
+      metadata: {
+        processing_error: String(error.message || "Unknown error").slice(0, 200)
+      }
+    });
+
+  if (caseError && caseError.code !== "23505") {
+    console.error(
+      "Could not create AI failure approval case:",
+      caseError.message
+    );
+  }
+} catch (caseCreationError) {
+  console.error(
+    "AI failure approval case creation failed:",
+    caseCreationError.message
+  );
+}
+
+
+    
+
+    return {
+      success: false,
+      requires_review: true,
+      error: error.message
+    };
+  }
+}
+
+
+
+
+
+
+
+
+
+async function recoverPendingInboxMessages(workspaceId) {
+  const tenMinutesAgo = new Date(
+    Date.now() - 10 * 60 * 1000
+  ).toISOString();
+
+  const { data: messages, error } = await supabase
+    .from("inbox_messages")
+    .select(`
+      id,
+      conversation_id,
+      sender_name,
+      sender_address,
+      body_text,
+      sent_at,
+      provider_payload
+    `)
+    .eq("workspace_id", workspaceId)
+    .eq("direction", "inbound")
+    .or(
+      `ai_processing_status.eq.pending,ai_processing_status.eq.failed,and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${tenMinutesAgo})`
+    )
+    .order("created_at", { ascending: true })
+    .limit(10);
+
+  if (error) {
+    throw new Error("AI_MESSAGE_RECOVERY_LOOKUP_FAILED");
+  }
+
+  let recovered = 0;
+
+  for (const item of messages || []) {
+    const payload =
+      item.provider_payload &&
+      typeof item.provider_payload === "object"
+        ? item.provider_payload
+        : {};
+
+    const result = await processInboundInboxMessage(workspaceId, {
+      id: item.id,
+      conversationId: item.conversation_id,
+      senderName: item.sender_name,
+      senderEmail: item.sender_address,
+      subject: null,
+      bodyText: item.body_text,
+      timestamp: item.sent_at,
+      threadId: payload.thread_id || null
+    });
+
+    if (result.success) recovered++;
+  }
+
+  return {
+    checked: messages?.length || 0,
+    recovered
+  };
+}
+
+
+
+
+
+
+
+
 
 
 
