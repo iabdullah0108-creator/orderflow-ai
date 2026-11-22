@@ -1326,7 +1326,11 @@ async function generateAIText(aiConfig, prompt, options = {}) {
     body = {
   model: aiConfig.model,
   messages: [{ role: "user", content: prompt }],
-  max_tokens: Math.max(maxTokens, 2048),
+      
+  // max_tokens: Math.max(maxTokens, 2048),
+
+      max_tokens: maxTokens,
+      
   reasoning: options.reasoning || { effort: "low", exclude: true }
 };
     if (options.json) body.response_format = { type: "json_object" };
@@ -7915,8 +7919,8 @@ async function recoverPendingInboxMessages(workspaceId) {
     .eq("workspace_id", workspaceId)
     .eq("direction", "inbound")
     .or(
-      `ai_processing_status.eq.pending,ai_processing_status.eq.failed,and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${tenMinutesAgo})`
-    )
+  `ai_processing_status.eq.pending,and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${tenMinutesAgo})`
+)
     .order("created_at", { ascending: true })
     .limit(10);
 
