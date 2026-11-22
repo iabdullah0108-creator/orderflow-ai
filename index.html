@@ -9309,6 +9309,7 @@ const selectedConversation = () => conversations.find(c => c.id === selectedId);
 
 
   let gmailSyncInProgress = false;
+let inboxLoadInProgress = false;
 
 async function syncGmailAndRefreshInbox() {
   if (gmailSyncInProgress) return;
@@ -9337,8 +9338,8 @@ async function syncGmailAndRefreshInbox() {
   
 async function loadLiveConversations() {
   // Preserve the current selection and anything typed in the reply box.
-  const previousSelectedId = selectedId;
-  const replyDraft = $("reply-draft")?.value || "";
+  // Preserve the current conversation selection.
+const previousSelectedId = selectedId;
 
   try {
     const result =
@@ -9413,19 +9414,24 @@ async function loadLiveConversations() {
       }
     }
 
-    renderInbox();
-    renderSelected();
+    // Capture the latest text immediately before rendering.
+const replyDraft = $("reply-draft")?.value || "";
 
-    // Restore the unsent reply after rendering.
-    if ($("reply-draft")) {
-      $("reply-draft").value = replyDraft;
-    }
+renderInbox();
+renderSelected();
+
+// Restore the latest unsent reply.
+if ($("reply-draft")) {
+  $("reply-draft").value = replyDraft;
+}
 
     updateCounts();
 
-  } catch (error) {
+   } catch (error) {
     console.error("Live Smart Inbox loading failed:", error);
     notify("Could not load live conversations: " + error.message);
+  } finally {
+    inboxLoadInProgress = false;
   }
 }
 
@@ -14074,7 +14080,7 @@ renderApprovals();
 updateCounts();
 
 setInterval(updateCounts, 15000);
-setInterval(syncGmailAndRefreshInbox, 15000);
+setInterval(syncGmailAndRefreshInbox, 60000);
 
 
   
