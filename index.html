@@ -12711,6 +12711,7 @@ async function renderApprovals() {
           );
 
           notify("Approval case updated.");
+          await loadLiveConversations();
           await renderApprovals();
           updateCounts();
         } catch (error) {
