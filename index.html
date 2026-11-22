@@ -8536,7 +8536,15 @@ body.dark-mode #live-order-review-dialog form > div {
 
       <section class="view" id="view-approvals">
         <div class="page-heading"><div><div class="eyebrow">Human-in-the-loop</div><h1>Approval Queue</h1><p class="subtitle">Sensitive, unclear, or exception requests should be reviewed by a person.</p></div></div>
-        <div class="demo-note"><strong>Safety rule:</strong> this prototype never autonomously approves or rejects refunds. Queue buttons only simulate a review action.</div>
+
+        <div class="demo-note">
+  <strong>Safety rule:</strong>
+  AI never autonomously approves refunds, cancellations, or compensation.
+  Human review decisions are recorded, but financial actions are not
+  executed automatically.
+</div>
+
+        
         <div id="approval-list"></div>
       </section>
 
@@ -12273,58 +12281,191 @@ async function renderCustomers() {
 
 
 
-function renderApprovals() {
+
+async function renderApprovals() {
   const list = $("approval-list");
-  list.replaceChildren();
-  const pending = approvals.filter(a => !a.done);
-  if (!pending.length) {
-    list.append(make("div","panel empty-state","The demo approval queue is clear. New sensitive cases can be routed here."));
-    return;
-  }
-  pending.forEach(a => {
-    const card = make("div","panel approval-item");
-    const header = make("div");
-    header.style.cssText = "display:flex;justify-content:space-between;gap:10px;align-items:center";
-    header.append(make("h3","",a.type),make("span","pill red","Human review"));
-    const name = make("div","",a.name);
-    name.style.marginTop = "8px";
-    const description = make("p","",a.description);
-    const actions = make("div","approval-actions");
-    const open = make("button","btn btn-soft","Open conversation");
-    open.type = "button";
-    open.addEventListener("click",() => { selectedId = a.conversationId; showView("inbox"); });
-    const reviewed = make("button","btn","Mark reviewed");
-    reviewed.type = "button";
-    reviewed.addEventListener("click",() => {
-      a.done = true;
-      const c = conversations.find(x => x.id === a.conversationId);
-      if (c) {
-        c.review = false;
-        c.messages.push({from:"business",text:"A team member has reviewed this case in the demo. No real customer action was taken.",time:"Just now"});
+  if (!list) return;
+
+  list.replaceChildren(
+    make("div", "empty-state", "Loading approval cases…")
+  );
+
+  try {
+    const data =
+      await window.OrderFlowPersistentInbox.loadApprovals();
+
+    const pending = data.approvals || [];
+    list.replaceChildren();
+
+    if (!pending.length) {
+      list.append(
+        make(
+          "div",
+          "panel empty-state",
+          "Your Approval Queue is clear. New sensitive customer requests will appear here."
+        )
+      );
+      return;
+    }
+
+    pending.forEach(a => {
+      const card = make("div", "panel approval-item");
+
+      const header = make("div");
+      header.style.cssText =
+        "display:flex;justify-content:space-between;gap:10px;align-items:center";
+
+      header.append(
+        make("h3", "", a.case_type || "Customer request"),
+        make("span", "pill red", "Human review")
+      );
+
+      const customer = make(
+        "div",
+        "",
+        a.conversation?.customer_name ||
+          a.trigger_message?.sender_name ||
+          "Customer"
+      );
+      customer.style.marginTop = "8px";
+
+      const channel = make(
+        "div",
+        "muted",
+        (a.conversation?.channel || "Unknown channel") +
+          " · " +
+          (a.priority || "high").toUpperCase() +
+          " priority"
+      );
+
+      const reason = make("p", "", a.reason || "Manual review required.");
+
+      const summary = make(
+        "p",
+        "",
+        a.ai_summary || "No AI summary available."
+      );
+
+      const originalMessage = make(
+        "div",
+        "panel",
+        a.trigger_message?.body_text ||
+          "Original customer message unavailable."
+      );
+      originalMessage.style.marginTop = "10px";
+
+      const confidence = make(
+        "div",
+        "muted",
+        a.ai_confidence == null
+          ? "AI confidence: unavailable"
+          : `AI confidence: ${Math.round(Number(a.ai_confidence) * 100)}%`
+      );
+
+      const suggestedReply = make(
+        "p",
+        "",
+        a.suggested_reply
+          ? "Suggested reply: " + a.suggested_reply
+          : "No suggested reply available."
+      );
+
+      const actions = make("div", "approval-actions");
+
+      async function review(status, button) {
+        button.disabled = true;
+
+        try {
+          await window.OrderFlowPersistentInbox.updateApproval(
+            a.id,
+            status
+          );
+
+          notify("Approval case updated.");
+          await renderApprovals();
+          updateCounts();
+        } catch (error) {
+          button.disabled = false;
+          notify("Could not update approval: " + error.message);
+        }
       }
-      renderApprovals();
-      updateCounts();
-      notify("Marked reviewed in the demo. No refund or other real action was performed.");
+
+      if (a.status === "pending") {
+        const start = make("button", "btn btn-soft", "Start review");
+        start.type = "button";
+        start.addEventListener("click", () => review("in_review", start));
+        actions.append(start);
+      }
+
+      if (a.status === "pending" || a.status === "in_review") {
+        const approve = make("button", "btn", "Approve decision");
+        approve.type = "button";
+        approve.addEventListener("click", () => review("approved", approve));
+
+        const reject = make("button", "btn btn-soft", "Reject decision");
+        reject.type = "button";
+        reject.addEventListener("click", () => review("rejected", reject));
+
+        actions.append(approve, reject);
+      }
+
+      card.append(
+        header,
+        customer,
+        channel,
+        reason,
+        summary,
+        make("strong", "", "Original customer message"),
+        originalMessage,
+        confidence,
+        suggestedReply,
+        actions
+      );
+
+      list.append(card);
     });
-    actions.append(open,reviewed);
-    card.append(header,name,description,actions);
-    list.append(card);
-  });
+  } catch (error) {
+    list.replaceChildren(
+      make(
+        "div",
+        "panel empty-state",
+        "Could not load Approval Queue: " + error.message
+      )
+    );
+  }
 }
 
-function updateCounts() {
-  const unread = conversations.filter(c => c.unread && !c.resolved).length;
-  const pending = approvals.filter(a => !a.done).length;
+
+  
+
+
+async function updateCounts() {
+  const unread = conversations.filter(
+    c => c.unread && !c.resolved
+  ).length;
+
   $("inbox-count").textContent = unread;
-  $("approval-count").textContent = pending;
   $("metric-inbox").textContent = conversations.length;
-  $("metric-approval").textContent = pending;
   $("analytics-conversations").textContent = conversations.length;
-  $("analytics-reviews").textContent = pending;
   $("analytics-resolved").textContent = resolvedCount;
   $("analytics-drafts").textContent = draftCount;
+
+  try {
+    const data =
+      await window.OrderFlowPersistentInbox.loadApprovals();
+
+    const pending = (data.approvals || []).length;
+
+    $("approval-count").textContent = pending;
+    $("metric-approval").textContent = pending;
+    $("analytics-reviews").textContent = pending;
+  } catch (error) {
+    console.error("Could not refresh approval counts:", error.message);
+  }
 }
 
+
+  
 function classifyMessage(text) {
   const t = text.toLowerCase();
   if (/refund|money back|chargeback|payment dispute/.test(t)) return {category:"Refund request",review:true,priority:"High"};
@@ -14508,7 +14649,46 @@ window.OrderFlowPersistentInbox = (() => {
     });
   }
 
-  return { loadPersistentConversations, loadPersistentMessages, sendPersistentReply };
+
+
+
+
+
+    async function loadApprovals(status = "") {
+    const params = new URLSearchParams();
+
+    if (status) params.set("status", status);
+
+    const query = params.toString();
+    return api(`/api/approvals${query ? "?" + query : ""}`);
+  }
+
+  async function updateApproval(approvalId, status, reviewerNote = "") {
+    if (!approvalId) throw new Error("Approval case ID is missing.");
+
+    return api(`/api/approvals/${encodeURIComponent(approvalId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status,
+        reviewer_note: reviewerNote
+      })
+    });
+  }
+
+  return {
+    loadPersistentConversations,
+    loadPersistentMessages,
+    sendPersistentReply,
+    loadApprovals,
+    updateApproval
+  };
+
+  
+
+  
+
+
+  
 })();
 </script>
 
