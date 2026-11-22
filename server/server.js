@@ -5115,6 +5115,8 @@ app.get("/api/approvals", authenticateUser, async (req, res) => {
 
 
 // UPDATE an approval case after human review.
+
+// UPDATE an approval case after human review.
 app.patch("/api/approvals/:approvalId", authenticateUser, async (req, res) => {
   const workspace = await requireWorkspace(req, res);
   if (!workspace) return;
@@ -5139,6 +5141,28 @@ app.patch("/api/approvals/:approvalId", authenticateUser, async (req, res) => {
 
   const now = new Date().toISOString();
 
+  const { data: existing, error: lookupError } = await supabase
+    .from("approval_cases")
+    .select("id, conversation_id, trigger_message_id, status")
+    .eq("id", req.params.approvalId)
+    .eq("workspace_id", workspace.id)
+    .in("status", ["pending", "in_review"])
+    .maybeSingle();
+
+  if (lookupError) {
+    return res.status(500).json({
+      success: false,
+      error: "Could not find approval case."
+    });
+  }
+
+  if (!existing) {
+    return res.status(404).json({
+      success: false,
+      error: "Approval case not found or already reviewed."
+    });
+  }
+
   const updates = {
     status,
     reviewer_id: req.user.id,
@@ -5157,25 +5181,57 @@ app.patch("/api/approvals/:approvalId", authenticateUser, async (req, res) => {
   const { data: approval, error } = await supabase
     .from("approval_cases")
     .update(updates)
-    .eq("id", req.params.approvalId)
+    .eq("id", existing.id)
     .eq("workspace_id", workspace.id)
     .in("status", ["pending", "in_review"])
-    .select("id, status, reviewer_id, reviewer_note, reviewed_at, resolved_at, updated_at")
+    .select("id, conversation_id, trigger_message_id, status, reviewer_id, reviewer_note, reviewed_at, resolved_at, updated_at")
     .maybeSingle();
 
-  if (error) {
-    console.error("Approval case update failed:", error.message);
+  if (error || !approval) {
+    console.error("Approval case update failed:", error?.message);
     return res.status(500).json({
       success: false,
       error: "Could not update approval case."
     });
   }
 
-  if (!approval) {
-    return res.status(404).json({
-      success: false,
-      error: "Approval case not found or already reviewed."
-    });
+  // Only release the conversation restriction after approval.
+  if (status === "approved") {
+    const { data: otherPending, error: pendingError } = await supabase
+      .from("approval_cases")
+      .select("id")
+      .eq("workspace_id", workspace.id)
+      .eq("conversation_id", existing.conversation_id)
+      .in("status", ["pending", "in_review"])
+      .limit(1);
+
+    if (pendingError) {
+      console.error("Remaining approval lookup failed:", pendingError.message);
+      return res.status(500).json({
+        success: false,
+        error: "Approval saved, but conversation review status could not be updated."
+      });
+    }
+
+    if (!otherPending?.length) {
+      const { error: conversationError } = await supabase
+        .from("inbox_conversations")
+        .update({
+          status: "open",
+          updated_at: now
+        })
+        .eq("id", existing.conversation_id)
+        .eq("workspace_id", workspace.id)
+        .eq("status", "needs_review");
+
+      if (conversationError) {
+        console.error("Conversation review status update failed:", conversationError.message);
+        return res.status(500).json({
+          success: false,
+          error: "Approval saved, but conversation review status could not be updated."
+        });
+      }
+    }
   }
 
   return res.json({
