@@ -9336,10 +9336,14 @@ async function syncGmailAndRefreshInbox() {
 
 
   
+
 async function loadLiveConversations() {
-  // Preserve the current selection and anything typed in the reply box.
+  // Prevent overlapping inbox loads.
+  if (inboxLoadInProgress) return;
+  inboxLoadInProgress = true;
+
   // Preserve the current conversation selection.
-const previousSelectedId = selectedId;
+  const previousSelectedId = selectedId;
 
   try {
     const result =
@@ -9347,6 +9351,7 @@ const previousSelectedId = selectedId;
         limit: 50
       });
 
+    // Load outstanding approval cases.
     const approvalResult =
       await window.OrderFlowPersistentInbox.loadApprovals();
 
@@ -9357,12 +9362,35 @@ const previousSelectedId = selectedId;
       ])
     );
 
+    // Load approved cases so previously reviewed messages
+    // can be distinguished from outstanding review requests.
+    const approvedResult =
+      await window.OrderFlowPersistentInbox.loadApprovals("approved");
+
+    const approvedMessagesByConversation = new Map();
+
+    (approvedResult.approvals || []).forEach(approval => {
+      if (!approval.conversation_id || !approval.trigger_message_id) return;
+
+      if (!approvedMessagesByConversation.has(approval.conversation_id)) {
+        approvedMessagesByConversation.set(approval.conversation_id, []);
+      }
+
+      approvedMessagesByConversation
+        .get(approval.conversation_id)
+        .push(approval.trigger_message_id);
+    });
+
     const liveConversations = (result.conversations || []).map(c => {
       const name = c.customer_name || c.customer_email || "Unknown customer";
 
       return {
         id: c.id,
         approvalId: approvalsByConversation.get(c.id) || null,
+
+        approvedReviewMessageIds:
+          approvedMessagesByConversation.get(c.id) || [],
+
         name,
         initials: name
           .split(/\s+/)
@@ -9370,13 +9398,16 @@ const previousSelectedId = selectedId;
           .join("")
           .slice(0, 2)
           .toUpperCase(),
+
         channel: c.channel || "Email",
+
         time: c.last_message_at
           ? new Date(c.last_message_at).toLocaleTimeString([], {
               hour: "numeric",
               minute: "2-digit"
             })
           : "",
+
         category: c.subject || "Customer message",
         priority: "Normal",
         confidence: "—",
@@ -9415,19 +9446,19 @@ const previousSelectedId = selectedId;
     }
 
     // Capture the latest text immediately before rendering.
-const replyDraft = $("reply-draft")?.value || "";
+    const replyDraft = $("reply-draft")?.value || "";
 
-renderInbox();
-renderSelected();
+    renderInbox();
+    renderSelected();
 
-// Restore the latest unsent reply.
-if ($("reply-draft")) {
-  $("reply-draft").value = replyDraft;
-}
+    // Restore the latest unsent reply.
+    if ($("reply-draft")) {
+      $("reply-draft").value = replyDraft;
+    }
 
     updateCounts();
 
-   } catch (error) {
+  } catch (error) {
     console.error("Live Smart Inbox loading failed:", error);
     notify("Could not load live conversations: " + error.message);
   } finally {
@@ -9435,7 +9466,6 @@ if ($("reply-draft")) {
   }
 }
 
-  
 
   
 
@@ -9729,10 +9759,15 @@ function renderSelected() {
   const aiSummary = latestInbound?.ai_summary || "";
   const aiReviewReason = latestInbound?.ai_review_reason || "";
 
-  const aiReviewRequired = Boolean(
-    latestInbound?.requires_review ||
-    ["high", "critical"].includes(aiRisk)
-  );
+  const approvedReview = Boolean(
+  latestInbound?.id &&
+  (c.approvedReviewMessageIds || []).includes(latestInbound.id)
+);
+
+const aiReviewRequired = !approvedReview && Boolean(
+  latestInbound?.requires_review ||
+  ["high", "critical"].includes(aiRisk)
+);
 
   const confidenceLabel =
     aiConfidence == null
@@ -9847,7 +9882,10 @@ channelLabel.classList.remove(
 
     // Dynamic Human Review status
   const reviewCard = $("intent-explanation");
-  const reviewRequired = aiReviewRequired || c.review;
+  const reviewRequired = aiReviewRequired || (
+  c.review &&
+  !approvedReview
+);
 
   reviewCard.classList.toggle(
     "of-human-review-warning",
