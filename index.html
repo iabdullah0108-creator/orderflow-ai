@@ -9500,7 +9500,11 @@ async function loadLiveConversations() {
       const selected = selectedConversation();
 
       if (selected) {
-        selected.messages = messageResult.messages || [];
+        selected.messages = (messageResult.messages || []).map(m => ({
+  ...m,
+  from: m.direction === "inbound" ? "customer" : "business",
+  text: m.body_text || ""
+}));
       }
     }
 
