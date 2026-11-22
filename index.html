@@ -9307,7 +9307,12 @@ const selectedConversation = () => conversations.find(c => c.id === selectedId);
 
 
 
-  async function loadLiveConversations() {
+  
+async function loadLiveConversations() {
+  // Preserve the current selection and anything typed in the reply box.
+  const previousSelectedId = selectedId;
+  const replyDraft = $("reply-draft")?.value || "";
+
   try {
     const result =
       await window.OrderFlowPersistentInbox.loadPersistentConversations({
@@ -9315,15 +9320,14 @@ const selectedConversation = () => conversations.find(c => c.id === selectedId);
       });
 
     const approvalResult =
-  await window.OrderFlowPersistentInbox.loadApprovals();
+      await window.OrderFlowPersistentInbox.loadApprovals();
 
-const approvalsByConversation = new Map(
-  (approvalResult.approvals || []).map(approval => [
-    approval.conversation_id,
-    approval.id
-  ])
-);
-    
+    const approvalsByConversation = new Map(
+      (approvalResult.approvals || []).map(approval => [
+        approval.conversation_id,
+        approval.id
+      ])
+    );
 
     const liveConversations = (result.conversations || []).map(c => {
       const name = c.customer_name || c.customer_email || "Unknown customer";
@@ -9364,9 +9368,12 @@ const approvalsByConversation = new Map(
 
     conversations = liveConversations;
 
-    selectedId = conversations.length
-      ? conversations[0].id
-      : null;
+    // Keep the previously selected conversation whenever possible.
+    selectedId = conversations.some(c => c.id === previousSelectedId)
+      ? previousSelectedId
+      : conversations.length
+        ? conversations[0].id
+        : null;
 
     if (selectedId) {
       const messageResult =
@@ -9381,6 +9388,12 @@ const approvalsByConversation = new Map(
 
     renderInbox();
     renderSelected();
+
+    // Restore the unsent reply after rendering.
+    if ($("reply-draft")) {
+      $("reply-draft").value = replyDraft;
+    }
+
     updateCounts();
 
   } catch (error) {
@@ -9388,6 +9401,7 @@ const approvalsByConversation = new Map(
     notify("Could not load live conversations: " + error.message);
   }
 }
+
   
 
   
@@ -13844,6 +13858,12 @@ $("theme-toggle").addEventListener("click",() => {
     return payload;
   }
 
+    async function syncGmail() {
+  return api("/api/integrations/gmail/sync", {
+    method: "POST"
+  });
+}
+
   async function loadPersistentConversations({ channel = "", status = "", limit = 50 } = {}) {
     const params = new URLSearchParams({ limit: String(limit) });
     if (channel) params.set("channel", channel);
@@ -13914,6 +13934,7 @@ $("theme-toggle").addEventListener("click",() => {
   }
 
   return {
+    syncGmail,
     loadPersistentConversations,
     loadPersistentMessages,
     sendPersistentReply,
