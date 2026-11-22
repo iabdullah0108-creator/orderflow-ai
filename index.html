@@ -9332,6 +9332,65 @@ async function syncGmailAndRefreshInbox() {
 }
 
 
+
+
+
+
+  
+let activeInboxRealtimeChannel = null;
+let activeInboxRealtimeTimer = null;
+
+function startActiveInboxRealtime() {
+  if (activeInboxRealtimeChannel) return;
+
+  activeInboxRealtimeChannel = supabaseClient
+    .channel("orderflow-active-smart-inbox")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "inbox_conversations"
+      },
+      () => {
+        scheduleActiveInboxRealtimeRefresh();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "inbox_messages"
+      },
+      () => {
+        scheduleActiveInboxRealtimeRefresh();
+      }
+    )
+    .subscribe((status, error) => {
+      console.log("Active Smart Inbox Realtime:", status);
+
+      if (error) {
+        console.error("Active Smart Inbox Realtime error:", error);
+      }
+    });
+}
+
+function scheduleActiveInboxRealtimeRefresh() {
+  clearTimeout(activeInboxRealtimeTimer);
+
+  activeInboxRealtimeTimer = setTimeout(() => {
+    loadLiveConversations();
+  }, 350);
+}
+
+
+
+  
+
+
+
+  
   
 
 
@@ -14112,6 +14171,7 @@ $("theme-toggle").addEventListener("click",() => {
 
 
 
+startActiveInboxRealtime();
 syncGmailAndRefreshInbox();
 renderOrders();
 renderCustomers();
