@@ -4849,6 +4849,131 @@ app.get("/api/inbox/conversations", authenticateUser, async (req, res) => {
 
 
 
+// Create a manual human-review case.
+app.post("/api/approvals", authenticateUser, async (req, res) => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+
+  try {
+    const conversationId = String(
+      req.body?.conversation_id || ""
+    ).trim();
+
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        error: "Conversation ID is required."
+      });
+    }
+
+    // Verify that the conversation belongs to this workspace.
+    const { data: conversation, error: conversationError } =
+      await supabase
+        .from("inbox_conversations")
+        .select("id")
+        .eq("id", conversationId)
+        .eq("workspace_id", workspace.id)
+        .maybeSingle();
+
+    if (conversationError) throw conversationError;
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        error: "Conversation not found."
+      });
+    }
+
+    // Find the latest inbound customer message.
+    const { data: latestMessage, error: messageError } =
+      await supabase
+        .from("inbox_messages")
+        .select("id, body_text")
+        .eq("workspace_id", workspace.id)
+        .eq("conversation_id", conversationId)
+        .eq("direction", "inbound")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (messageError) throw messageError;
+
+    // Avoid creating duplicate cases for the same message.
+    if (latestMessage) {
+      const { data: existingCase, error: existingError } =
+        await supabase
+          .from("approval_cases")
+          .select("*")
+          .eq("workspace_id", workspace.id)
+          .eq("trigger_message_id", latestMessage.id)
+          .maybeSingle();
+
+      if (existingError) throw existingError;
+
+      if (existingCase) {
+        return res.json({
+          success: true,
+          existing: true,
+          approval: existingCase
+        });
+      }
+    }
+
+    const { data: approval, error: insertError } =
+      await supabase
+        .from("approval_cases")
+        .insert({
+          workspace_id: workspace.id,
+          conversation_id: conversationId,
+          trigger_message_id: latestMessage?.id || null,
+          case_type: "manual_escalation",
+          priority: "high",
+          reason: "A team member manually requested human review.",
+          ai_summary: latestMessage?.body_text
+            ? latestMessage.body_text.slice(0, 2000)
+            : null,
+          action_required: "review_only",
+          status: "pending",
+          metadata: {
+            source: "manual"
+          }
+        })
+        .select("*")
+        .single();
+
+    if (insertError) throw insertError;
+
+    await supabase
+      .from("inbox_conversations")
+      .update({
+        status: "needs_review",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", conversationId)
+      .eq("workspace_id", workspace.id);
+
+    return res.status(201).json({
+      success: true,
+      existing: false,
+      approval
+    });
+
+  } catch (error) {
+    console.error("Manual approval creation failed:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      error: "Could not create the human-review case."
+    });
+  }
+});
+
+
+
+
+
+
+
 
 // GET approval cases for the signed-in user's workspace.
 app.get("/api/approvals", authenticateUser, async (req, res) => {
