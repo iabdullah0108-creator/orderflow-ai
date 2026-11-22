@@ -9249,7 +9249,7 @@ const supabaseClient = window.supabase.createClient(
 "use strict";
 
 // Prototype data only. Do not put real customer data or secrets here.
-const conversations = [
+let conversations = [
   {id:1,name:"Sarah Ahmed",initials:"SA",channel:"WhatsApp",time:"2m",category:"Delivery question",priority:"Normal",confidence:"High",customerStatus:"Returning",order:"#OF-1042",orderStatus:"In transit",items:"2 items",amount:"Rs. 4,500",unread:true,review:false,resolved:false,
    messages:[{from:"customer",text:"Hi! I want to buy 2 sets of white dinner plates. Each set has 6 plates. What is the total price, including delivery, and are they in stock?",time:"2:32 PM"}]},
   {id:2,name:"Hamza Khan",initials:"HK",channel:"Instagram",time:"8m",category:"Product inquiry",priority:"Normal",confidence:"High",customerStatus:"New customer",order:"—",orderStatus:"No order",items:"—",amount:"—",unread:true,review:false,resolved:false,
@@ -9284,6 +9284,85 @@ let toastTimer;
 
 const $ = id => document.getElementById(id);
 const selectedConversation = () => conversations.find(c => c.id === selectedId);
+
+
+
+
+  async function loadLiveConversations() {
+  try {
+    const result =
+      await window.OrderFlowPersistentInbox.loadPersistentConversations({
+        limit: 50
+      });
+
+    const liveConversations = (result.conversations || []).map(c => {
+      const name = c.customer_name || c.customer_email || "Unknown customer";
+
+      return {
+        id: c.id,
+        name,
+        initials: name
+          .split(/\s+/)
+          .map(part => part[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        channel: c.channel || "Email",
+        time: c.last_message_at
+          ? new Date(c.last_message_at).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit"
+            })
+          : "",
+        category: c.subject || "Customer message",
+        priority: "Normal",
+        confidence: "—",
+        customerStatus: "Customer",
+        order: "—",
+        orderStatus: "No linked order",
+        items: "—",
+        amount: "—",
+        unread: Number(c.unread_count || 0) > 0,
+        review: c.status === "needs_review",
+        resolved: c.status === "resolved",
+        messages: [],
+        customerEmail: c.customer_email,
+        customerId: c.customer_id
+      };
+    });
+
+    conversations = liveConversations;
+
+    selectedId = conversations.length
+      ? conversations[0].id
+      : null;
+
+    if (selectedId) {
+      const messageResult =
+        await window.OrderFlowPersistentInbox.loadPersistentMessages(selectedId);
+
+      const selected = selectedConversation();
+
+      if (selected) {
+        selected.messages = messageResult.messages || [];
+      }
+    }
+
+    renderInbox();
+    renderSelected();
+    updateCounts();
+
+  } catch (error) {
+    console.error("Live Smart Inbox loading failed:", error);
+    notify("Could not load live conversations: " + error.message);
+  }
+}
+  
+
+  
+
+
+  
 
 function safeText(value) {
   return String(value ?? "");
@@ -9557,6 +9636,40 @@ function renderSelected() {
         ? "gmail"
         : "other";
 
+
+
+
+
+    // Get the latest inbound customer message and its saved AI analysis.
+  const latestInbound = [...(c.messages || [])]
+    .reverse()
+    .find(m => m.direction === "inbound");
+
+  const aiIntent = latestInbound?.ai_intent || null;
+  const aiRisk = latestInbound?.ai_risk || null;
+  const aiConfidence = latestInbound?.ai_confidence;
+  const aiSummary = latestInbound?.ai_summary || "";
+  const aiReviewReason = latestInbound?.ai_review_reason || "";
+
+  const aiReviewRequired = Boolean(
+    latestInbound?.requires_review ||
+    ["high", "critical"].includes(aiRisk)
+  );
+
+  const confidenceLabel =
+    aiConfidence == null
+      ? (latestInbound?.ai_processing_status === "processing"
+          ? "Processing"
+          : "Pending")
+      : Math.round(Number(aiConfidence) * 100) + "%";
+  
+
+
+
+
+
+  
+
   // Customer header
   $("selected-avatar").textContent = c.initials;
   $("selected-name").textContent = c.name;
@@ -9643,31 +9756,64 @@ channelLabel.classList.remove(
     channelLabel.textContent = c.channel + " · Demo";
   }
 
-  // Customer details
+  // Customer details and live AI analysis
   $("detail-name").textContent = c.name;
   $("detail-channel").textContent = c.channel;
-  $("detail-customer-status").textContent = c.customerStatus;
-  $("detail-order").textContent = c.order;
-  $("detail-intent").textContent = c.category;
-  $("detail-priority").textContent = c.priority;
-  $("detail-confidence").textContent = c.confidence;
+  $("detail-customer-status").textContent = c.customerStatus || "Customer";
+  $("detail-order").textContent = c.order || "No linked order";
+  $("detail-intent").textContent = aiIntent || "Not yet detected";
+  $("detail-priority").textContent = aiRisk
+    ? aiRisk.charAt(0).toUpperCase() + aiRisk.slice(1)
+    : "Pending";
+  $("detail-confidence").textContent = confidenceLabel;
 
-  // Human Review warning
+    // Dynamic Human Review status
   const reviewCard = $("intent-explanation");
-  reviewCard.classList.toggle("of-human-review-warning", Boolean(c.review));
+  const reviewRequired = aiReviewRequired || c.review;
+
+  reviewCard.classList.toggle(
+    "of-human-review-warning",
+    Boolean(reviewRequired)
+  );
   reviewCard.replaceChildren();
 
-  const strong = make("strong", "", c.review
-    ? "◉ Human review recommended"
-    : "✧ Suggested next step");
+  const processingStatus = latestInbound?.ai_processing_status;
 
-  const explanation = c.review
-    ? "This case needs a person to inspect the context and make the decision. The AI must not decide a refund or resolve a serious complaint on its own."
-    : c.resolved
-      ? "This demo conversation has been marked resolved. You can still inspect its history."
-      : "A draft can be prepared from the sample business knowledge. Check accuracy before any real-world use.";
+  const strong = make(
+    "strong",
+    "",
+    reviewRequired
+      ? "◉ Human review required"
+      : processingStatus === "completed"
+        ? "✧ AI analysis completed"
+        : processingStatus === "failed"
+          ? "⚠ AI analysis failed"
+          : "◷ AI analysis pending"
+  );
 
-  reviewCard.append(strong, document.createTextNode(explanation));
+  let explanation;
+
+  if (reviewRequired) {
+    explanation =
+      aiReviewReason ||
+      aiSummary ||
+      "This customer request requires a person to review it. The AI must not independently approve refunds, compensation, or other sensitive actions.";
+  } else if (processingStatus === "completed") {
+    explanation =
+      aiSummary ||
+      "The AI has analyzed this customer message. Review the suggested response before sending.";
+  } else if (processingStatus === "failed") {
+    explanation =
+      "The AI could not complete its analysis. This message should be inspected manually.";
+  } else {
+    explanation =
+      "AI analysis has not yet been completed for this message.";
+  }
+
+  reviewCard.append(
+    strong,
+    document.createTextNode(explanation)
+  );
 
   // Order details and action buttons
   $("order-status").textContent = c.orderStatus;
@@ -9675,16 +9821,28 @@ channelLabel.classList.remove(
   $("linked-order-items").textContent = c.items;
   $("linked-order-amount").textContent = c.amount;
 
-  $("approve-send-btn").textContent = c.review
+  $("approve-send-btn").textContent = reviewRequired
     ? "Draft only · Review required"
     : "Approve draft";
 
-  $("approve-send-btn").disabled = c.review || c.resolved;
-  $("escalate-btn").disabled = c.review || c.resolved;
+  $("approve-send-btn").disabled = reviewRequired || c.resolved;
+  $("escalate-btn").disabled = reviewRequired || c.resolved;
   $("draft-btn").disabled = c.resolved;
   $("resolve-btn").disabled = c.resolved;
 
-  renderMessages(c);
+    renderMessages(c);
+
+  // Show the saved AI suggestion without overwriting a reply
+  // the user has already started writing.
+  const replyDraft = $("reply-draft");
+
+  if (
+    replyDraft &&
+    !replyDraft.value.trim() &&
+    latestInbound?.ai_suggested_reply
+  ) {
+    replyDraft.value = latestInbound.ai_suggested_reply;
+  }
 }
 
 
@@ -13692,14 +13850,28 @@ $("theme-toggle").addEventListener("click",() => {
 
   
 
-renderInbox();
-renderSelected();
+// renderInbox();
+// renderSelected();
+// renderOrders();
+// renderCustomers();
+// renderApprovals();
+// updateCounts();
+
+// setInterval(updateCounts, 15000);
+
+
+
+
+  loadLiveConversations();
 renderOrders();
 renderCustomers();
 renderApprovals();
 updateCounts();
 
 setInterval(updateCounts, 15000);
+
+
+  
   
 </script>
 
