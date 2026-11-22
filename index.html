@@ -7839,7 +7839,26 @@ body.dark-mode #live-order-review-dialog form > div {
   
 
 
+/* Human review action — warm amber theme */
+#escalate-btn {
+  background: linear-gradient(135deg, #f5c451, #e9a928);
+  color: #17130a;
+  border: 1px solid rgba(255, 207, 91, 0.75);
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(245, 196, 81, 0.16);
+  transition: all 0.2s ease;
+}
 
+#escalate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffda75, #f5bd3e);
+  box-shadow: 0 0 20px rgba(245, 196, 81, 0.32);
+  transform: translateY(-1px);
+}
+
+#escalate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
   
 
 
@@ -9821,14 +9840,20 @@ channelLabel.classList.remove(
   $("linked-order-items").textContent = c.items;
   $("linked-order-amount").textContent = c.amount;
 
-  $("approve-send-btn").textContent = reviewRequired
-    ? "Draft only · Review required"
-    : "Approve draft";
+ $("approve-send-btn").textContent = reviewRequired
+  ? "Draft only · Review required"
+  : "Approve draft";
 
-  $("approve-send-btn").disabled = reviewRequired || c.resolved;
-  $("escalate-btn").disabled = reviewRequired || c.resolved;
-  $("draft-btn").disabled = c.resolved;
-  $("resolve-btn").disabled = c.resolved;
+$("approve-send-btn").disabled = reviewRequired || c.resolved;
+
+$("escalate-btn").textContent = c.approvalId
+  ? "View in Approval Queue"
+  : "Send to review";
+
+$("escalate-btn").disabled = c.resolved;
+
+$("draft-btn").disabled = c.resolved;
+$("resolve-btn").disabled = c.resolved;
 
     renderMessages(c);
 
@@ -13178,21 +13203,48 @@ $("approve-send-btn").addEventListener("click",() => {
   notify("Demo reply added to the conversation only. No message was sent externally.");
 });
 
-$("escalate-btn").addEventListener("click",() => {
+$("escalate-btn").addEventListener("click", async () => {
   const c = selectedConversation();
+
   if (!c || c.resolved) return;
-  if (c.review) {
-    notify("This conversation is already marked for human review.");
+
+  // If a case has already been created, open the Approval Queue.
+  if (c.approvalId) {
+    showView("approvals");
     return;
   }
-  c.review = true;
-  c.priority = "High";
-  c.category = "Needs human review";
-  approvals.push({id:Date.now(),conversationId:c.id,name:c.name,type:"Manual escalation",priority:"High",description:"A staff member or the prototype user escalated this conversation for a human decision."});
-  renderInbox();
-  renderSelected();
-  updateCounts();
-  notify("Added to the demo human-review queue.");
+
+  const button = $("escalate-btn");
+  button.disabled = true;
+
+  try {
+    const result =
+      await window.OrderFlowPersistentInbox.createApproval(c.id);
+
+    if (!result.approval?.id) {
+      throw new Error("Approval case was not returned.");
+    }
+
+    c.approvalId = result.approval.id;
+    c.review = true;
+    c.priority = "High";
+    c.category = "Needs human review";
+
+    renderInbox();
+    renderSelected();
+    await updateCounts();
+
+    notify(
+      result.existing
+        ? "This conversation already has an approval case."
+        : "Added to the Approval Queue."
+    );
+
+  } catch (error) {
+    console.error("Could not send conversation to review:", error);
+    button.disabled = false;
+    notify("Could not send to review: " + error.message);
+  }
 });
 
 $("mark-read-btn").addEventListener("click",() => {
@@ -13815,6 +13867,28 @@ $("theme-toggle").addEventListener("click",() => {
     return api(`/api/approvals${query ? "?" + query : ""}`);
   }
 
+
+
+
+    async function createApproval(conversationId) {
+  if (!conversationId) {
+    throw new Error("Conversation ID is missing.");
+  }
+
+  return api("/api/approvals", {
+    method: "POST",
+    body: JSON.stringify({
+      conversation_id: conversationId
+    })
+  });
+}
+
+    
+    
+
+
+    
+
   async function updateApproval(approvalId, status, reviewerNote = "") {
     if (!approvalId) throw new Error("Approval case ID is missing.");
 
@@ -13832,6 +13906,7 @@ $("theme-toggle").addEventListener("click",() => {
     loadPersistentMessages,
     sendPersistentReply,
     loadApprovals,
+    createApproval,
     updateApproval
   };
 
