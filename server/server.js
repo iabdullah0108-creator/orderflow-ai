@@ -7307,7 +7307,7 @@ async function processInboundInboxMessage(workspaceId, message) {
   let reservation = null;
 
   try {
-    // Load the conversation and confirm it belongs to this workspace.
+    // Load the conversation and confirm workspace ownership.
     const { data: conversation, error: conversationError } =
       await supabase
         .from("inbox_conversations")
@@ -7326,7 +7326,7 @@ async function processInboundInboxMessage(workspaceId, message) {
       throw new Error("INBOX_CONVERSATION_NOT_FOUND");
     }
 
-    // Load the newly received message.
+    // Load the inbound message.
     const { data: savedMessage, error: messageError } =
       await supabase
         .from("inbox_messages")
@@ -7336,49 +7336,42 @@ async function processInboundInboxMessage(workspaceId, message) {
         .eq("conversation_id", conversation.id)
         .single();
 
-    if (messageError || !savedMessage || savedMessage.direction !== "inbound") {
+    if (
+      messageError ||
+      !savedMessage ||
+      savedMessage.direction !== "inbound"
+    ) {
       throw new Error("INBOUND_MESSAGE_NOT_FOUND");
     }
 
+    // Claim the message to prevent concurrent processing.
+    const { data: claimedMessage, error: claimError } =
+      await supabase
+        .from("inbox_messages")
+        .update({
+          ai_processing_status: "processing",
+          ai_processing_started_at: new Date().toISOString()
+        })
+        .eq("id", savedMessage.id)
+        .eq("workspace_id", workspaceId)
+        .or(
+          `ai_processing_status.in.(pending,failed),and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()})`
+        )
+        .select("id");
 
+    if (claimError) {
+      throw new Error("AI_PROCESSING_CLAIM_FAILED");
+    }
 
-    // Claim the message so concurrent syncs cannot process it twice.
-const { data: claimedMessage, error: claimError } =
-  await supabase
-    .from("inbox_messages")
+    if (!claimedMessage?.length) {
+      return {
+        success: true,
+        skipped: true,
+        reason: "already_processing_or_completed"
+      };
+    }
 
-  .update({
-  ai_processing_status: "processing",
-  ai_processing_started_at: new Date().toISOString()
-})
-
-  
-    .eq("id", savedMessage.id)
-    .eq("workspace_id", workspaceId)
-    
-  .or(
-  `ai_processing_status.in.(pending,failed),and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()})`
-)
-.select("id");
-
-if (claimError) {
-  throw new Error("AI_PROCESSING_CLAIM_FAILED");
-}
-
-if (!claimedMessage?.length) {
-  return {
-    success: true,
-    skipped: true,
-    reason: "already_processing_or_completed"
-  };
-}
-
-
-
-
-    
-
-    // Defensive idempotency check: never process an existing approval case twice.
+    // Never process an existing approval case twice.
     const { data: existingCase, error: existingCaseError } =
       await supabase
         .from("approval_cases")
@@ -7392,21 +7385,28 @@ if (!claimedMessage?.length) {
     }
 
     if (existingCase) {
-  await supabase
-    .from("inbox_messages")
+      const { error: existingCompletionError } =
+        await supabase
+          .from("inbox_messages")
+          .update({
+            ai_processing_status: "completed",
+            ai_processing_started_at: null
+          })
+          .eq("id", savedMessage.id)
+          .eq("workspace_id", workspaceId);
 
-    .update({
-  ai_processing_status: "completed",
-  ai_processing_started_at: null
-})
-    
-    .eq("id", savedMessage.id)
-    .eq("workspace_id", workspaceId);
+      if (existingCompletionError) {
+        throw new Error("AI_PROCESSING_COMPLETION_FAILED");
+      }
 
-  return { success: true, skipped: true, reason: "already_processed" };
-}
+      return {
+        success: true,
+        skipped: true,
+        reason: "already_processed"
+      };
+    }
 
-    // Load the workspace's business knowledge.
+    // Load the workspace's Business Knowledge.
     const { data: knowledge, error: knowledgeError } =
       await supabase
         .from("business_knowledge")
@@ -7425,7 +7425,7 @@ if (!claimedMessage?.length) {
       `FREQUENTLY ASKED QUESTIONS:\n${knowledge?.faqs || ""}`
     ].join("\n\n");
 
-    // Load recent conversation history for context.
+    // Load recent conversation history.
     const { data: history, error: historyError } =
       await supabase
         .from("inbox_messages")
@@ -7448,13 +7448,13 @@ if (!claimedMessage?.length) {
 
     const aiConfig = await getWorkspaceAIConfig(workspaceId);
 
-    // One reservation and one AI call per newly imported inbound message.
+    // Reserve AI usage for this message.
     reservation = await reserveAITask(workspaceId);
 
     const prompt = `
 You are the Smart Assistant for a business operations platform.
 
-Analyze the latest customer message and prepare a safe response.
+Analyze the latest incoming email and decide how it should be handled.
 
 BUSINESS KNOWLEDGE:
 ${businessInfo}
@@ -7474,30 +7474,53 @@ ${conversationHistory}
 LATEST CUSTOMER MESSAGE:
 ${savedMessage.body_text || ""}
 
-SAFETY RULES:
-1. Use only the supplied Business Knowledge. Never invent prices, policies, delivery dates, stock, or business facts.
-2. Always require human review for refunds, damaged or defective goods, missing or incorrect items, payment disputes, compensation, legal complaints, safety complaints, and risky cancellations.
-3. Never approve, deny, promise, or execute a refund or compensation.
-4. Routine questions may be classified as safe only when the answer is clearly supported by Business Knowledge.
-5. If the message is ambiguous, information is missing, or confidence is low, require human review or ask a clarifying question.
-6. Never claim an order is paid, confirmed, refunded, cancelled, or changed unless the supplied conversation explicitly establishes that.
-7. Do not treat a customer's request as authorization to perform a financial action.
-8. If Business Knowledge is insufficient, do not guess.
+CLASSIFICATION RULES:
+
+1. "draft":
+The message is a genuine, routine business inquiry and its answer is clearly supported by Business Knowledge or conversation history. Prepare a helpful customer-facing draft.
+
+2. "clarify":
+The message appears to be a genuine business inquiry, but important information is missing or the customer's meaning is unclear. Prepare a polite clarification draft. Do not guess.
+
+3. "review":
+Human review is mandatory for refunds, damaged or defective goods, missing or incorrect items, payment disputes, compensation, legal complaints, safety complaints, risky cancellations, and other consequential business decisions.
+
+Also use review when a genuine customer inquiry requires a business decision or information that cannot safely be established from Business Knowledge.
+
+4. "ignore":
+Use this for messages that are not genuine customer inquiries and do not require a business response, including external service security notifications, OTPs, verification codes, automated alerts, spam, irrelevant newsletters and meaningless test messages.
+
+Do not ignore a genuine customer inquiry merely because it is short.
+
+BUSINESS KNOWLEDGE AND CONFIDENCE:
+
+- Use only supplied Business Knowledge and conversation history.
+- Never invent prices, policies, delivery dates, stock or business facts.
+- High confidence does not remove mandatory human review.
+- Low confidence does not automatically mean human review. Use "clarify" for harmless, genuine inquiries where a clarification draft is appropriate.
+- If a business-specific answer cannot be supported, do not guess. Use "review" when a human business decision is needed.
+- Never claim an order is paid, confirmed, refunded, cancelled or changed unless explicitly established.
+- Never approve, deny, promise or execute refunds or compensation.
+- Do not treat a customer's request as authorization to perform a financial action.
 
 Return ONLY valid JSON in this exact structure:
 {
+  "handling": "draft | clarify | review | ignore",
   "intent": "short intent category",
   "risk": "low | normal | high | critical",
   "confidence": 0.0,
-  "requires_human_review": true,
-  "review_reason": "reason or empty string",
-  "summary": "short summary of the customer's issue",
-  "suggested_reply": "safe customer-facing response",
+  "review_reason": "reason for human review, or empty string",
+  "summary": "short summary",
+  "suggested_reply": "customer-facing draft, or empty string when handling is ignore",
   "safe_to_auto_send": false
 }
 
 CONFIDENCE must be a number between 0 and 1.
-When uncertain, choose human review and safe_to_auto_send false.
+
+For "ignore", suggested_reply must be an empty string.
+For "review", explain why human intervention is necessary.
+For "clarify", prepare a polite question rather than guessing.
+Never classify a sensitive request as "draft" or "clarify".
 `;
 
     const rawResponse = await generateAIText(
@@ -7514,11 +7537,13 @@ When uncertain, choose human review and safe_to_auto_send false.
       throw new Error("AI_CLASSIFICATION_INVALID_JSON");
     }
 
+    if (!result || typeof result !== "object" || Array.isArray(result)) {
+      throw new Error("AI_CLASSIFICATION_INVALID_RESULT");
+    }
+
     const confidence = Number(result.confidence);
 
     if (
-      !result ||
-      typeof result !== "object" ||
       !Number.isFinite(confidence) ||
       confidence < 0 ||
       confidence > 1 ||
@@ -7528,54 +7553,90 @@ When uncertain, choose human review and safe_to_auto_send false.
     }
 
     const intent = String(result.intent || "unclear").slice(0, 100);
+
     const risk = ["low", "normal", "high", "critical"].includes(result.risk)
       ? result.risk
       : "high";
 
+    const handling = ["draft", "clarify", "review", "ignore"].includes(
+      result.handling
+    )
+      ? result.handling
+      : "review";
+
+    const suggestedReply = String(result.suggested_reply || "").slice(0, 10000);
+
+    // Server-side protection for sensitive customer requests.
     const sensitiveIntent =
-      /refund|damaged|defective|missing item|wrong item|payment dispute|compensation|legal|safety complaint|cancel/i
-        .test(intent + " " + (result.review_reason || ""));
+      /refund|damaged|damage|defective|faulty|broken|missing item|wrong item|incorrect item|payment dispute|chargeback|compensation|legal|safety complaint|cancel(?:lation)?/i
+        .test(
+          intent + " " +
+          String(result.review_reason || "") + " " +
+          String(savedMessage.body_text || "")
+        );
 
-    // The server, not the model, enforces mandatory human review.
+    // Human review overrides the AI's decision for sensitive or high-risk cases.
+    // An empty reply also cannot become a customer-facing draft.
     const requiresReview =
-  result.requires_human_review !== false ||
-  sensitiveIntent ||
-  ["high", "critical"].includes(risk) ||
-  confidence < 0.85 ||
-  !businessInfo.trim();
+      handling === "review" ||
+      sensitiveIntent ||
+      ["high", "critical"].includes(risk) ||
+      (
+        (handling === "draft" || handling === "clarify") &&
+        !suggestedReply.trim()
+      );
 
-    const safeToAutoSend =
+    // Ignore only genuinely irrelevant, non-sensitive messages.
+    const shouldIgnore =
+      handling === "ignore" &&
+      !requiresReview;
+
+    // Only routine inquiries and clarification requests create drafts.
+    const shouldCreateDraft =
       !requiresReview &&
-      result.safe_to_auto_send === true &&
-      ["low", "normal"].includes(risk) &&
-      confidence >= 0.85;
+      !shouldIgnore &&
+      (handling === "draft" || handling === "clarify");
 
+    // Customer emails are never sent automatically by this processor.
+    const safeToAutoSend = false;
 
+    const reviewReason = sensitiveIntent
+      ? "Sensitive customer request requires human authorization."
+      : String(
+          result.review_reason ||
+          "The message requires human review."
+        ).slice(0, 2000);
 
-    // Persist AI analysis on the original customer message.
-const { error: analysisError } = await supabase
-  .from("inbox_messages")
-  .update({
-    ai_intent: intent,
-    ai_risk: risk,
-    ai_confidence: confidence,
-    ai_summary: String(result.summary || "").slice(0, 2000),
-    ai_suggested_reply: result.suggested_reply.slice(0, 10000),
-    ai_review_reason: String(result.review_reason || "").slice(0, 2000),
-    ai_safe_to_auto_send: safeToAutoSend
-  })
-  .eq("id", savedMessage.id)
-  .eq("workspace_id", workspaceId);
+    // Persist AI analysis on the original inbound message.
+    const { error: analysisError } = await supabase
+      .from("inbox_messages")
+      .update({
+        ai_intent: intent,
+        ai_risk: risk,
+        ai_confidence: confidence,
+        ai_summary: String(result.summary || "").slice(0, 2000),
+        ai_suggested_reply: suggestedReply,
+        ai_review_reason: requiresReview ? reviewReason : "",
+        ai_safe_to_auto_send: safeToAutoSend,
+        requires_review: requiresReview
+      })
+      .eq("id", savedMessage.id)
+      .eq("workspace_id", workspaceId);
 
-if (analysisError) {
-  throw new Error("AI_ANALYSIS_SAVE_FAILED");
-}
+    if (analysisError) {
+      throw new Error("AI_ANALYSIS_SAVE_FAILED");
+    }
 
-    
+    // OUTCOME 1: Ignore irrelevant notifications and messages.
+    if (shouldIgnore) {
+      console.log(
+        "Inbound message ignored as irrelevant:",
+        savedMessage.id
+      );
+    }
 
-    
-
-    if (requiresReview) {
+    // OUTCOME 2: Create a human-review case.
+    else if (requiresReview) {
       const { error: flagError } = await supabase
         .from("inbox_messages")
         .update({ requires_review: true })
@@ -7586,6 +7647,17 @@ if (analysisError) {
         throw new Error("INBOX_REVIEW_FLAG_FAILED");
       }
 
+      const actionText =
+        intent + " " + String(savedMessage.body_text || "");
+
+      const actionRequired = /refund/i.test(actionText)
+        ? "refund"
+        : /compensation/i.test(actionText)
+          ? "compensation"
+          : /cancel(?:lation)?/i.test(actionText)
+            ? "cancellation"
+            : "review_only";
+
       const { error: caseError } = await supabase
         .from("approval_cases")
         .insert({
@@ -7594,104 +7666,93 @@ if (analysisError) {
           trigger_message_id: savedMessage.id,
           case_type: intent,
           priority: risk === "critical" ? "critical" : "high",
-          reason: sensitiveIntent
-            ? "Sensitive customer request requires human authorization."
-            : String(result.review_reason || "AI confidence or available business information is insufficient."),
+          reason: reviewReason,
           ai_summary: String(result.summary || "").slice(0, 2000),
           ai_confidence: confidence,
-          suggested_reply: result.suggested_reply.slice(0, 10000),
-          action_required: /refund/i.test(intent)
-            ? "refund"
-            : /compensation/i.test(intent)
-              ? "compensation"
-              : /cancel/i.test(intent)
-                ? "cancellation"
-                : "review_only",
+          suggested_reply: suggestedReply,
+          action_required: actionRequired,
           status: "pending",
           metadata: {
             channel: conversation.channel,
             intent,
-            risk
+            risk,
+            handling
           }
         });
 
-      if (caseError) {
-        // A duplicate case can occur if two syncs race.
-        if (caseError.code !== "23505") {
-          throw new Error("APPROVAL_CASE_CREATE_FAILED");
+      if (caseError && caseError.code !== "23505") {
+        throw new Error("APPROVAL_CASE_CREATE_FAILED");
+      }
+    }
+
+    // OUTCOME 3: Create an AI draft for a routine or clarification response.
+    else if (shouldCreateDraft) {
+      const { data: existingDraft, error: draftLookupError } =
+        await supabase
+          .from("inbox_messages")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .eq("is_ai_draft", true)
+          .contains("provider_payload", {
+            source_message_id: savedMessage.id
+          })
+          .maybeSingle();
+
+      if (draftLookupError) {
+        throw new Error("AI_DRAFT_LOOKUP_FAILED");
+      }
+
+      if (!existingDraft) {
+        const { error: draftError } = await supabase
+          .from("inbox_messages")
+          .insert({
+            workspace_id: workspaceId,
+            conversation_id: conversation.id,
+            direction: "outbound",
+            sender_name: "Smart Assistant",
+            body_text: suggestedReply,
+            delivery_status: "draft",
+            is_ai_draft: true,
+            requires_review: false,
+            provider_payload: {
+              provider: "orderflow_ai",
+              source_message_id: savedMessage.id,
+              confidence,
+              handling
+            }
+          });
+
+        if (draftError && draftError.code !== "23505") {
+          throw new Error("AI_DRAFT_SAVE_FAILED");
         }
       }
-    
-} else {
-  // Check whether a draft was already saved for this customer message.
-  const { data: existingDraft, error: draftLookupError } =
-    await supabase
-      .from("inbox_messages")
-      .select("id")
-      .eq("workspace_id", workspaceId)
-      .eq("is_ai_draft", true)
-      .contains("provider_payload", {
-        source_message_id: savedMessage.id
-      })
-      .maybeSingle();
-
-  if (draftLookupError) {
-    throw new Error("AI_DRAFT_LOOKUP_FAILED");
-  }
-
-  if (!existingDraft) {
-    const { error: draftError } = await supabase
-      .from("inbox_messages")
-      .insert({
-        workspace_id: workspaceId,
-        conversation_id: conversation.id,
-        direction: "outbound",
-        sender_name: "Smart Assistant",
-        body_text: result.suggested_reply.slice(0, 10000),
-        delivery_status: "draft",
-        is_ai_draft: true,
-        requires_review: false,
-        provider_payload: {
-          provider: "orderflow_ai",
-          source_message_id: savedMessage.id,
-          confidence
-        }
-      });
-
-    if (draftError && draftError.code !== "23505") {
-      throw new Error("AI_DRAFT_SAVE_FAILED");
     }
-  }
-}
 
-
-        // Commit AI usage only after the case or draft has been saved.
+    // Commit AI usage only after processing has been saved.
     await commitAITask(reservation.reservation_id);
     reservation = null;
 
-
+    // Mark inbound processing as completed.
     const { error: completionError } = await supabase
-  .from("inbox_messages")
-
+      .from("inbox_messages")
       .update({
-  ai_processing_status: "completed",
-  ai_processing_started_at: null
-})
-      
-  .eq("id", savedMessage.id)
-  .eq("workspace_id", workspaceId);
+        ai_processing_status: "completed",
+        ai_processing_started_at: null
+      })
+      .eq("id", savedMessage.id)
+      .eq("workspace_id", workspaceId);
 
-if (completionError) {
-  throw new Error("AI_PROCESSING_COMPLETION_FAILED");
-}
-
-    
-
-
-    
+    if (completionError) {
+      throw new Error("AI_PROCESSING_COMPLETION_FAILED");
+    }
 
     return {
       success: true,
+      handling: shouldIgnore
+        ? "ignore"
+        : requiresReview
+          ? "review"
+          : handling,
       requires_review: requiresReview,
       safe_to_auto_send: safeToAutoSend
     };
@@ -7701,68 +7762,67 @@ if (completionError) {
       try {
         await refundAITask(reservation.reservation_id);
       } catch (refundError) {
-        console.error("AI task reservation refund failed:", refundError.message);
+        console.error(
+          "AI task reservation refund failed:",
+          refundError.message
+        );
       }
     }
 
     console.error("Inbound AI processing failed:", error.message);
 
-    // The original customer message remains saved.
-    // Flag it for manual handling rather than silently ignoring it.
+    // Failed AI processing must never silently disappear.
     try {
       await supabase
         .from("inbox_messages")
-
         .update({
-  requires_review: true,
-  ai_processing_status: "failed",
-  ai_processing_started_at: null
-})
-
-        
+          requires_review: true,
+          ai_processing_status: "failed",
+          ai_processing_started_at: null
+        })
         .eq("id", message.id)
         .eq("workspace_id", workspaceId);
     } catch (flagError) {
-      console.error("Could not flag failed AI message:", flagError.message);
+      console.error(
+        "Could not flag failed AI message:",
+        flagError.message
+      );
     }
 
+    // Create a fallback human-review case.
+    try {
+      const { error: caseError } = await supabase
+        .from("approval_cases")
+        .insert({
+          workspace_id: workspaceId,
+          conversation_id: message.conversationId,
+          trigger_message_id: message.id,
+          case_type: "ai_processing_failed",
+          priority: "high",
+          reason: "AI could not safely process this customer message. Manual review is required.",
+          ai_summary: "Automatic message analysis failed. Please review the original customer message.",
+          suggested_reply: null,
+          action_required: "review_only",
+          status: "pending",
+          metadata: {
+            processing_error: String(
+              error.message || "Unknown error"
+            ).slice(0, 200)
+          }
+        });
 
-
-    // Create a manual-review case when AI processing fails.
-try {
-  const { error: caseError } = await supabase
-    .from("approval_cases")
-    .insert({
-      workspace_id: workspaceId,
-      conversation_id: message.conversationId,
-      trigger_message_id: message.id,
-      case_type: "ai_processing_failed",
-      priority: "high",
-      reason: "AI could not safely process this customer message. Manual review is required.",
-      ai_summary: "Automatic message analysis failed. Please review the original customer message.",
-      suggested_reply: null,
-      action_required: "review_only",
-      status: "pending",
-      metadata: {
-        processing_error: String(error.message || "Unknown error").slice(0, 200)
+      if (caseError && caseError.code !== "23505") {
+        console.error(
+          "Could not create AI failure approval case:",
+          caseError.message
+        );
       }
-    });
-
-  if (caseError && caseError.code !== "23505") {
-    console.error(
-      "Could not create AI failure approval case:",
-      caseError.message
-    );
-  }
-} catch (caseCreationError) {
-  console.error(
-    "AI failure approval case creation failed:",
-    caseCreationError.message
-  );
-}
-
-
-    
+    } catch (caseCreationError) {
+      console.error(
+        "AI failure approval case creation failed:",
+        caseCreationError.message
+      );
+    }
 
     return {
       success: false,
