@@ -9434,18 +9434,40 @@ top.append(identity, make("span", "convo-time", c.time));
     if (c.unread) bottom.append(make("span","unread","1"));
     main.append(top,preview,bottom);
     button.append(avatar,main);
-    button.addEventListener("click", () => {
-     selectedId = c.id;
-     c.unread = false;
-     $("reply-draft").value = "";
 
-     renderInbox();
-     renderSelected();
-     updateCounts();
-    });
+
+    button.addEventListener("click", async () => {
+  selectedId = c.id;
+  c.unread = false;
+  $("reply-draft").value = "";
+
+  renderInbox();
+  renderSelected();
+
+  // Fetch real messages for database conversations.
+  if (typeof c.id === "string") {
+    try {
+      const result =
+        await window.OrderFlowPersistentInbox.loadPersistentMessages(c.id);
+
+      if (selectedId !== c.id) return;
+
+      c.messages = result.messages || [];
+      renderSelected();
+    } catch (error) {
+      console.error("Could not load conversation messages:", error);
+      notify("Could not load conversation messages.");
+    }
+  }
+
+  updateCounts();
+});
+
+    
     list.append(button);
   });
 }
+
 
 
 function renderMessages(c) {
@@ -9462,26 +9484,51 @@ function renderMessages(c) {
         ? "gmail"
         : "other";
 
+  const messages = Array.isArray(c.messages) ? c.messages : [];
+
   container.append(
-    make("div", "date-separator", "TODAY · DEMO CONVERSATION")
+    make("div", "date-separator", "CONVERSATION HISTORY")
   );
 
-  c.messages.forEach(m => {
+  messages.forEach(m => {
+    const isBusiness = m.direction
+      ? m.direction === "outbound"
+      : m.from === "business";
+
+    const messageText = m.body_text ?? m.text ?? "";
+
+    const timestamp = m.sent_at || m.created_at || null;
+
+    const time = timestamp
+      ? new Date(timestamp).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        })
+      : (m.time || "");
+
+    const isDraft = Boolean(m.is_ai_draft);
+
     const wrap = make(
       "div",
-      "message " + (m.from === "business" ? "business" : "customer")
+      "message " + (isBusiness ? "business" : "customer")
     );
 
-    const bubble = make("div", "message-bubble", m.text);
+    const bubble = make("div", "message-bubble", messageText);
 
-    if (m.from !== "business" && platform !== "other") {
-  bubble.classList.add("of-bubble-" + platform);
-}
+    if (!isBusiness && platform !== "other") {
+      bubble.classList.add("of-bubble-" + platform);
+    }
+
+    const label = isDraft
+      ? "AI draft"
+      : isBusiness
+        ? "Business"
+        : (m.sender_name || "Customer");
 
     const meta = make(
       "div",
       "message-meta",
-      (m.from === "business" ? "Business draft · " : "Customer · ") + m.time
+      label + (time ? " · " + time : "")
     );
 
     wrap.append(bubble, meta);
