@@ -6901,17 +6901,24 @@ async function syncGmailWorkspace(workspaceId, options = {}) {
   }
 
 
-  const checkpointHistoryId =
+ 
+const checkpointHistoryId =
   options.checkpointHistoryId || profile.historyId;
 
 if (!checkpointHistoryId) {
   throw new Error("Gmail did not return a history checkpoint.");
 }
 
+const savedMetadata =
+  connection.metadata &&
+  typeof connection.metadata === "object" &&
+  !Array.isArray(connection.metadata)
+    ? connection.metadata
+    : {};
 
-  
+const previousHistoryId = savedMetadata.gmail_history_id;
 
-  let threadItems;
+let threadItems;
 
 if (Array.isArray(options.threadIds)) {
   const uniqueThreadIds = [
@@ -6919,15 +6926,68 @@ if (Array.isArray(options.threadIds)) {
   ];
 
   threadItems = uniqueThreadIds.map(id => ({ id }));
+
+} else if (previousHistoryId) {
+  // Retrieve only Gmail threads containing newly added messages.
+  const newThreadIds = new Set();
+  let pageToken;
+
+  try {
+    do {
+      const { data: historyPage } =
+        await gmail.users.history.list({
+          userId: "me",
+          startHistoryId: previousHistoryId,
+          historyTypes: ["messageAdded"],
+          pageToken
+        });
+
+      for (const record of historyPage.history || []) {
+        for (const added of record.messagesAdded || []) {
+          if (added.message?.threadId) {
+            newThreadIds.add(added.message.threadId);
+          }
+        }
+      }
+
+      pageToken = historyPage.nextPageToken;
+
+    } while (pageToken);
+
+    threadItems = [...newThreadIds].map(id => ({ id }));
+
+  } catch (error) {
+    const status = error.code || error.response?.status;
+
+    if (Number(status) !== 404) {
+      throw error;
+    }
+
+    // Gmail history expired. Fall back to a recent inbox scan.
+    console.warn("Gmail history checkpoint expired; performing fallback sync.");
+
+    const { data: threadList } =
+      await gmail.users.threads.list({
+        userId: "me",
+        q: "in:inbox",
+        maxResults: 25
+      });
+
+    threadItems = threadList.threads || [];
+  }
+
 } else {
-  const { data: threadList } = await gmail.users.threads.list({
-    userId: "me",
-    q: "in:inbox",
-    maxResults: 25
-  });
+  // First sync: import recent inbox threads.
+  const { data: threadList } =
+    await gmail.users.threads.list({
+      userId: "me",
+      q: "in:inbox",
+      maxResults: 25
+    });
 
   threadItems = threadList.threads || [];
 }
+
   
 
   let importedThreads = 0;
