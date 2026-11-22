@@ -5085,7 +5085,32 @@ app.get("/api/inbox/conversations/:conversationId/messages", authenticateUser, a
 
   const { data, error } = await supabase
     .from("inbox_messages")
-    .select("id, external_message_id, direction, sender_name, sender_address, body_text, delivery_status, is_ai_draft, requires_review, sent_at, created_at")
+
+
+    .select(`
+  id,
+  external_message_id,
+  direction,
+  sender_name,
+  sender_address,
+  body_text,
+  delivery_status,
+  is_ai_draft,
+  requires_review,
+  sent_at,
+  created_at,
+  ai_processing_status,
+  ai_intent,
+  ai_risk,
+  ai_confidence,
+  ai_summary,
+  ai_suggested_reply,
+  ai_review_reason,
+  ai_safe_to_auto_send
+`)
+
+
+    
     .eq("workspace_id", workspace.id)
     .eq("conversation_id", conversation.id)
     .order("created_at", { ascending: true })
@@ -7339,6 +7364,29 @@ When uncertain, choose human review and safe_to_auto_send false.
       result.safe_to_auto_send === true &&
       ["low", "normal"].includes(risk) &&
       confidence >= 0.85;
+
+
+
+    // Persist AI analysis on the original customer message.
+const { error: analysisError } = await supabase
+  .from("inbox_messages")
+  .update({
+    ai_intent: intent,
+    ai_risk: risk,
+    ai_confidence: confidence,
+    ai_summary: String(result.summary || "").slice(0, 2000),
+    ai_suggested_reply: result.suggested_reply.slice(0, 10000),
+    ai_review_reason: String(result.review_reason || "").slice(0, 2000),
+    ai_safe_to_auto_send: safeToAutoSend
+  })
+  .eq("id", savedMessage.id)
+  .eq("workspace_id", workspaceId);
+
+if (analysisError) {
+  throw new Error("AI_ANALYSIS_SAVE_FAILED");
+}
+
+    
 
     
 
