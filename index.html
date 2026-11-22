@@ -9307,6 +9307,33 @@ const selectedConversation = () => conversations.find(c => c.id === selectedId);
 
 
 
+
+  let gmailSyncInProgress = false;
+
+async function syncGmailAndRefreshInbox() {
+  if (gmailSyncInProgress) return;
+
+  // Don't poll Gmail while the dashboard tab is hidden.
+  if (document.visibilityState !== "visible") return;
+
+  gmailSyncInProgress = true;
+
+  try {
+  await window.OrderFlowPersistentInbox.syncGmail();
+
+} catch (error) {
+  console.error("Automatic Gmail sync failed:", error);
+
+} finally {
+  await loadLiveConversations();
+  gmailSyncInProgress = false;
+}
+}
+
+
+  
+
+
   
 async function loadLiveConversations() {
   // Preserve the current selection and anything typed in the reply box.
@@ -13970,13 +13997,14 @@ $("theme-toggle").addEventListener("click",() => {
 
 
 
-  loadLiveConversations();
+syncGmailAndRefreshInbox();
 renderOrders();
 renderCustomers();
 renderApprovals();
 updateCounts();
 
 setInterval(updateCounts, 15000);
+setInterval(syncGmailAndRefreshInbox, 15000);
 
 
   
