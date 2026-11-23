@@ -8284,7 +8284,7 @@ body.dark-mode #live-order-review-dialog form > div {
                 
                 <!-- <button class="btn" id="escalate-btn">Send to review</button> -->
 
-                <button class="btn pill orange" id="escalate-btn">Send to review</button>
+                <button class="btn orange" id="escalate-btn">Send to review</button>
 
                 <button class="btn btn-soft" id="extract-live-order-btn" >
   ✧ Extract Order
@@ -12827,7 +12827,7 @@ async function renderApprovals() {
       }
 
       if (a.status === "pending" || a.status === "in_review") {
-        const approve = make("button", "btn pill green", "Approve decision");
+        const approve = make("button", "btn green", "Approve decision");
         approve.type = "button";
         approve.addEventListener("click", () => review("approved", approve));
 
