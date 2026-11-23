@@ -4857,20 +4857,23 @@ const conversationIds = conversations.map(c => c.id);
 let latestMessagesByConversation = new Map();
 
 if (conversationIds.length) {
+
   const { data: latestMessages, error: messagesError } =
-    await supabase
-      .from("inbox_messages")
-      .select("conversation_id, body_text, direction, created_at, is_ai_draft")
-      .eq("workspace_id", workspace.id)
-      .in("conversation_id", conversationIds)
-      .eq("is_ai_draft", false)
-      .order("created_at", { ascending: false });
+  await supabase
+    .from("inbox_messages")
+    .select("conversation_id, body_text, direction, created_at, is_ai_draft")
+    .eq("workspace_id", workspace.id)
+    .in("conversation_id", conversationIds)
+    .order("created_at", { ascending: false });
 
   if (messagesError) {
     console.error("Inbox preview lookup failed:", messagesError.message);
   } else {
-    for (const message of latestMessages || []) {
-      if (!latestMessagesByConversation.has(message.conversation_id)) {
+   for (const message of latestMessages || []) {
+  if (message.is_ai_draft) continue;
+
+  if (!latestMessagesByConversation.has(message.conversation_id)) {
+    
         latestMessagesByConversation.set(
           message.conversation_id,
           message.body_text || ""
