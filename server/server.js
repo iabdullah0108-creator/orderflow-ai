@@ -117,8 +117,32 @@ async function getGmailClientForWorkspace(workspaceId) {
   );
 
   if (!refreshToken) {
-    throw new Error("Gmail refresh token is missing. Reconnect Gmail.");
+  const metadata =
+    connection.metadata &&
+    typeof connection.metadata === "object" &&
+    !Array.isArray(connection.metadata)
+      ? connection.metadata
+      : {};
+
+  const { error: updateError } = await supabase
+    .from("provider_connections")
+    .update({
+      metadata: {
+        ...metadata,
+        gmail_reauthorization_required: true,
+        gmail_reauthorization_at: new Date().toISOString()
+      },
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", connection.id)
+    .eq("workspace_id", workspaceId);
+
+  if (updateError) {
+    console.error("Could not record Gmail reconnection requirement:", updateError.message);
   }
+
+  throw new Error("Gmail refresh token is missing. Reconnect Gmail.");
+}
 
   const oauthClient = createGmailOAuthClient();
 
@@ -131,7 +155,56 @@ async function getGmailClientForWorkspace(workspaceId) {
   });
 
   // Automatically refresh the access token when necessary.
-  const { token } = await oauthClient.getAccessToken();
+
+  let token;
+
+try {
+  const result = await oauthClient.getAccessToken();
+  token = result.token;
+} catch (error) {
+  const googleError = String(
+    error.response?.data?.error ||
+    error.code ||
+    error.message ||
+    ""
+  );
+
+  if (
+    googleError.includes("invalid_grant") ||
+    googleError.includes("expired or revoked")
+  ) {
+    const metadata =
+      connection.metadata &&
+      typeof connection.metadata === "object" &&
+      !Array.isArray(connection.metadata)
+        ? connection.metadata
+        : {};
+
+    const { error: updateError } = await supabase
+      .from("provider_connections")
+      .update({
+        metadata: {
+          ...metadata,
+          gmail_reauthorization_required: true,
+          gmail_reauthorization_at: new Date().toISOString()
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", connection.id)
+      .eq("workspace_id", workspaceId);
+
+    if (updateError) {
+      console.error(
+        "Could not record Gmail reconnection requirement:",
+        updateError.message
+      );
+    }
+  }
+
+  throw error;
+}
+
+  
 
   if (!token) {
     throw new Error("Could not obtain a Gmail access token.");
