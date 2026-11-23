@@ -4842,11 +4842,54 @@ app.get("/api/inbox/conversations", authenticateUser, async (req, res) => {
   }
 
   const { data, error } = await query;
-  if (error) {
-    console.error("Inbox conversation query failed:", error.message);
-    return res.status(500).json({ success: false, error: "Could not load inbox conversations." });
+
+if (error) {
+  console.error("Inbox conversation query failed:", error.message);
+  return res.status(500).json({
+    success: false,
+    error: "Could not load inbox conversations."
+  });
+}
+
+const conversations = data || [];
+const conversationIds = conversations.map(c => c.id);
+
+let latestMessagesByConversation = new Map();
+
+if (conversationIds.length) {
+  const { data: latestMessages, error: messagesError } =
+    await supabase
+      .from("inbox_messages")
+      .select("conversation_id, body_text, direction, created_at, is_ai_draft")
+      .eq("workspace_id", workspace.id)
+      .in("conversation_id", conversationIds)
+      .eq("is_ai_draft", false)
+      .order("created_at", { ascending: false });
+
+  if (messagesError) {
+    console.error("Inbox preview lookup failed:", messagesError.message);
+  } else {
+    for (const message of latestMessages || []) {
+      if (!latestMessagesByConversation.has(message.conversation_id)) {
+        latestMessagesByConversation.set(
+          message.conversation_id,
+          message.body_text || ""
+        );
+      }
+    }
   }
-  return res.json({ success: true, conversations: data || [] });
+}
+
+return res.json({
+  success: true,
+  conversations: conversations.map(c => ({
+    ...c,
+    latest_message_preview:
+      latestMessagesByConversation.get(c.id) || ""
+  }))
+});
+
+  
 });
 
 
