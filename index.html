@@ -9505,6 +9505,8 @@ async function loadLiveConversations() {
   from: m.direction === "inbound" ? "customer" : "business",
   text: m.body_text || ""
 }));
+        console.log("Mapped messages:", selected.messages);
+        
       }
     }
 
