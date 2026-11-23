@@ -12892,6 +12892,25 @@ $("draft-btn").addEventListener("click", async () => {
     .filter(m => m.from === "customer")
     .slice(-1)[0];
 
+
+
+  console.log("Draft diagnostic:", {
+  conversationId: c.id,
+  messageCount: c.messages.length,
+  messages: c.messages.map(m => ({
+    direction: m.direction,
+    from: m.from,
+    text: m.text,
+    body_text: m.body_text
+  })),
+  latest
+});
+
+  
+
+
+  
+
   if (!latest) {
     notify("No customer message is available to reply to.");
     return;
