@@ -9678,8 +9678,15 @@ top.append(identity, make("span", "convo-time", c.time));
 
 
 
-    const last = c.messages[c.messages.length-1];
-    const preview = make("div","convo-preview",last ? last.text : "No messages");
+    const last = c.messages[c.messages.length - 1];
+
+const previewText =
+  last?.text ||
+  c.latestMessagePreview ||
+  "No messages";
+
+const preview = make("div", "convo-preview", previewText);
+    
     const bottom = make("div","convo-bottom");
     const tag = make("span","convo-tag",c.review ? "Needs human review" : c.resolved ? "Resolved" : c.category);
     bottom.append(tag);
@@ -15990,7 +15997,8 @@ async function showConnectInfo(channel) {
       review: row.status === "needs_review",
       resolved: row.status === "resolved",
       unread: Number(row.unread_count || 0) > 0,
-      messages: []
+      messages: [],
+latestMessagePreview: row.latest_message_preview || ""
     };
   }
 
