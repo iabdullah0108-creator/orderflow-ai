@@ -7865,23 +7865,21 @@ body.dark-mode #live-order-review-dialog form > div {
 
 
 
-  #escalate-btn {
-  background: rgba(249, 115, 22, 0.13);
-  color: #9a3412;
-  border: 1px solid rgba(249, 115, 22, 0.25);
-  border-radius: 10px;
+#escalate-btn {
+  background: var(--orange-soft) !important;
+  color: var(--orange) !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
 }
 
 
 
-  .btn.green {
-  background: rgba(34, 197, 94, 0.13);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 10px;
+button.btn-approve {
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
 }
-
-
 
   
 
@@ -12851,7 +12849,7 @@ async function renderApprovals() {
       }
 
       if (a.status === "pending" || a.status === "in_review") {
-        const approve = make("button", "btn green", "Approve decision");
+        const approve = make("button", "btn btn-approve", "Approve decision");
         approve.type = "button";
         approve.addEventListener("click", () => review("approved", approve));
 
