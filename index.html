@@ -1654,6 +1654,14 @@ td{font-size:13px}
   color: #ea4335;
 }
 
+  #selected-channel.of-header-platform.outlook,
+.of-header-platform-logo.outlook {
+  color: #0078d4;
+}
+
+
+  
+
 /* ===== Tint individual message bubbles ===== */
 
 /* WhatsApp */
@@ -1677,6 +1685,13 @@ td{font-size:13px}
   border-color: #f1c7c3;
 }
 
+  /* Outlook */
+.message-bubble.of-bubble-outlook {
+  background: #e3f2fd !important;
+  color: #17446b;
+  border-color: #bbdefb;
+}
+
 /* Dark mode */
 :root[data-theme="dark"] .message-bubble.of-bubble-whatsapp {
   background: #254b34 !important;
@@ -1694,6 +1709,12 @@ td{font-size:13px}
   background: #512d2b !important;
   color: #ffe8e6;
   border-color: #74413d;
+}
+
+  :root[data-theme="dark"] .message-bubble.of-bubble-outlook {
+  background: #193b56 !important;
+  color: #e1f2ff;
+  border-color: #285777;
 }
 
 /* ===== Right-side Human Review warning ===== */
@@ -15449,7 +15470,8 @@ adapter intentionally exposes functions instead of guessing/overwriting those ID
   const css = `
   .of-channel-connectors {
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    /* grid-template-columns:repeat(3,minmax(0,1fr)); */
+    grid-template-columns:repeat(4,minmax(0,1fr));
     gap:12px;
     margin:0 0 18px;
   }
@@ -15627,6 +15649,14 @@ adapter intentionally exposes functions instead of guessing/overwriting those ID
     color:#a52870;
     border-color:#f1cde5;
   }
+
+.of-channel-bubble.outlook {
+  background:#e3f2fd;
+  color:#005a9e;
+  border-color:#bbdefb;
+}
+
+  
   .of-channel-bubble.other {
     background:var(--surface2,#f0f3f9);
     color:var(--muted,#718096);
@@ -15838,13 +15868,31 @@ button.of-return-demo-btn:focus-visible {
     return data;
   }
 
-  function channelKey(value) {
-    const s = String(value || "").toLowerCase();
-    if (s.includes("gmail") || s === "email" || s.includes("email")) return "gmail";
-    if (s.includes("whatsapp")) return "whatsapp";
-    if (s.includes("instagram")) return "instagram";
-    return "other";
-  }
+  // function channelKey(value) {
+  //   const s = String(value || "").toLowerCase();
+  //   if (s.includes("gmail") || s === "email" || s.includes("email")) return "gmail";
+  //   if (s.includes("whatsapp")) return "whatsapp";
+  //   if (s.includes("instagram")) return "instagram";
+  //   return "other";
+  // }
+
+
+
+function channelKey(value) {
+  const s = String(value || "").toLowerCase();
+
+  if (s.includes("outlook") || s.includes("microsoft")) return "outlook";
+  if (s.includes("gmail")) return "gmail";
+  if (s === "email" || s.includes("email")) return "gmail";
+  if (s.includes("whatsapp")) return "whatsapp";
+  if (s.includes("instagram")) return "instagram";
+
+  return "other";
+}
+  
+  
+
+  
 
   function badge(channel) {
     const key = channelKey(channel);
@@ -16156,7 +16204,25 @@ latestMessagePreview: row.latest_message_preview || ""
                 fill="none" stroke="currentColor" stroke-width="2.2"/>
               <circle cx="17.6" cy="6.7" r="1.2" fill="currentColor"/>
             </svg>`;
-        }
+        } else if (platform === "outlook") {
+          logo.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor"
+                d="M3 5.5 12 3v18l-9-2.5z"/>
+              <path fill="currentColor"
+                d="M13 5h8v14h-8z" opacity=".75"/>
+              <path fill="none" stroke="currentColor"
+                stroke-width="1.5" d="m13 8 4 3 4-3"/>
+              <path fill="none" stroke="currentColor"
+                stroke-width="1.5" d="m13 16 4-3 4 3"/>
+              <path fill="none" stroke="white"
+                stroke-width="1.5" d="M6.5 9.2c-1.5 0-2.5 1.2-2.5 2.8s1 2.8 2.5 2.8 2.5-1.2 2.5-2.8-1-2.8-2.5-2.8Z"/>
+            </svg>`;
+      }
+
+        
+
+        
 
         identity.append(logo);
       }
@@ -16245,7 +16311,7 @@ if (ch) {
           <path fill="currentColor"
             d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Z"/>
         </svg>`;
-    } else {
+       } else if (platform === "instagram") {
       logo.innerHTML = `
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5"
@@ -16254,8 +16320,17 @@ if (ch) {
             fill="none" stroke="currentColor" stroke-width="2.2"/>
           <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
         </svg>`;
+    } else if (platform === "outlook") {
+      logo.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M3 5.5 12 3v18l-9-2.5z"/>
+          <path fill="currentColor" d="M13 5h8v14h-8z" opacity=".75"/>
+          <path fill="none" stroke="currentColor"
+            stroke-width="1.5" d="m13 8 4 3 4-3"/>
+          <path fill="none" stroke="white"
+            stroke-width="1.5" d="M6.5 9.2c-1.5 0-2.5 1.2-2.5 2.8s1 2.8 2.5 2.8 2.5-1.2 2.5-2.8-1-2.8-2.5-2.8Z"/>
+        </svg>`;
     }
-
     const label = document.createElement("span");
     label.className = "of-header-platform-name";
     label.textContent = platformName;
