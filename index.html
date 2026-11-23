@@ -10022,15 +10022,29 @@ $("resolve-btn").disabled = c.resolved;
 
   // Show the saved AI suggestion without overwriting a reply
   // the user has already started writing.
+
+
   const replyDraft = $("reply-draft");
 
-  if (
-    replyDraft &&
-    !replyDraft.value.trim() &&
-    latestInbound?.ai_suggested_reply
-  ) {
-    replyDraft.value = latestInbound.ai_suggested_reply;
-  }
+const latestInboundIndex = (c.messages || [])
+  .map(m => m.direction === "inbound")
+  .lastIndexOf(true);
+
+const hasReplyAfterLatestInbound = latestInboundIndex >= 0 &&
+  (c.messages || []).slice(latestInboundIndex + 1).some(m =>
+    m.direction === "outbound" || m.from === "business"
+  );
+
+if (
+  replyDraft &&
+  !replyDraft.value.trim() &&
+  latestInbound?.ai_suggested_reply &&
+  !hasReplyAfterLatestInbound
+) {
+  replyDraft.value = latestInbound.ai_suggested_reply;
+}
+
+  
 }
 
 
