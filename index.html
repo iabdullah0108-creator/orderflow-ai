@@ -15982,21 +15982,33 @@ async function showConnectInfo(channel) {
         const button = document.querySelector(`[data-connect-channel="${key}"]`);
 
         if (node) {
-          node.textContent = row
-            ? row.status === "connected"
-              ? `Connected${row.display_name ? " · " + row.display_name : ""}`
-              : row.status === "error"
-                ? "Connection error"
-                : "Not connected"
-            : "Not connected";
-        }
+  const reconnectRequired =
+    key === "gmail" &&
+    row?.metadata?.gmail_reauthorization_required === true;
+
+  node.textContent = reconnectRequired
+    ? "Gmail authorization expired — reconnect required"
+    : row
+      ? row.status === "connected"
+        ? `Connected${row.display_name ? " · " + row.display_name : ""}`
+        : row.status === "error"
+          ? "Connection error"
+          : "Not connected"
+      : "Not connected";
+}
 
         if (button) {
-          button.textContent =
-            row?.status === "connected"
-              ? "Manage " + CHANNELS[key].label
-              : "Connect " + CHANNELS[key].label;
-        }
+  const reconnectRequired =
+    key === "gmail" &&
+    row?.metadata?.gmail_reauthorization_required === true;
+
+  button.textContent = reconnectRequired
+    ? "Reconnect Gmail"
+    : row?.status === "connected"
+      ? "Manage " + CHANNELS[key].label
+      : "Connect " + CHANNELS[key].label;
+}
+        
       });
     } catch (e) {
       Object.keys(CHANNELS).forEach(key => {
