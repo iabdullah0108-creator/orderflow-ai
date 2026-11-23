@@ -9704,8 +9704,16 @@ top.append(identity, make("span", "convo-time", c.time));
 
       if (selectedId !== c.id) return;
 
-      c.messages = result.messages || [];
-      renderSelected();
+
+      c.messages = (result.messages || []).map(m => ({
+  ...m,
+  from: m.direction === "inbound" ? "customer" : "business",
+  text: m.body_text || ""
+}));
+
+renderSelected();
+      
+      
     } catch (error) {
       console.error("Could not load conversation messages:", error);
       notify("Could not load conversation messages.");
