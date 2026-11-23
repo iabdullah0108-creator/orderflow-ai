@@ -12905,6 +12905,22 @@ $("draft-btn").addEventListener("click", async () => {
   const c = selectedConversation();
   if (!c || c.resolved) return;
 
+
+
+  console.log("Generate Draft selected messages:", {
+  conversationId: c.id,
+  messages: (c.messages || []).map(m => ({
+    direction: m.direction,
+    from: m.from,
+    text: m.text,
+    body_text: m.body_text
+  }))
+});
+
+
+
+  
+
   const latest = c.messages
     .filter(m => m.from === "customer")
     .slice(-1)[0];
