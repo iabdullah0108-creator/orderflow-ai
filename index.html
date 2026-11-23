@@ -9534,17 +9534,23 @@ customerEmail: c.customer_email,
       }
     }
 
-    // Capture the latest text immediately before rendering.
-    const replyDraft = $("reply-draft")?.value || "";
+    // // Capture the latest text immediately before rendering.
+    // const replyDraft = $("reply-draft")?.value || "";
+
+    // renderInbox();
+    // renderSelected();
+
+    // // Restore the latest unsent reply.
+    // if ($("reply-draft")) {
+    //   $("reply-draft").value = replyDraft;
+    // }
+
+
 
     renderInbox();
-    renderSelected();
+renderSelected();
 
-    // Restore the latest unsent reply.
-    if ($("reply-draft")) {
-      $("reply-draft").value = replyDraft;
-    }
-
+    
     updateCounts();
 
   } catch (error) {
