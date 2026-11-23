@@ -4655,7 +4655,7 @@ app.get("/api/integrations/connections", authenticateUser, async (req, res) => {
 
   const { data, error } = await supabase
     .from("provider_connections")
-    .select("id, channel, external_account_id, display_name, status, last_error, connected_at, updated_at")
+    .select("id, channel, external_account_id, display_name, status, last_error, connected_at, updated_at, metadata")
     .eq("workspace_id", workspace.id)
     .order("channel", { ascending: true });
 
