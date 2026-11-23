@@ -9759,6 +9759,7 @@ function renderMessages(c) {
       : (m.time || "");
 
     const isDraft = Boolean(m.is_ai_draft);
+    if (isDraft) return;
 
     const wrap = make(
       "div",
