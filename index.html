@@ -9479,7 +9479,8 @@ async function loadLiveConversations() {
         review: c.status === "needs_review",
         resolved: c.status === "resolved",
         messages: [],
-        customerEmail: c.customer_email,
+latestMessagePreview: c.latest_message_preview || "",
+customerEmail: c.customer_email,
         customerId: c.customer_id
       };
     });
