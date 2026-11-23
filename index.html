@@ -13477,8 +13477,14 @@ $("approve-send-btn").addEventListener("click", async () => {
 
       c.time = "now";
 
-      renderInbox();
-      renderSelected();
+// Move the recently active conversation to the top.
+conversations = [
+  c,
+  ...conversations.filter(item => item.id !== c.id)
+];
+
+renderInbox();
+renderSelected();
     }
 
     notify(
