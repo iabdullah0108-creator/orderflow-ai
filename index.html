@@ -16092,7 +16092,9 @@ latestMessagePreview: row.latest_message_preview || ""
 
       const preview = document.createElement("div");
       preview.className = "convo-preview";
-      preview.textContent = c.subject || "Open to load message history";
+      
+      preview.textContent =
+  c.latestMessagePreview || c.subject || "No messages";
 
       const bottom = document.createElement("div");
       bottom.className = "convo-bottom";
