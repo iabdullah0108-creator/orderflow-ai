@@ -4803,19 +4803,47 @@ app.get(
         throw new Error("Could not identify the Gmail account.");
       }
 
+
+
+      const { data: existingConnection } = await supabase
+  .from("provider_connections")
+  .select("metadata")
+  .eq("workspace_id", oauthState.workspace_id)
+  .eq("channel", "gmail")
+  .maybeSingle();
+
+const existingMetadata =
+  existingConnection?.metadata &&
+  typeof existingConnection.metadata === "object" &&
+  !Array.isArray(existingConnection.metadata)
+    ? existingConnection.metadata
+    : {};
+
+const updatedMetadata = {
+  ...existingMetadata,
+  gmail_reauthorization_required: false,
+  gmail_reauthorization_at: null
+};
+
+
+      
+
       const { data: connection, error: connectionError } = await supabase
         .from("provider_connections")
         .upsert(
           {
-            workspace_id: oauthState.workspace_id,
-            channel: "gmail",
-            external_account_id: email,
-            display_name: email,
-            status: "connected",
-            last_error: null,
-            connected_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
+  workspace_id: oauthState.workspace_id,
+  channel: "gmail",
+  external_account_id: email,
+  display_name: email,
+  status: "connected",
+  last_error: null,
+            
+ metadata: updatedMetadata,
+            
+  connected_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+},
           { onConflict: "workspace_id,channel" }
         )
         .select("id")
