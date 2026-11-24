@@ -14589,12 +14589,45 @@ try {
         return;
       }
 
+
+      
       const { data, error } =
         await supabaseClient.auth.getSession();
 
       if (error) throw error;
 
+      // Handle the Instagram OAuth callback result.
+      const instagramStatus = queryParams.get("instagram");
+
+      if (instagramStatus === "connected") {
+        notifyUser("Instagram account connected successfully.");
+      } else if (instagramStatus === "error") {
+        notifyUser(
+          "Instagram connection failed. Please check your Meta configuration and try again."
+        );
+      }
+
+      // Remove the callback parameter from the address bar.
+      if (instagramStatus) {
+        queryParams.delete("instagram");
+
+        const cleanUrl =
+          url.pathname +
+          (queryParams.toString() ? "?" + queryParams.toString() : "") +
+          url.hash;
+
+        window.history.replaceState(
+          {},
+          document.title,
+          cleanUrl
+        );
+      }
+
       authScreen.style.display = data.session ? "none" : "flex";
+
+
+
+      
     } catch (error) {
       console.error("Initial authentication check failed:", error);
       authScreen.style.display = "flex";
@@ -15998,6 +16031,8 @@ function channelKey(value) {
 
 
 
+
+
   
 async function showConnectInfo(channel) {
   const c = CHANNELS[channel];
@@ -16033,18 +16068,54 @@ async function showConnectInfo(channel) {
     return;
   }
 
+  if (channel === "instagram") {
+    const button = document.querySelector(
+      '[data-connect-channel="instagram"]'
+    );
+
+    try {
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Connecting…";
+      }
+
+      const data = await api("/api/integrations/instagram/connect");
+
+      if (!data.url) {
+        throw new Error("Instagram authorization URL was not returned.");
+      }
+
+      window.location.href = data.url;
+      return;
+    } catch (error) {
+      notifyUser("Instagram connection could not start: " + error.message);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Connect Instagram";
+      }
+    }
+
+    return;
+  }
+
   const docs = {
-    whatsapp: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started",
-    instagram: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login"
+    whatsapp: "https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
   };
 
   notifyUser(
     `${c.label} connection is not implemented yet. No account has been connected.`
   );
 
-  window.open(docs[channel], "_blank", "noopener,noreferrer");
+  if (docs[channel]) {
+    window.open(docs[channel], "_blank", "noopener,noreferrer");
+  }
 }
 
+
+  
+
+  
 
   
 
