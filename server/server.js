@@ -1117,8 +1117,21 @@ app.post(
 
 
 
-app.use(express.json({ limit: "20kb" }));
+// app.use(express.json({ limit: "20kb" }));
 
+
+
+app.use(express.json({
+  limit: "20kb",
+  verify: (req, res, buf) => {
+    if (
+      req.originalUrl?.split("?")[0] ===
+      "/api/integrations/instagram/webhook"
+    ) {
+      req.rawBody = Buffer.from(buf);
+    }
+  }
+}));
 
 
 
@@ -4741,6 +4754,103 @@ app.get(
 
 
 
+
+
+app.get(
+  "/api/integrations/instagram/connect",
+  authenticateUser,
+  async (req, res) => {
+    try {
+      const workspace = await requireWorkspace(req, res);
+      if (!workspace) return;
+
+      const appId = process.env.META_APP_ID;
+      const configId = process.env.META_LOGIN_CONFIG_ID;
+
+      if (!appId || !configId || !process.env.META_APP_SECRET) {
+        return res.status(500).json({
+          success: false,
+          error: "Instagram Unified Login is not configured."
+        });
+      }
+
+      const redirectUri =
+        "https://orderflow-ai-umber.vercel.app/api/integrations/instagram/callback";
+
+      const state = crypto.randomBytes(32).toString("hex");
+
+      const stateHash = crypto
+        .createHash("sha256")
+        .update(state)
+        .digest("hex");
+
+      const { error } = await supabase
+        .from("provider_oauth_states")
+        .insert({
+          state_hash: stateHash,
+          user_id: req.user.id,
+          workspace_id: workspace.id,
+          provider: "instagram",
+          expires_at: new Date(
+            Date.now() + 10 * 60 * 1000
+          ).toISOString()
+        });
+
+      if (error) {
+        console.error(
+          "Instagram OAuth state creation failed:",
+          error.message
+        );
+
+        return res.status(500).json({
+          success: false,
+          error: "Could not start Instagram connection."
+        });
+      }
+
+      const params = new URLSearchParams({
+        client_id: appId,
+        config_id: configId,
+        redirect_uri: redirectUri,
+        response_type: "code",
+        override_default_response_type: "true",
+        state,
+        display: "popup",
+        prompt: "login"
+      });
+
+      const url =
+        `https://www.facebook.com/dialog/oauth?${params.toString()}`;
+
+      return res.json({
+        success: true,
+        url
+      });
+
+    } catch (error) {
+      console.error(
+        "Instagram connection start failed:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        error: "Could not start Instagram connection."
+      });
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
 app.get(
   "/api/integrations/gmail/callback",
   async (req, res) => {
@@ -4911,6 +5021,298 @@ const updatedMetadata = {
     }
   }
 );
+
+
+
+
+
+
+
+
+app.get(
+  "/api/integrations/instagram/callback",
+  async (req, res) => {
+    const appUrl = process.env.APP_URL;
+    const redirect = (status) => {
+      const url = new URL("/", appUrl);
+      url.searchParams.set("instagram", status);
+      return res.redirect(url.toString());
+    };
+
+    let connectionId = null;
+
+    try {
+      const {
+        code,
+        state,
+        error: metaError
+      } = req.query;
+
+      if (metaError) return redirect("error");
+
+      if (
+        typeof code !== "string" ||
+        typeof state !== "string"
+      ) {
+        return redirect("error");
+      }
+
+      // Validate and consume the one-time OAuth state.
+      const stateHash = crypto
+        .createHash("sha256")
+        .update(state)
+        .digest("hex");
+
+      const { data: oauthState, error: stateError } =
+        await supabase
+          .from("provider_oauth_states")
+          .delete()
+          .eq("state_hash", stateHash)
+          .eq("provider", "instagram")
+          .select("user_id, workspace_id, expires_at")
+          .maybeSingle();
+
+      if (stateError || !oauthState) {
+        return redirect("error");
+      }
+
+      if (
+        new Date(oauthState.expires_at).getTime() <
+        Date.now()
+      ) {
+        return redirect("error");
+      }
+
+      const appId = process.env.META_APP_ID;
+      const appSecret = process.env.META_APP_SECRET;
+
+      if (!appId || !appSecret) {
+        throw new Error("Meta app credentials are not configured.");
+      }
+
+      const redirectUri =
+        "https://orderflow-ai-umber.vercel.app/api/integrations/instagram/callback";
+
+      // Exchange Meta's authorization code for an access token.
+      const tokenUrl = new URL(
+        "https://graph.facebook.com/v27.0/oauth/access_token"
+      );
+
+      tokenUrl.search = new URLSearchParams({
+        client_id: appId,
+        client_secret: appSecret,
+        redirect_uri: redirectUri,
+        code
+      }).toString();
+
+      const tokenResponse = await fetch(tokenUrl.toString());
+      const tokenData = await tokenResponse.json();
+
+      if (
+        !tokenResponse.ok ||
+        !tokenData.access_token
+      ) {
+        console.error(
+          "Instagram token exchange failed:",
+          tokenData.error?.message || tokenResponse.status
+        );
+
+        throw new Error("Meta token exchange failed.");
+      }
+
+      const accessToken = tokenData.access_token;
+
+      // Discover Instagram accounts assigned to this token.
+      const accountsUrl = new URL(
+        "https://graph.facebook.com/v27.0/me/assigned_instagram_accounts"
+      );
+
+      accountsUrl.search = new URLSearchParams({
+        fields: "id,username,name",
+        access_token: accessToken
+      }).toString();
+
+      const accountsResponse = await fetch(
+        accountsUrl.toString()
+      );
+
+      const accountsData = await accountsResponse.json();
+
+      if (!accountsResponse.ok) {
+        console.error(
+          "Instagram account discovery failed:",
+          accountsData.error?.message || accountsResponse.status
+        );
+
+        throw new Error("Could not retrieve Instagram accounts.");
+      }
+
+      const accounts = accountsData.data || [];
+
+      if (accounts.length === 0) {
+        console.error(
+          "Instagram authorization succeeded, but Meta returned no assigned Instagram accounts."
+        );
+
+        throw new Error("No Instagram account was returned.");
+      }
+
+      if (accounts.length !== 1) {
+        console.error(
+          "Multiple Instagram accounts were returned. Account selection is not implemented yet."
+        );
+
+        throw new Error("Multiple Instagram accounts found.");
+      }
+
+      const instagramAccount = accounts[0];
+
+      if (!instagramAccount.id) {
+        throw new Error("Instagram account ID is missing.");
+      }
+
+      const username = instagramAccount.username || null;
+
+      const displayName = username
+        ? `@${username}`
+        : instagramAccount.name || instagramAccount.id;
+
+      // Preserve any existing connection metadata.
+      const { data: existingConnection, error: metadataError } =
+        await supabase
+          .from("provider_connections")
+          .select("metadata")
+          .eq("workspace_id", oauthState.workspace_id)
+          .eq("channel", "instagram")
+          .maybeSingle();
+
+      if (metadataError) {
+        throw new Error("Could not retrieve Instagram connection metadata.");
+      }
+
+      const existingMetadata =
+        existingConnection?.metadata &&
+        typeof existingConnection.metadata === "object" &&
+        !Array.isArray(existingConnection.metadata)
+          ? existingConnection.metadata
+          : {};
+
+      const updatedMetadata = {
+        ...existingMetadata,
+        instagram_user_id: instagramAccount.id,
+        instagram_username: username,
+        login_method: "unified_login",
+        graph_api_version: "v27.0"
+      };
+
+      // Save the connection as pending until credentials are saved.
+      const { data: connection, error: connectionError } =
+        await supabase
+          .from("provider_connections")
+          .upsert(
+            {
+              workspace_id: oauthState.workspace_id,
+              channel: "instagram",
+              external_account_id: instagramAccount.id,
+              display_name: displayName,
+              status: "pending",
+              last_error: null,
+              metadata: updatedMetadata,
+              connected_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: "workspace_id,channel" }
+          )
+          .select("id")
+          .single();
+
+      if (connectionError || !connection) {
+        console.error(
+          "Instagram connection database error:",
+          connectionError?.message
+        );
+
+        throw new Error("Could not save Instagram connection.");
+      }
+
+      connectionId = connection.id;
+
+      const expiresIn = Number(tokenData.expires_in);
+
+      const tokenExpiresAt =
+        Number.isFinite(expiresIn) && expiresIn > 0
+          ? new Date(
+              Date.now() + expiresIn * 1000
+            ).toISOString()
+          : null;
+
+      // Encrypt and save the access token.
+      const { error: credentialsError } = await supabase
+        .from("provider_credentials")
+        .upsert(
+          {
+            workspace_id: oauthState.workspace_id,
+            provider_connection_id: connection.id,
+            access_token_encrypted: encryptToken(accessToken),
+            refresh_token_encrypted: null,
+            token_expires_at: tokenExpiresAt,
+            scopes: [
+              "instagram_basic",
+              "instagram_manage_messages"
+            ],
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "provider_connection_id" }
+        );
+
+      if (credentialsError) {
+        console.error(
+          "Instagram credential storage failed:",
+          credentialsError.message
+        );
+
+        throw new Error("Could not securely save Instagram credentials.");
+      }
+
+      // Mark connected only after credentials have been saved.
+      const { error: statusError } = await supabase
+        .from("provider_connections")
+        .update({
+          status: "connected",
+          last_error: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", connection.id)
+        .eq("workspace_id", oauthState.workspace_id);
+
+      if (statusError) {
+        throw new Error("Could not finalize Instagram connection.");
+      }
+
+      return redirect("connected");
+
+    } catch (error) {
+      console.error(
+        "Instagram OAuth callback failed:",
+        error.message
+      );
+
+      if (connectionId) {
+        await supabase
+          .from("provider_connections")
+          .update({
+            last_error: "Instagram connection setup failed.",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", connectionId);
+      }
+
+      return redirect("error");
+    }
+  }
+);
+
+
 
 
 
@@ -8612,7 +9014,51 @@ app.post(
 
 
 
+// Instagram webhook verification (Meta GET challenge).
+app.get(
+  "/api/integrations/instagram/webhook",
+  (req, res) => {
+    try {
+      const mode = req.query["hub.mode"];
+      const token = req.query["hub.verify_token"];
+      const challenge = req.query["hub.challenge"];
 
+      const expectedToken =
+        process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+
+      if (!expectedToken) {
+        console.error(
+          "Instagram webhook verification token is not configured."
+        );
+
+        return res.status(503).send("Webhook not configured.");
+      }
+
+      if (
+        mode === "subscribe" &&
+        typeof token === "string" &&
+        token === expectedToken &&
+        typeof challenge === "string"
+      ) {
+        console.log("Instagram webhook verified.");
+
+        return res.status(200).type("text/plain").send(challenge);
+      }
+
+      console.warn("Instagram webhook verification rejected.");
+
+      return res.sendStatus(403);
+
+    } catch (error) {
+      console.error(
+        "Instagram webhook verification error:",
+        error.message
+      );
+
+      return res.sendStatus(500);
+    }
+  }
+);
 
 
 
