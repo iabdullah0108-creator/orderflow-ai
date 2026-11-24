@@ -9200,10 +9200,13 @@ app.post(
 
           const timestamp = Number(event.timestamp);
 
-          const receivedAt =
-            Number.isFinite(timestamp) && timestamp > 0
-              ? new Date(timestamp).toISOString()
-              : new Date().toISOString();
+const timestampMs =
+  timestamp < 1e12 ? timestamp * 1000 : timestamp;
+
+const receivedAt =
+  Number.isFinite(timestamp) && timestamp > 0
+    ? new Date(timestampMs).toISOString()
+    : new Date().toISOString();
 
           // Find or create the customer's conversation.
           let { data: conversation, error: conversationError } =
