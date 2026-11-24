@@ -9068,6 +9068,271 @@ app.get(
 
 
 
+// Instagram webhook receiver (Meta POST events).
+app.post(
+  "/api/integrations/instagram/webhook",
+  async (req, res) => {
+    try {
+      const appSecret = process.env.META_APP_SECRET;
+      const signature = req.get("x-hub-signature-256") || "";
+
+      // Verify Meta's signature against the original request body.
+      if (!appSecret || !Buffer.isBuffer(req.rawBody)) {
+        console.error("Instagram webhook signature verification is not configured.");
+        return res.sendStatus(503);
+      }
+
+      const expectedSignature = crypto
+        .createHmac("sha256", appSecret)
+        .update(req.rawBody)
+        .digest("hex");
+
+      const suppliedSignature = signature.startsWith("sha256=")
+        ? signature.slice(7)
+        : "";
+
+      const expectedBuffer = Buffer.from(expectedSignature, "hex");
+      const suppliedBuffer = Buffer.from(suppliedSignature, "hex");
+
+      if (
+        !suppliedSignature ||
+        expectedBuffer.length !== suppliedBuffer.length ||
+        !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)
+      ) {
+        console.warn("Instagram webhook signature rejected.");
+        return res.sendStatus(401);
+      }
+
+      const payload = req.body || {};
+
+      if (payload.object !== "instagram") {
+        return res.sendStatus(404);
+      }
+
+      const entries = Array.isArray(payload.entry)
+        ? payload.entry
+        : [];
+
+      for (const entry of entries) {
+        const events = Array.isArray(entry.messaging)
+          ? entry.messaging
+          : [];
+
+        for (const event of events) {
+          const incoming = event.message;
+
+          // Ignore echoes and events that are not incoming messages.
+          if (
+            !incoming ||
+            incoming.is_echo === true ||
+            !incoming.mid ||
+            !event.sender?.id
+          ) {
+            continue;
+          }
+
+          const senderId = String(event.sender.id);
+
+          const accountIds = [
+            entry.id,
+            event.recipient?.id
+          ]
+            .filter(Boolean)
+            .map(String);
+
+          if (!accountIds.length) continue;
+
+          // Find the connected OrderFlow workspace for this Instagram account.
+          const { data: connections, error: connectionError } =
+            await supabase
+              .from("provider_connections")
+              .select("id, workspace_id, external_account_id")
+              .eq("channel", "instagram")
+              .eq("status", "connected")
+              .in("external_account_id", accountIds)
+              .limit(2);
+
+          if (connectionError) {
+            throw new Error("INSTAGRAM_CONNECTION_LOOKUP_FAILED");
+          }
+
+          // Never guess which workspace owns an ambiguous account.
+          if (!connections || connections.length !== 1) {
+            console.warn(
+              "Instagram event ignored: no unique connected workspace found."
+            );
+            continue;
+          }
+
+          const connection = connections[0];
+          const workspaceId = connection.workspace_id;
+          const accountId = connection.external_account_id;
+          const externalMessageId = String(incoming.mid);
+
+          // Ignore duplicate webhook deliveries.
+          const { data: existingMessage, error: duplicateError } =
+            await supabase
+              .from("inbox_messages")
+              .select("id")
+              .eq("workspace_id", workspaceId)
+              .eq("external_message_id", externalMessageId)
+              .maybeSingle();
+
+          if (duplicateError) {
+            throw new Error("INSTAGRAM_DUPLICATE_LOOKUP_FAILED");
+          }
+
+          if (existingMessage) continue;
+
+          const attachments = Array.isArray(incoming.attachments)
+            ? incoming.attachments
+            : [];
+
+          const bodyText = inboxText(
+            incoming.text ||
+              (attachments.length
+                ? "Customer sent an Instagram attachment."
+                : ""),
+            20000
+          );
+
+          if (!bodyText) continue;
+
+          const timestamp = Number(event.timestamp);
+
+          const receivedAt =
+            Number.isFinite(timestamp) && timestamp > 0
+              ? new Date(timestamp).toISOString()
+              : new Date().toISOString();
+
+          // Find or create the customer's conversation.
+          let { data: conversation, error: conversationError } =
+            await supabase
+              .from("inbox_conversations")
+              .select("id, unread_count")
+              .eq("workspace_id", workspaceId)
+              .eq("channel", "instagram")
+              .eq("external_thread_id", senderId)
+              .maybeSingle();
+
+          if (conversationError) {
+            throw new Error("INSTAGRAM_CONVERSATION_LOOKUP_FAILED");
+          }
+
+          if (!conversation) {
+            const inserted = await supabase
+              .from("inbox_conversations")
+              .insert({
+                workspace_id: workspaceId,
+                channel: "instagram",
+                external_thread_id: senderId,
+                external_account_id: accountId,
+                customer_name: "Instagram customer",
+                status: "open",
+                last_message_at: receivedAt,
+                unread_count: 1
+              })
+              .select("id, unread_count")
+              .single();
+
+            if (inserted.error) {
+              // Another webhook may have created this conversation.
+              const retry = await supabase
+                .from("inbox_conversations")
+                .select("id, unread_count")
+                .eq("workspace_id", workspaceId)
+                .eq("channel", "instagram")
+                .eq("external_thread_id", senderId)
+                .maybeSingle();
+
+              if (retry.error || !retry.data) {
+                throw new Error("INSTAGRAM_CONVERSATION_CREATE_FAILED");
+              }
+
+              conversation = retry.data;
+            } else {
+              conversation = inserted.data;
+            }
+          } else {
+            const { error: updateError } = await supabase
+              .from("inbox_conversations")
+              .update({
+                last_message_at: receivedAt,
+                unread_count: (conversation.unread_count || 0) + 1
+              })
+              .eq("id", conversation.id)
+              .eq("workspace_id", workspaceId);
+
+            if (updateError) {
+              throw new Error("INSTAGRAM_CONVERSATION_UPDATE_FAILED");
+            }
+          }
+
+          // Persist the incoming Instagram DM.
+          const { data: savedMessage, error: saveError } =
+            await supabase
+              .from("inbox_messages")
+              .insert({
+                workspace_id: workspaceId,
+                conversation_id: conversation.id,
+                external_message_id: externalMessageId,
+                direction: "inbound",
+                sender_name: "Instagram customer",
+                sender_address: senderId,
+                body_text: bodyText,
+                delivery_status: "received",
+                provider_payload: {
+                  provider: "instagram",
+                  account_id: accountId,
+                  thread_id: senderId,
+                  timestamp: receivedAt,
+                  attachments
+                }
+              })
+              .select("id")
+              .single();
+
+          if (saveError) {
+            if (saveError.code === "23505") continue;
+
+            throw new Error("INSTAGRAM_MESSAGE_SAVE_FAILED");
+          }
+
+          // Run the existing AI workflow.
+          // It creates drafts or approval cases, never sends automatically.
+          await processInboundInboxMessage(workspaceId, {
+            id: savedMessage.id,
+            conversationId: conversation.id,
+            senderName: "Instagram customer",
+            senderEmail: null,
+            subject: null,
+            bodyText,
+            timestamp: receivedAt,
+            threadId: senderId
+          });
+        }
+      }
+
+      return res.status(200).send("EVENT_RECEIVED");
+
+    } catch (error) {
+      console.error(
+        "Instagram webhook processing failed:",
+        error.message
+      );
+
+      return res.sendStatus(500);
+    }
+  }
+);
+
+
+
+
+
+
+
+
 
 
 
