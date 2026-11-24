@@ -7964,8 +7964,8 @@ async function processInboundInboxMessage(workspaceId, message) {
         .eq("id", savedMessage.id)
         .eq("workspace_id", workspaceId)
         .or(
-          `ai_processing_status.in.(pending,failed),and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()})`
-        )
+  `ai_processing_status.is.null,ai_processing_status.in.(pending,failed),and(ai_processing_status.eq.processing,ai_processing_started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()})`
+)
         .select("id");
 
     if (claimError) {
