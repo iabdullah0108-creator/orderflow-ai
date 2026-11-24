@@ -14597,15 +14597,14 @@ try {
       if (error) throw error;
 
       // Handle the Instagram OAuth callback result.
-      const instagramStatus = queryParams.get("instagram");
+      // Handle the Instagram OAuth callback result.
+const instagramStatus = queryParams.get("instagram");
 
-      if (instagramStatus === "connected") {
-        notifyUser("Instagram account connected successfully.");
-      } else if (instagramStatus === "error") {
-        notifyUser(
-          "Instagram connection failed. Please check your Meta configuration and try again."
-        );
-      }
+if (instagramStatus === "connected") {
+  console.info("Instagram account connected successfully.");
+} else if (instagramStatus === "error") {
+  console.warn("Instagram connection failed. Check Meta configuration.");
+}
 
       // Remove the callback parameter from the address bar.
       if (instagramStatus) {
