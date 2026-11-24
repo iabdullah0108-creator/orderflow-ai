@@ -8063,7 +8063,7 @@ async function processInboundInboxMessage(workspaceId, message) {
     const prompt = `
 You are the Smart Assistant for a business operations platform.
 
-Analyze the latest incoming email and decide how it should be handled.
+Analyze the latest incoming customer message and decide its intent and how it should be handled.
 
 BUSINESS KNOWLEDGE:
 ${businessInfo}
