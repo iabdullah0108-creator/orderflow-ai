@@ -9407,6 +9407,63 @@ app.post(
           const accountId = connection.external_account_id;
           const externalMessageId = String(incoming.mid);
 
+
+
+          // Best-effort lookup of the Instagram customer's profile.
+let instagramCustomerName = "Instagram customer";
+
+try {
+  const { data: credentials, error: credentialsError } =
+    await supabase
+      .from("provider_credentials")
+      .select("access_token_encrypted")
+      .eq("workspace_id", workspaceId)
+      .eq("provider_connection_id", connection.id)
+      .maybeSingle();
+
+  if (credentialsError) {
+    throw credentialsError;
+  }
+
+  const accessToken = decryptToken(
+    credentials?.access_token_encrypted
+  );
+
+  if (accessToken) {
+    const profileResponse = await fetch(
+      `https://graph.facebook.com/v27.0/${encodeURIComponent(senderId)}?fields=name,username,profile_pic`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    const profile = await profileResponse.json().catch(() => ({}));
+
+    if (profileResponse.ok) {
+      instagramCustomerName = profile.username
+        ? `@${profile.username}`
+        : profile.name || "Instagram customer";
+    } else {
+      console.warn(
+        "Instagram profile lookup unavailable:",
+        profile.error?.code || profileResponse.status
+      );
+    }
+  }
+} catch (profileError) {
+  console.warn(
+    "Instagram customer profile lookup failed:",
+    profileError.message
+  );
+}
+          
+
+
+
+          
+
           // Ignore duplicate webhook deliveries.
           const { data: existingMessage, error: duplicateError } =
             await supabase
@@ -9468,7 +9525,7 @@ const receivedAt =
                 channel: "instagram",
                 external_thread_id: senderId,
                 external_account_id: accountId,
-                customer_name: "Instagram customer",
+                customer_name: instagramCustomerName,
                 status: "open",
                 last_message_at: receivedAt,
                 unread_count: 1
@@ -9498,6 +9555,7 @@ const receivedAt =
             const { error: updateError } = await supabase
               .from("inbox_conversations")
               .update({
+                customer_name: instagramCustomerName,
                 last_message_at: receivedAt,
                 unread_count: (conversation.unread_count || 0) + 1
               })
@@ -9518,7 +9576,7 @@ const receivedAt =
                 conversation_id: conversation.id,
                 external_message_id: externalMessageId,
                 direction: "inbound",
-                sender_name: "Instagram customer",
+                sender_name: instagramCustomerName,
                 sender_address: senderId,
                 body_text: bodyText,
                 delivery_status: "received",
@@ -9545,7 +9603,7 @@ const receivedAt =
           await processInboundInboxMessage(workspaceId, {
             id: savedMessage.id,
             conversationId: conversation.id,
-            senderName: "Instagram customer",
+            senderName: instagramCustomerName,
             senderEmail: null,
             subject: null,
             bodyText,
