@@ -13480,10 +13480,10 @@ $("approve-send-btn").addEventListener("click", async () => {
     return;
   }
 
-  if (c.channel !== "gmail") {
-    notify("Native sending is currently available for connected Gmail conversations.");
-    return;
-  }
+  if (!["gmail", "instagram"].includes(c.channel)) {
+  notify("Native sending is not available for this channel yet.");
+  return;
+}
 
   button.disabled = true;
   button.textContent = "Sending…";
@@ -13511,7 +13511,7 @@ $("approve-send-btn").addEventListener("click", async () => {
     const result = await response.json().catch(() => ({}));
 
     if (!response.ok || result.success !== true) {
-      throw new Error(result.error || "Gmail could not send the reply.");
+      throw new Error(result.error || "Could not send the reply.");
     }
 
     if (result.sent !== true) {
@@ -13546,11 +13546,11 @@ renderSelected();
     }
 
     notify(
-      result.note || "Reply sent successfully through Gmail."
+      result.note || "Reply sent successfully."
     );
 
   } catch (error) {
-    console.error("Gmail reply failed:", error);
+    console.error("Inbox reply failed:", error);
     notify(error.message || "Could not send the reply.");
   } finally {
     button.disabled = false;
