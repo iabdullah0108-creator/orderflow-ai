@@ -6579,6 +6579,244 @@ app.post("/api/inbox/conversations/:conversationId/reply", authenticateUser, asy
 
 
 
+
+
+    // Instagram replies are sent directly through the connected Instagram account.
+  if (conversation.channel === "instagram") {
+    const instagramAccountId = conversation.external_account_id;
+    const recipientId = conversation.external_thread_id;
+
+    if (!instagramAccountId || !recipientId) {
+      return res.status(400).json({
+        success: false,
+        error: "Instagram account or customer ID is missing."
+      });
+    }
+
+    // Find this workspace's connected Instagram account.
+    const { data: connection, error: connectionError } = await supabase
+      .from("provider_connections")
+      .select("id, external_account_id, display_name")
+      .eq("workspace_id", workspace.id)
+      .eq("channel", "instagram")
+      .eq("status", "connected")
+      .eq("external_account_id", instagramAccountId)
+      .maybeSingle();
+
+    if (connectionError || !connection) {
+      return res.status(409).json({
+        success: false,
+        error: "The Instagram account is not connected. Reconnect it in Settings."
+      });
+    }
+
+    // Retrieve and decrypt the stored access token.
+    const { data: credentials, error: credentialsError } = await supabase
+      .from("provider_credentials")
+      .select("access_token_encrypted")
+      .eq("workspace_id", workspace.id)
+      .eq("provider_connection_id", connection.id)
+      .maybeSingle();
+
+    if (credentialsError || !credentials?.access_token_encrypted) {
+      return res.status(409).json({
+        success: false,
+        error: "Instagram credentials were not found. Reconnect the account."
+      });
+    }
+
+    let accessToken;
+
+    try {
+      accessToken = decryptToken(credentials.access_token_encrypted);
+    } catch (error) {
+      console.error("Instagram token decryption failed:", error.message);
+      return res.status(500).json({
+        success: false,
+        error: "Could not access the Instagram connection. Please reconnect it."
+      });
+    }
+
+    if (!accessToken) {
+      return res.status(409).json({
+        success: false,
+        error: "Instagram access token is unavailable. Reconnect the account."
+      });
+    }
+
+    // Save the outgoing message before attempting delivery.
+    const { data: outgoingMessage, error: insertError } = await supabase
+      .from("inbox_messages")
+      .insert({
+        workspace_id: workspace.id,
+        conversation_id: conversation.id,
+        direction: "outbound",
+        sender_name: connection.display_name || "Business",
+        body_text: body,
+        delivery_status: "sending"
+      })
+      .select("id, direction, body_text, delivery_status, created_at")
+      .single();
+
+    if (insertError || !outgoingMessage) {
+      console.error("Instagram outgoing message insert failed:", insertError);
+      return res.status(500).json({
+        success: false,
+        error: "Could not save the reply."
+      });
+    }
+
+    let instagramResponse;
+
+    try {
+      instagramResponse = await fetch(
+        `https://graph.facebook.com/v27.0/${encodeURIComponent(instagramAccountId)}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            recipient: { id: recipientId },
+            message: { text: body }
+          })
+        }
+      );
+    } catch (error) {
+      console.error("Instagram send request failed:", error.message);
+
+      await supabase
+        .from("inbox_messages")
+        .update({ delivery_status: "unknown" })
+        .eq("id", outgoingMessage.id)
+        .eq("workspace_id", workspace.id);
+
+      return res.status(502).json({
+        success: false,
+        delivery_status: "unknown",
+        error: "Instagram's response could not be confirmed. Check the Instagram conversation before retrying."
+      });
+    }
+
+    let sentData = {};
+
+    try {
+      sentData = await instagramResponse.json();
+    } catch {
+      sentData = {};
+    }
+
+    if (!instagramResponse.ok) {
+      const definiteRejection = instagramResponse.status >= 400 &&
+        instagramResponse.status < 500;
+
+      await supabase
+        .from("inbox_messages")
+        .update({
+          delivery_status: definiteRejection ? "failed" : "unknown",
+          provider_payload: {
+            provider: "instagram",
+            http_status: instagramResponse.status,
+            error: sentData.error || null
+          }
+        })
+        .eq("id", outgoingMessage.id)
+        .eq("workspace_id", workspace.id);
+
+      console.error("Instagram API rejected reply:", {
+        status: instagramResponse.status,
+        error: sentData.error || null
+      });
+
+      return res.status(502).json({
+        success: false,
+        delivery_status: definiteRejection ? "failed" : "unknown",
+        error: sentData.error?.message ||
+          "Instagram could not confirm delivery. Check the conversation before retrying."
+      });
+    }
+
+    // A successful HTTP response without a message ID is not enough
+    // to safely report that the reply was sent.
+    if (!sentData.message_id) {
+      await supabase
+        .from("inbox_messages")
+        .update({
+          delivery_status: "unknown",
+          provider_payload: {
+            provider: "instagram",
+            response: sentData
+          }
+        })
+        .eq("id", outgoingMessage.id)
+        .eq("workspace_id", workspace.id);
+
+      return res.status(502).json({
+        success: false,
+        delivery_status: "unknown",
+        error: "Instagram returned no message ID. Check the conversation before retrying."
+      });
+    }
+
+    const sentAt = new Date().toISOString();
+
+    const { data: savedMessage, error: updateError } = await supabase
+      .from("inbox_messages")
+      .update({
+        external_message_id: sentData.message_id,
+        sender_address: instagramAccountId,
+        delivery_status: "sent",
+        sent_at: sentAt,
+        provider_payload: {
+          provider: "instagram",
+          account_id: instagramAccountId,
+          recipient_id: sentData.recipient_id || recipientId
+        }
+      })
+      .eq("id", outgoingMessage.id)
+      .eq("workspace_id", workspace.id)
+      .select("id, direction, body_text, delivery_status, created_at, sent_at")
+      .single();
+
+    if (updateError || !savedMessage) {
+      console.error("Instagram sent message could not be updated:", updateError);
+
+      // Meta confirmed sending. Do not retry just because our database update failed.
+      return res.status(200).json({
+        success: true,
+        sent: true,
+        saved: false,
+        message: outgoingMessage,
+        warning: "Instagram accepted the reply, but the inbox record could not be fully updated. Do not resend it."
+      });
+    }
+
+    await supabase
+      .from("inbox_conversations")
+      .update({
+        last_message_at: sentAt,
+        updated_at: sentAt
+      })
+      .eq("id", conversation.id)
+      .eq("workspace_id", workspace.id);
+
+    return res.json({
+      success: true,
+      sent: true,
+      message: savedMessage
+    });
+  }
+
+
+  
+
+
+
+  
+
+
+
   
 
   const webhookUrl = process.env.N8N_SEND_REPLY_WEBHOOK_URL;
@@ -9284,6 +9522,7 @@ const receivedAt =
                 sender_address: senderId,
                 body_text: bodyText,
                 delivery_status: "received",
+                ai_processing_status: "pending",
                 provider_payload: {
                   provider: "instagram",
                   account_id: accountId,
